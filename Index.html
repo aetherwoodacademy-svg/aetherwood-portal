@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetherwood Potion Bar</title>
+  <style>
+    :root {
+      --midnight: #080b2b;
+      --deep-blue: #101b55;
+      --violet: #5b2a93;
+      --glow-blue: #67d7ff;
+      --glow-pink: #f5a6ff;
+      --lavender: #d8c5ff;
+      --cream: #fff8ee;
+      --gold: #ffd979;
+      --green: #9ef2bd;
+      --panel: rgba(11, 14, 54, .68);
+      --border: rgba(216, 197, 255, .38);
+      --shadow: rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--cream);
+      padding: 22px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(103, 215, 255, .34), transparent 24%),
+        radial-gradient(circle at 82% 18%, rgba(245, 166, 255, .38), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(91, 42, 147, .75), transparent 42%),
+        linear-gradient(145deg, #030512 0%, var(--midnight) 36%, var(--deep-blue) 62%, #2a1152 100%);
+      overflow-x: hidden;
+    }
+
+    body:after {
+      content: "";
+      position: fixed;
+      inset: auto 0 0 0;
+      height: 210px;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(5, 8, 27, .9), transparent);
+    }
+
+    @keyframes twinkle {
+      from { opacity: .16; transform: translateY(0); }
+      to { opacity: .34; transform: translateY(-8px); }
+    }
+
+    .wrap {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      padding: 22px 14px 20px;
+    }
+
+    .crest {
+      width: 86px;
+      height: 86px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 10px;
+      border: 1px solid rgba(255, 248, 238, .5);
+      border-radius: 50%;
+      box-shadow: 0 0 32px rgba(103, 215, 255, .42), inset 0 0 24px rgba(245, 166, 255, .18);
+      font-size: 2.7rem;
+      color: var(--cream);
+      background: rgba(255,255,255,.06);
+    }
+
+    .eyebrow {
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      color: var(--lavender);
+    }
+
+    h1 {
+      margin: 8px 0 8px;
+      font-size: clamp(2.65rem, 9vw, 6rem);
+      line-height: .88;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      text-shadow: 0 0 24px rgba(103, 215, 255, .34), 0 18px 40px rgba(0,0,0,.35);
+    }
+
+    .title-pink { color: var(--glow-pink); }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 0 auto;
+      font-family: system-ui, sans-serif;
+      font-style: italic;
+      font-size: 1.08rem;
+      color: rgba(255,248,238,.86);
+    }
+
+    form {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 28px 90px var(--shadow), inset 0 0 60px rgba(103, 215, 255, .06);
+      border-radius: 32px;
+      padding: clamp(18px, 4vw, 34px);
+      backdrop-filter: blur(16px);
+    }
+
+    .section {
+      margin: 0 0 26px;
+    }
+
+    .section h2 {
+      font-size: 1.38rem;
+      margin: 0 0 15px;
+      color: var(--lavender);
+      text-align: center;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 14px;
+    }
+
+    .three {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    label.card, label.pill {
+      cursor: pointer;
+      display: block;
+      border: 1px solid rgba(216, 197, 255, .35);
+      background: rgba(5, 8, 32, .52);
+      border-radius: 22px;
+      padding: 16px;
+      transition: transform .18s ease, background .18s ease, border .18s ease, box-shadow .18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    label.card { min-height: 190px; text-align: center; }
+
+    label.pill {
+      min-height: 86px;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    label.card:hover, label.pill:hover {
+      transform: translateY(-3px);
+      background: rgba(20, 28, 86, .7);
+      box-shadow: 0 0 26px rgba(103, 215, 255, .16);
+    }
+
+    input[type="radio"], input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    label.card:has(input:checked), label.pill:has(input:checked) {
+      border-color: var(--glow-pink);
+      background: rgba(91, 42, 147, .58);
+      box-shadow: 0 0 0 3px rgba(245, 166, 255, .15) inset, 0 0 28px rgba(245, 166, 255, .22);
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 9px;
+      filter: drop-shadow(0 0 10px rgba(103, 215, 255, .35));
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 1.08rem;
+      display: block;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    .desc {
+      font-family: system-ui, sans-serif;
+      color: rgba(255,248,238,.78);
+      font-size: .88rem;
+      line-height: 1.35;
+      margin-top: 8px;
+      display: block;
+    }
+
+    .icon {
+      font-size: 1.7rem;
+      width: 36px;
+      text-align: center;
+      flex: 0 0 36px;
+    }
+
+    .pill-text { display: block; }
+    .pill-title { display: block; font-weight: 750; color: var(--cream); }
+    .pill-desc { display: block; color: rgba(255,248,238,.68); font-size: .88rem; margin-top: 3px; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 15px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(216, 197, 255, .46);
+      background: rgba(7, 12, 46, .68);
+      color: var(--cream);
+      font-size: 1rem;
+      font-family: system-ui, sans-serif;
+      outline: none;
+      box-shadow: inset 0 0 22px rgba(103, 215, 255, .05);
+    }
+
+    input::placeholder, textarea::placeholder { color: rgba(216, 197, 255, .62); }
+    textarea { min-height: 110px; resize: vertical; }
+
+    button {
+      width: min(560px, 100%);
+      display: block;
+      margin: 20px auto 0;
+      border: 1px solid rgba(255,248,238,.38);
+      border-radius: 18px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #6d39b6, #bc6cff 46%, #f5a6ff);
+      color: white;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 18px 42px rgba(0,0,0,.34), 0 0 32px rgba(245,166,255,.22);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    button:hover { filter: brightness(1.08); }
+    button:disabled { opacity: .72; cursor: wait; }
+
+    .message {
+      display: none;
+      margin: 18px auto 0;
+      max-width: 760px;
+      padding: 17px;
+      border-radius: 18px;
+      background: rgba(103, 215, 255, .14);
+      border: 1px solid rgba(103, 215, 255, .46);
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      color: var(--cream);
+    }
+
+
+
+    .ambience {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .aurora {
+      position: absolute;
+      width: 70vmax;
+      height: 70vmax;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .28;
+      mix-blend-mode: screen;
+      animation: drift 24s ease-in-out infinite alternate;
+    }
+
+    .aurora.one {
+      left: -24vmax;
+      top: -18vmax;
+      background: radial-gradient(circle, rgba(103, 215, 255, .72), rgba(91, 42, 147, .22), transparent 66%);
+    }
+
+    .aurora.two {
+      right: -26vmax;
+      top: 4vmax;
+      background: radial-gradient(circle, rgba(245, 166, 255, .68), rgba(103, 215, 255, .16), transparent 66%);
+      animation-delay: -8s;
+      animation-duration: 30s;
+    }
+
+    .aurora.three {
+      left: 18vmax;
+      bottom: -34vmax;
+      background: radial-gradient(circle, rgba(171, 108, 255, .72), rgba(0, 220, 255, .12), transparent 65%);
+      animation-delay: -14s;
+      animation-duration: 34s;
+    }
+
+    .mist {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,.08), transparent 18%),
+        radial-gradient(circle at 80% 45%, rgba(216,197,255,.08), transparent 20%),
+        radial-gradient(circle at 40% 80%, rgba(103,215,255,.06), transparent 24%);
+      filter: blur(18px);
+      opacity: .65;
+      animation: mistMove 42s linear infinite;
+    }
+
+    .firefly {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 230, 151, .92);
+      box-shadow: 0 0 14px rgba(255, 230, 151, .92), 0 0 28px rgba(245, 166, 255, .36);
+      opacity: .75;
+      animation: floatFirefly var(--duration) ease-in-out infinite alternate;
+      left: var(--left);
+      top: var(--top);
+      animation-delay: var(--delay);
+    }
+
+    @keyframes drift {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(8vmax, 5vmax, 0) scale(1.08); }
+      100% { transform: translate3d(-3vmax, 9vmax, 0) scale(.96); }
+    }
+
+    @keyframes mistMove {
+      0% { transform: translate3d(-4%, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(4%, -3%, 0) rotate(3deg); }
+      100% { transform: translate3d(-4%, 0, 0) rotate(0deg); }
+    }
+
+    @keyframes floatFirefly {
+      0% { transform: translate3d(0, 0, 0) scale(.7); opacity: .2; }
+      45% { opacity: .95; }
+      100% { transform: translate3d(var(--x), var(--y), 0) scale(1.18); opacity: .72; }
+    }
+
+
+
+    .hidden-magic {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .fairy {
+      position: absolute;
+      right: clamp(18px, 6vw, 88px);
+      top: 118px;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      filter: drop-shadow(0 0 14px rgba(245, 166, 255, .9)) drop-shadow(0 0 30px rgba(103, 215, 255, .45));
+      opacity: .82;
+      animation: fairyHover 5.8s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+
+    .fairy:after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 2px;
+      right: -18px;
+      top: 34px;
+      background: linear-gradient(90deg, transparent, rgba(216, 197, 255, .26), transparent);
+      transform: rotate(-9deg);
+    }
+
+    .mushroom-patch {
+      position: absolute;
+      left: clamp(10px, 4vw, 56px);
+      bottom: 28px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      opacity: .9;
+      filter: drop-shadow(0 0 18px rgba(245, 166, 255, .55));
+      animation: mushroomGlow 4.5s ease-in-out infinite alternate;
+    }
+
+    .mushroom {
+      position: relative;
+      width: 34px;
+      height: 38px;
+    }
+
+    .mushroom.small { width: 24px; height: 29px; opacity: .82; }
+    .mushroom.tall { width: 42px; height: 48px; }
+
+    .cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 20px;
+      border-radius: 22px 22px 8px 8px;
+      background: radial-gradient(circle at 28% 35%, rgba(255,255,255,.95) 0 2px, transparent 3px), radial-gradient(circle at 66% 38%, rgba(255,255,255,.8) 0 2px, transparent 3px), linear-gradient(135deg, #ec6fff, #6ddcff 62%, #ffd979);
+      box-shadow: 0 0 18px rgba(245,166,255,.55), inset 0 -6px 10px rgba(8, 11, 43, .28);
+    }
+
+    .stem {
+      position: absolute;
+      width: 12px;
+      height: 24px;
+      left: 50%;
+      top: 15px;
+      transform: translateX(-50%);
+      border-radius: 8px 8px 5px 5px;
+      background: linear-gradient(#fff8ee, #d8c5ff);
+      box-shadow: 0 0 10px rgba(216,197,255,.36);
+    }
+
+    .mushroom-glow {
+      position: absolute;
+      left: -20px;
+      right: -28px;
+      bottom: -12px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(103, 215, 255, .24), transparent 68%);
+      animation: mushroomGlow 3.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes fairyHover {
+      0% { transform: translate3d(0, 0, 0) rotate(-3deg); opacity: .72; }
+      50% { transform: translate3d(-9px, -12px, 0) rotate(4deg); opacity: .96; }
+      100% { transform: translate3d(7px, 6px, 0) rotate(-2deg); opacity: .82; }
+    }
+
+    @keyframes mushroomGlow {
+      from { filter: drop-shadow(0 0 10px rgba(103, 215, 255, .36)); opacity: .74; }
+      to { filter: drop-shadow(0 0 22px rgba(245, 166, 255, .68)); opacity: .96; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .aurora, .mist, .firefly, .fairy, .mushroom-glow { animation: none; }
+    }
+
+    footer {
+      text-align: center;
+      font-family: system-ui, sans-serif;
+      color: rgba(255,248,238,.68);
+      margin: 22px 0 0;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambience" aria-hidden="true">
+    <div class="aurora one"></div>
+    <div class="aurora two"></div>
+    <div class="aurora three"></div>
+    <div class="mist"></div>
+    <span class="firefly" style="--left: 8%; --top: 18%; --x: 42px; --y: -55px; --duration: 7s; --delay: -1s;"></span>
+    <span class="firefly" style="--left: 18%; --top: 72%; --x: -34px; --y: -80px; --duration: 9s; --delay: -4s;"></span>
+    <span class="firefly" style="--left: 32%; --top: 28%; --x: 68px; --y: 36px; --duration: 8s; --delay: -2s;"></span>
+    <span class="firefly" style="--left: 54%; --top: 14%; --x: -80px; --y: 52px; --duration: 10s; --delay: -6s;"></span>
+    <span class="firefly" style="--left: 72%; --top: 66%; --x: 48px; --y: -88px; --duration: 8.5s; --delay: -3s;"></span>
+    <span class="firefly" style="--left: 88%; --top: 34%; --x: -58px; --y: 72px; --duration: 11s; --delay: -7s;"></span>
+    <span class="firefly" style="--left: 44%; --top: 82%; --x: 72px; --y: -46px; --duration: 9.5s; --delay: -5s;"></span>
+    <span class="firefly" style="--left: 94%; --top: 82%; --x: -92px; --y: -64px; --duration: 12s; --delay: -9s;"></span>
+  </div>
+  <div class="hidden-magic" aria-hidden="true">
+    <div class="fairy">🧚</div>
+    <div class="mushroom-patch">
+      <div class="mushroom small"><span class="cap"></span><span class="stem"></span></div>
+      <div class="mushroom tall"><span class="cap"></span><span class="stem"></span></div>
+      <div class="mushroom"><span class="cap"></span><span class="stem"></span></div>
+      <div class="mushroom-glow"></div>
+    </div>
+  </div>
+  <main class="wrap">
+    <header>
+      <div class="crest">A</div>
+      <div class="eyebrow">Aetherwood Retreat Kitchen</div>
+      <h1>Aetherwood<br><span class="title-pink">Potion Bar</span></h1>
+      <p class="subtitle">Magical smoothies, blended fresh for your retreat.</p>
+    </header>
+
+    <form id="smoothieForm">
+      <div class="section">
+        <h2>Who enters the woodland café?</h2>
+        <input type="text" name="customer" placeholder="The Boy" required />
+      </div>
+
+      <div class="section">
+        <h2>Choose Your Potion</h2>
+        <div class="grid">
+          <label class="card"><input type="radio" name="smoothie" value="Sunfire Nectar" required><span class="emoji">☀️</span><span class="name">Sunfire Nectar</span><span class="desc">Tropical sunshine in a glass. Mango, pineapple, lime and coconut water.</span></label>
+          <label class="card"><input type="radio" name="smoothie" value="Dragon Berry Potion"><span class="emoji">🐉</span><span class="name">Dragon Berry Potion</span><span class="desc">Bursting with berries gathered from the ancient hedgerows of Aetherwood.</span></label>
+          <label class="card"><input type="radio" name="smoothie" value="Moonshadow Brew"><span class="emoji">🌙</span><span class="name">Moonshadow Brew</span><span class="desc">A rich chocolate potion crafted beneath silver moonlight.</span></label>
+          <label class="card"><input type="radio" name="smoothie" value="Forestheart Elixir"><span class="emoji">🌿</span><span class="name">Forestheart Elixir</span><span class="desc">The favourite drink of wandering healers and woodland guardians.</span></label>
+          <label class="card"><input type="radio" name="smoothie" value="Riverstone Renewal"><span class="emoji">💧</span><span class="name">Riverstone Renewal</span><span class="desc">Cleansing and refreshing, like a crystal stream for your insides.</span></label>
+          <label class="card"><input type="radio" name="smoothie" value="Forest Fate"><span class="emoji">✨</span><span class="name">Forest Fate</span><span class="desc">Can’t decide? Let the forest spirits choose your perfect potion.</span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Choose Your Base Essence</h2>
+        <div class="grid three">
+          <label class="pill"><input type="radio" name="base" value="Coconut Water Spring" required><span class="icon">💧</span><span class="pill-text"><span class="pill-title">Coconut Water Spring</span><span class="pill-desc">Light, hydrating and pure</span></span></label>
+          <label class="pill"><input type="radio" name="base" value="Almond Moon Milk"><span class="icon">🌰</span><span class="pill-text"><span class="pill-title">Almond Moon Milk</span><span class="pill-desc">Creamy and smooth</span></span></label>
+          <label class="pill"><input type="radio" name="base" value="Woodland Yoghurt Blend"><span class="icon">🥣</span><span class="pill-text"><span class="pill-title">Woodland Yoghurt Blend</span><span class="pill-desc">Silky and nourishing</span></span></label>
+          <label class="pill"><input type="radio" name="base" value="Fresh Juice Potion"><span class="icon">🍊</span><span class="pill-text"><span class="pill-title">Fresh Juice Potion</span><span class="pill-desc">Bursting with natural goodness</span></span></label>
+          <label class="pill"><input type="radio" name="base" value="Whatever Ma Recommends"><span class="icon">🪄</span><span class="pill-text"><span class="pill-title">Whatever Ma Recommends</span><span class="pill-desc">Trust the kitchen magic</span></span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Add Enchantments</h2>
+        <div class="grid three">
+          <label class="pill"><input type="checkbox" name="extras" value="Golden Banana"><span class="icon">🍌</span><span class="pill-text"><span class="pill-title">Golden Banana</span><span class="pill-desc">Sweet and magical</span></span></label>
+          <label class="pill"><input type="checkbox" name="extras" value="Pixie Peanut Butter"><span class="icon">🥜</span><span class="pill-text"><span class="pill-title">Pixie Peanut Butter</span><span class="pill-desc">Smooth and enchanted</span></span></label>
+          <label class="pill"><input type="checkbox" name="extras" value="Chia Stardust"><span class="icon">✨</span><span class="pill-text"><span class="pill-title">Chia Stardust</span><span class="pill-desc">Tiny seeds of energy</span></span></label>
+          <label class="pill"><input type="checkbox" name="extras" value="Cacao Magic"><span class="icon">🍫</span><span class="pill-text"><span class="pill-title">Cacao Magic</span><span class="pill-desc">Rich and chocolatey</span></span></label>
+          <label class="pill"><input type="checkbox" name="extras" value="Forest Honey"><span class="icon">🍯</span><span class="pill-text"><span class="pill-title">Forest Honey</span><span class="pill-desc">From the hives of Aetherwood</span></span></label>
+          <label class="pill"><input type="checkbox" name="extras" value="No Enchantments Today"><span class="icon">🫧</span><span class="pill-text"><span class="pill-title">No Enchantments Today</span><span class="pill-desc">Keep it pure and simple</span></span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Potion Strength</h2>
+        <div class="grid three">
+          <label class="pill"><input type="radio" name="texture" value="Light and Flowing" required><span class="icon">🌊</span><span class="pill-text"><span class="pill-title">Light and Flowing</span><span class="pill-desc">Smooth and easy</span></span></label>
+          <label class="pill"><input type="radio" name="texture" value="Perfectly Balanced"><span class="icon">⚖️</span><span class="pill-text"><span class="pill-title">Perfectly Balanced</span><span class="pill-desc">Just right</span></span></label>
+          <label class="pill"><input type="radio" name="texture" value="Thick as Dragon Breath"><span class="icon">🐲</span><span class="pill-text"><span class="pill-title">Thick as Dragon Breath</span><span class="pill-desc">Creamy, thick and satisfying</span></span></label>
+          <label class="pill"><input type="radio" name="texture" value="Ice Cold and Slushy"><span class="icon">❄️</span><span class="pill-text"><span class="pill-title">Ice Cold and Slushy</span><span class="pill-desc">Extra frosty and refreshing</span></span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Any Special Notes For The Aetherwood Alchemists?</h2>
+        <textarea name="notes" placeholder="Tell us your wishes, allergies, or anything else the forest should know..."></textarea>
+      </div>
+
+      <button type="submit">Place My Potion Order</button>
+      <div class="message" id="message">The forest has received your request. Your potion is being prepared by the Aetherwood Alchemists. 🌿✨</div>
+    </form>
+
+    <footer>Thank you for visiting the Aetherwood Potion Bar. Freshly blended in the borderlands between breakfast and enchantment.</footer>
+  </main>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLZrR_dl0w6A6YeZo8nmwTJYOb2ZA6vxY2provnruzEDIqlavd7dA1m_ObUdT4Orc/exec";
+
+    const form = document.getElementById("smoothieForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = form.querySelector("button");
+      button.disabled = true;
+      button.textContent = "Sending to the Aetherwood Alchemists...";
+
+      const formData = new FormData(form);
+      const extras = formData.getAll("extras").join(", ");
+
+      const order = {
+        customer: formData.get("customer"),
+        smoothie: formData.get("smoothie"),
+        base: formData.get("base"),
+        extras: extras || "None",
+        texture: formData.get("texture"),
+        notes: formData.get("notes") || "None",
+        submittedAt: new Date().toLocaleString()
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order)
+        });
+
+        form.reset();
+        message.style.display = "block";
+        message.textContent = "The forest has received your request. Your potion is being prepared by the Aetherwood Alchemists. 🌿✨";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (error) {
+        message.style.display = "block";
+        message.textContent = "Hmm, the forest sprites dropped the order. Try again in a moment.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Place My Potion Order";
+      }
+    });
+  </script>
+</body>
+</html>
