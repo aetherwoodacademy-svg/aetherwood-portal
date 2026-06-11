@@ -1,607 +1,765 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a12" />
+  <title>Aetherwood</title>
 
-  <link rel="icon" type="image/png" href="icon.png">
-  <link rel="apple-touch-icon" href="icon.png">
+  <!--
+    AETHERWOOD — THRESHOLD (v2)
 
-  <title>Aetherwood Potion Bar</title>
-  <title>Aetherwood Potion Bar</title>
+    Doors are slightly ajar in the canon image. The visitor's gesture is
+    stepping through the warm light, not opening the doors.
+
+    Painted window is left untouched. The four elements are carved into
+    a stone band above the doors. Phase is signalled through the window's
+    own glow shifting and through the line below the doors. Season is
+    expressed through particles drifting at the lower edge.
+
+    Three signature touches: candle seam (steady warmth), window glow
+    (slow phase-tied pulse), particles (slow drift). Per Architecture v2.1.
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --midnight: #080b2b;
-      --deep-blue: #101b55;
-      --violet: #5b2a93;
-      --glow-blue: #67d7ff;
-      --glow-pink: #f5a6ff;
-      --lavender: #d8c5ff;
-      --cream: #fff8ee;
-      --gold: #ffd979;
-      --green: #9ef2bd;
-      --panel: rgba(11, 14, 54, .68);
-      --border: rgba(216, 197, 255, .38);
-      --shadow: rgba(0, 0, 0, .38);
+      --bg-deep: #07070c;
+      --ink-cream: #e8dcc4;
+      --ink-muted: rgba(232, 220, 196, 0.66);
+      --ink-faint: rgba(232, 220, 196, 0.36);
+      --amber-warm: #f3b05c;
+      --amber-glow: rgba(243, 176, 92, 0.35);
+      --stone-etch: rgba(180, 175, 160, 0.55);
+
+      --serif: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+      --tracking-wordmark: 0.42em;
+      --tracking-phase: 0.28em;
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
-      font-family: Georgia, 'Times New Roman', serif;
-      color: var(--cream);
-      padding: 22px;
-      background:
-        radial-gradient(circle at 18% 12%, rgba(103, 215, 255, .34), transparent 24%),
-        radial-gradient(circle at 82% 18%, rgba(245, 166, 255, .38), transparent 25%),
-        radial-gradient(circle at 50% 80%, rgba(91, 42, 147, .75), transparent 42%),
-        linear-gradient(145deg, #030512 0%, var(--midnight) 36%, var(--deep-blue) 62%, #2a1152 100%);
-      overflow-x: hidden;
-    }
-
-    body:after {
-      content: "";
-      position: fixed;
-      inset: auto 0 0 0;
-      height: 210px;
-      pointer-events: none;
-      background: linear-gradient(to top, rgba(5, 8, 27, .9), transparent);
-    }
-
-    @keyframes twinkle {
-      from { opacity: .16; transform: translateY(0); }
-      to { opacity: .34; transform: translateY(-8px); }
-    }
-
-    .wrap {
-      width: min(1120px, 100%);
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    header {
-      text-align: center;
-      padding: 22px 14px 20px;
-    }
-
-    .crest {
-      width: 86px;
-      height: 86px;
-      display: grid;
-      place-items: center;
-      margin: 0 auto 10px;
-      border: 1px solid rgba(255, 248, 238, .5);
-      border-radius: 50%;
-      box-shadow: 0 0 32px rgba(103, 215, 255, .42), inset 0 0 24px rgba(245, 166, 255, .18);
-      font-size: 2.7rem;
-      color: var(--cream);
-      background: rgba(255,255,255,.06);
-    }
-
-    .eyebrow {
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      font-size: .78rem;
-      color: var(--lavender);
-    }
-
-    h1 {
-      margin: 8px 0 8px;
-      font-size: clamp(2.65rem, 9vw, 6rem);
-      line-height: .88;
-      text-transform: uppercase;
-      letter-spacing: .03em;
-      text-shadow: 0 0 24px rgba(103, 215, 255, .34), 0 18px 40px rgba(0,0,0,.35);
-    }
-
-    .title-pink { color: var(--glow-pink); }
-
-    .subtitle {
-      max-width: 760px;
-      margin: 0 auto;
-      font-family: system-ui, sans-serif;
-      font-style: italic;
-      font-size: 1.08rem;
-      color: rgba(255,248,238,.86);
-    }
-
-    form {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      box-shadow: 0 28px 90px var(--shadow), inset 0 0 60px rgba(103, 215, 255, .06);
-      border-radius: 32px;
-      padding: clamp(18px, 4vw, 34px);
-      backdrop-filter: blur(16px);
-    }
-
-    .section {
-      margin: 0 0 26px;
-    }
-
-    .section h2 {
-      font-size: 1.38rem;
-      margin: 0 0 15px;
-      color: var(--lavender);
-      text-align: center;
-      letter-spacing: .03em;
-      text-transform: uppercase;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
-      gap: 14px;
-    }
-
-    .three {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-
-    label.card, label.pill {
-      cursor: pointer;
-      display: block;
-      border: 1px solid rgba(216, 197, 255, .35);
-      background: rgba(5, 8, 32, .52);
-      border-radius: 22px;
-      padding: 16px;
-      transition: transform .18s ease, background .18s ease, border .18s ease, box-shadow .18s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    label.card { min-height: 190px; text-align: center; }
-
-    label.pill {
-      min-height: 86px;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    label.card:hover, label.pill:hover {
-      transform: translateY(-3px);
-      background: rgba(20, 28, 86, .7);
-      box-shadow: 0 0 26px rgba(103, 215, 255, .16);
-    }
-
-    input[type="radio"], input[type="checkbox"] {
-      position: absolute;
-      opacity: 0;
-    }
-
-    label.card:has(input:checked), label.pill:has(input:checked) {
-      border-color: var(--glow-pink);
-      background: rgba(91, 42, 147, .58);
-      box-shadow: 0 0 0 3px rgba(245, 166, 255, .15) inset, 0 0 28px rgba(245, 166, 255, .22);
-    }
-
-    .emoji {
-      font-size: 2.5rem;
-      display: block;
-      margin-bottom: 9px;
-      filter: drop-shadow(0 0 10px rgba(103, 215, 255, .35));
-    }
-
-    .name {
-      font-weight: bold;
-      font-size: 1.08rem;
-      display: block;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: .02em;
-    }
-
-    .desc {
-      font-family: system-ui, sans-serif;
-      color: rgba(255,248,238,.78);
-      font-size: .88rem;
-      line-height: 1.35;
-      margin-top: 8px;
-      display: block;
-    }
-
-    .icon {
-      font-size: 1.7rem;
-      width: 36px;
-      text-align: center;
-      flex: 0 0 36px;
-    }
-
-    .pill-text { display: block; }
-    .pill-title { display: block; font-weight: 750; color: var(--cream); }
-    .pill-desc { display: block; color: rgba(255,248,238,.68); font-size: .88rem; margin-top: 3px; }
-
-    input[type="text"], textarea {
+      padding: 0;
+      height: 100%;
       width: 100%;
-      padding: 15px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(216, 197, 255, .46);
-      background: rgba(7, 12, 46, .68);
-      color: var(--cream);
-      font-size: 1rem;
-      font-family: system-ui, sans-serif;
-      outline: none;
-      box-shadow: inset 0 0 22px rgba(103, 215, 255, .05);
+      background: var(--bg-deep);
+      color: var(--ink-cream);
+      font-family: var(--serif);
+      font-weight: 400;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-tap-highlight-color: transparent;
     }
+    body { position: relative; min-height: 100vh; min-height: 100dvh; }
 
-    input::placeholder, textarea::placeholder { color: rgba(216, 197, 255, .62); }
-    textarea { min-height: 110px; resize: vertical; }
-
-    button {
-      width: min(560px, 100%);
-      display: block;
-      margin: 20px auto 0;
-      border: 1px solid rgba(255,248,238,.38);
-      border-radius: 18px;
-      padding: 18px 20px;
-      background: linear-gradient(135deg, #6d39b6, #bc6cff 46%, #f5a6ff);
-      color: white;
-      font-family: Georgia, 'Times New Roman', serif;
-      font-weight: 800;
-      font-size: 1.25rem;
-      cursor: pointer;
-      box-shadow: 0 18px 42px rgba(0,0,0,.34), 0 0 32px rgba(245,166,255,.22);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    button:hover { filter: brightness(1.08); }
-    button:disabled { opacity: .72; cursor: wait; }
-
-    .message {
-      display: none;
-      margin: 18px auto 0;
-      max-width: 760px;
-      padding: 17px;
-      border-radius: 18px;
-      background: rgba(103, 215, 255, .14);
-      border: 1px solid rgba(103, 215, 255, .46);
-      font-family: system-ui, sans-serif;
-      text-align: center;
-      color: var(--cream);
-    }
-
-
-
-    .ambience {
+    .threshold-image {
       position: fixed;
       inset: 0;
-      overflow: hidden;
-      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      background-image: url("images/threshold_background.png");
+      background-size: cover;
+      background-position: center 38%;
+      background-repeat: no-repeat;
       z-index: 0;
+      transform: scale(1.02);
+      transition: transform 1800ms cubic-bezier(0.22, 1, 0.36, 1),
+                  filter 1600ms ease-out;
+      will-change: transform, filter;
     }
 
-    .aurora {
-      position: absolute;
-      width: 70vmax;
-      height: 70vmax;
-      border-radius: 50%;
-      filter: blur(70px);
-      opacity: .28;
+    .gradient-top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 18vh;
+      background: linear-gradient(to bottom, rgba(7, 7, 12, 0.6), rgba(7, 7, 12, 0));
+      z-index: 1;
+      pointer-events: none;
+    }
+    .gradient-bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 50vh;
+      background: linear-gradient(to top,
+        rgba(7, 7, 12, 0.94) 0%,
+        rgba(7, 7, 12, 0.78) 30%,
+        rgba(7, 7, 12, 0.42) 65%,
+        rgba(7, 7, 12, 0) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Phase-responsive window glow — soft radial wash positioned over the painted window */
+    .window-glow {
+      position: fixed;
+      left: 50%;
+      top: 22%;
+      transform: translate(-50%, -50%);
+      width: min(78vw, 360px);
+      aspect-ratio: 1 / 1;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(
+        circle at center,
+        rgba(140, 180, 230, var(--phase-glow, 0.25)) 0%,
+        rgba(100, 140, 200, calc(var(--phase-glow, 0.25) * 0.5)) 35%,
+        rgba(0, 0, 0, 0) 65%
+      );
       mix-blend-mode: screen;
-      animation: drift 24s ease-in-out infinite alternate;
+      filter: blur(6px);
+      animation: glowBreath 12s ease-in-out infinite;
+      opacity: 0;
+      transition: opacity 2000ms ease-out;
+    }
+    .window-glow.lit { opacity: 1; }
+
+    @keyframes glowBreath {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50%      { transform: translate(-50%, -50%) scale(1.04); }
     }
 
-    .aurora.one {
-      left: -24vmax;
-      top: -18vmax;
-      background: radial-gradient(circle, rgba(103, 215, 255, .72), rgba(91, 42, 147, .22), transparent 66%);
-    }
-
-    .aurora.two {
-      right: -26vmax;
-      top: 4vmax;
-      background: radial-gradient(circle, rgba(245, 166, 255, .68), rgba(103, 215, 255, .16), transparent 66%);
-      animation-delay: -8s;
-      animation-duration: 30s;
-    }
-
-    .aurora.three {
-      left: 18vmax;
-      bottom: -34vmax;
-      background: radial-gradient(circle, rgba(171, 108, 255, .72), rgba(0, 220, 255, .12), transparent 65%);
-      animation-delay: -14s;
-      animation-duration: 34s;
-    }
-
-    .mist {
-      position: absolute;
-      inset: -20%;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(255,255,255,.08), transparent 18%),
-        radial-gradient(circle at 80% 45%, rgba(216,197,255,.08), transparent 20%),
-        radial-gradient(circle at 40% 80%, rgba(103,215,255,.06), transparent 24%);
-      filter: blur(18px);
-      opacity: .65;
-      animation: mistMove 42s linear infinite;
-    }
-
-    .firefly {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 230, 151, .92);
-      box-shadow: 0 0 14px rgba(255, 230, 151, .92), 0 0 28px rgba(245, 166, 255, .36);
-      opacity: .75;
-      animation: floatFirefly var(--duration) ease-in-out infinite alternate;
-      left: var(--left);
-      top: var(--top);
-      animation-delay: var(--delay);
-    }
-
-    @keyframes drift {
-      0% { transform: translate3d(0, 0, 0) scale(1); }
-      50% { transform: translate3d(8vmax, 5vmax, 0) scale(1.08); }
-      100% { transform: translate3d(-3vmax, 9vmax, 0) scale(.96); }
-    }
-
-    @keyframes mistMove {
-      0% { transform: translate3d(-4%, 0, 0) rotate(0deg); }
-      50% { transform: translate3d(4%, -3%, 0) rotate(3deg); }
-      100% { transform: translate3d(-4%, 0, 0) rotate(0deg); }
-    }
-
-    @keyframes floatFirefly {
-      0% { transform: translate3d(0, 0, 0) scale(.7); opacity: .2; }
-      45% { opacity: .95; }
-      100% { transform: translate3d(var(--x), var(--y), 0) scale(1.18); opacity: .72; }
-    }
-
-
-
-    .hidden-magic {
+    /* Element band — four painted glyphs. Current season's glyph holds
+       full luminosity with an amber wash; the others dim like memory. */
+    .element-band {
       position: fixed;
+      left: 50%;
+      top: 41%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
       pointer-events: none;
-      z-index: 0;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .fairy {
-      position: absolute;
-      right: clamp(18px, 6vw, 88px);
-      top: 118px;
-      font-size: clamp(2.2rem, 5vw, 4rem);
-      filter: drop-shadow(0 0 14px rgba(245, 166, 255, .9)) drop-shadow(0 0 30px rgba(103, 215, 255, .45));
-      opacity: .82;
-      animation: fairyHover 5.8s ease-in-out infinite alternate;
-      transform-origin: center;
-    }
-
-    .fairy:after {
-      content: "";
-      position: absolute;
-      width: 120px;
-      height: 2px;
-      right: -18px;
-      top: 34px;
-      background: linear-gradient(90deg, transparent, rgba(216, 197, 255, .26), transparent);
-      transform: rotate(-9deg);
-    }
-
-    .mushroom-patch {
-      position: absolute;
-      left: clamp(10px, 4vw, 56px);
-      bottom: 28px;
       display: flex;
-      align-items: flex-end;
-      gap: 6px;
-      opacity: .9;
-      filter: drop-shadow(0 0 18px rgba(245, 166, 255, .55));
-      animation: mushroomGlow 4.5s ease-in-out infinite alternate;
+      gap: clamp(22px, 6.5vw, 38px);
+      align-items: center;
+      opacity: 0;
+      animation: fadeInUp 2200ms ease-out 1100ms forwards;
+    }
+    .element-band .glyph {
+      width: clamp(34px, 7.2vw, 52px);
+      height: auto;
+      display: block;
+      opacity: 0.34;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.65)) saturate(0.55) brightness(0.82);
+      transition: opacity 1800ms ease-out, filter 1800ms ease-out;
+    }
+    html[data-season="spring"] .element-band .glyph[data-season="spring"],
+    html[data-season="summer"] .element-band .glyph[data-season="summer"],
+    html[data-season="autumn"] .element-band .glyph[data-season="autumn"],
+    html[data-season="winter"] .element-band .glyph[data-season="winter"] {
+      opacity: 1;
+      filter:
+        drop-shadow(0 0 12px rgba(243, 176, 92, 0.42))
+        drop-shadow(0 2px 4px rgba(0,0,0,0.55))
+        saturate(1.08) brightness(1.04);
     }
 
-    .mushroom {
-      position: relative;
-      width: 34px;
-      height: 38px;
-    }
-
-    .mushroom.small { width: 24px; height: 29px; opacity: .82; }
-    .mushroom.tall { width: 42px; height: 48px; }
-
-    .cap {
-      position: absolute;
+    /* Seasonal particles */
+    .particles {
+      position: fixed;
+      bottom: 0;
       left: 0;
       right: 0;
-      top: 0;
-      height: 20px;
-      border-radius: 22px 22px 8px 8px;
-      background: radial-gradient(circle at 28% 35%, rgba(255,255,255,.95) 0 2px, transparent 3px), radial-gradient(circle at 66% 38%, rgba(255,255,255,.8) 0 2px, transparent 3px), linear-gradient(135deg, #ec6fff, #6ddcff 62%, #ffd979);
-      box-shadow: 0 0 18px rgba(245,166,255,.55), inset 0 -6px 10px rgba(8, 11, 43, .28);
+      height: 60vh;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
     }
-
-    .stem {
+    .particle {
       position: absolute;
-      width: 12px;
-      height: 24px;
-      left: 50%;
-      top: 15px;
-      transform: translateX(-50%);
-      border-radius: 8px 8px 5px 5px;
-      background: linear-gradient(#fff8ee, #d8c5ff);
-      box-shadow: 0 0 10px rgba(216,197,255,.36);
+      animation: drift linear infinite;
+      will-change: transform;
     }
-
-    .mushroom-glow {
-      position: absolute;
-      left: -20px;
-      right: -28px;
-      bottom: -12px;
-      height: 28px;
+    .particle.leaf {
+      width: 8px; height: 8px;
+      background: radial-gradient(ellipse at 30% 30%, #c87844 0%, #8b4520 70%, transparent 100%);
+      border-radius: 50% 0 50% 0;
+      opacity: 0.6;
+      filter: blur(0.3px);
+    }
+    .particle.petal {
+      width: 6px; height: 7px;
+      background: radial-gradient(ellipse at 40% 30%, rgba(245, 220, 220, 0.9), rgba(220, 200, 210, 0.5));
+      border-radius: 50% 50% 50% 0;
+      opacity: 0.55;
+    }
+    .particle.mote {
+      width: 3px; height: 3px;
+      background: var(--amber-warm);
       border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(103, 215, 255, .24), transparent 68%);
-      animation: mushroomGlow 3.8s ease-in-out infinite alternate;
+      box-shadow: 0 0 6px 1px var(--amber-glow);
+      opacity: 0.65;
+    }
+    .particle.snow {
+      width: 4px; height: 4px;
+      background: rgba(232, 230, 224, 0.85);
+      border-radius: 50%;
+      box-shadow: 0 0 4px 1px rgba(232, 230, 224, 0.3);
+      opacity: 0.7;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0, 60vh) rotate(0deg); }
+      100% { transform: translate(var(--dx, 30px), -10vh) rotate(var(--rot, 180deg)); }
+    }
+    @keyframes snowfall {
+      0%   { transform: translate(0, -10vh) rotate(0deg); }
+      100% { transform: translate(var(--dx, 20px), 60vh) rotate(var(--rot, 90deg)); }
+    }
+    .particle.snow { animation-name: snowfall; }
+
+    /* Candlelight seam — steady warmth (doors ajar) with subtle flicker */
+    .door-seam {
+      position: fixed;
+      left: 50%;
+      top: 60%;
+      transform: translate(-50%, -50%);
+      width: 14vw;
+      height: 22vh;
+      max-width: 70px;
+      max-height: 140px;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(ellipse at center,
+        rgba(243, 176, 92, 0.55) 0%,
+        rgba(243, 176, 92, 0.22) 35%,
+        rgba(243, 176, 92, 0) 70%);
+      filter: blur(8px);
+      animation: flicker 7s ease-in-out infinite;
+      mix-blend-mode: screen;
     }
 
-    @keyframes fairyHover {
-      0% { transform: translate3d(0, 0, 0) rotate(-3deg); opacity: .72; }
-      50% { transform: translate3d(-9px, -12px, 0) rotate(4deg); opacity: .96; }
-      100% { transform: translate3d(7px, 6px, 0) rotate(-2deg); opacity: .82; }
+    @keyframes flicker {
+      0%, 100% { opacity: 0.75; transform: translate(-50%, -50%) scale(1); }
+      40%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.04); }
+      55%      { opacity: 0.7;  transform: translate(-50%, -50%) scale(1.02); }
+      75%      { opacity: 0.9;  transform: translate(-50%, -50%) scale(1.06); }
     }
 
-    @keyframes mushroomGlow {
-      from { filter: drop-shadow(0 0 10px rgba(103, 215, 255, .36)); opacity: .74; }
-      to { filter: drop-shadow(0 0 22px rgba(245, 166, 255, .68)); opacity: .96; }
+    .stage {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100vh;
+      height: 100dvh;
+      width: 100%;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    header.wordmark {
+      padding: 28px 24px 0;
+      text-align: center;
+      opacity: 0;
+      animation: fadeInDown 1800ms ease-out 400ms forwards;
+    }
+    .wordmark-text {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(13px, 3.4vw, 16px);
+      letter-spacing: var(--tracking-wordmark);
+      text-transform: uppercase;
+      color: var(--ink-cream);
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+      padding-left: var(--tracking-wordmark);
+    }
+
+    .threshold-foot {
+      padding: 0 28px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin-top: auto;
+    }
+
+    .phase-name {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(12px, 3vw, 14px);
+      letter-spacing: var(--tracking-phase);
+      text-transform: uppercase;
+      color: var(--ink-cream);
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+      padding-left: var(--tracking-phase);
+      margin: 0 0 18px;
+      opacity: 0;
+      animation: fadeInUp 1600ms ease-out 1000ms forwards;
+    }
+
+    .phase-line {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(17px, 4.6vw, 22px);
+      line-height: 1.55;
+      color: var(--ink-cream);
+      text-align: center;
+      max-width: 32ch;
+      margin: 0 0 36px;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+      opacity: 0;
+      animation: fadeInUp 1800ms ease-out 1300ms forwards;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 360px;
+      opacity: 0;
+      animation: fadeInUp 1800ms ease-out 1700ms forwards;
+    }
+
+    .door-button {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(15px, 4vw, 17px);
+      letter-spacing: 0.04em;
+      color: var(--ink-cream);
+      background: rgba(7, 7, 12, 0.42);
+      border: 1px solid rgba(232, 220, 196, 0.4);
+      border-radius: 2px;
+      padding: 16px 28px;
+      width: 100%;
+      cursor: pointer;
+      transition: border-color 280ms ease, background 280ms ease, color 280ms ease, transform 280ms ease;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+    }
+    .door-button:hover { border-color: var(--amber-warm); color: var(--amber-warm); background: rgba(20, 14, 8, 0.55); }
+    .door-button:focus-visible { outline: none; border-color: var(--amber-warm); box-shadow: 0 0 0 2px var(--amber-glow); }
+    .door-button:active { transform: translateY(1px); }
+
+    .door-hotspot {
+      position: fixed;
+      left: 50%;
+      top: 60%;
+      transform: translate(-50%, -50%);
+      width: 50vw;
+      height: 38vh;
+      max-width: 280px;
+      max-height: 360px;
+      z-index: 2;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    .door-hotspot:focus-visible { outline: 1px dashed var(--amber-glow); outline-offset: 4px; }
+
+    .name-input-wrap { display: none; flex-direction: column; gap: 14px; width: 100%; max-width: 360px; }
+    .name-input-wrap.active { display: flex; animation: fadeInUp 600ms ease-out forwards; }
+    .actions.naming { display: none; }
+
+    .name-input {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(17px, 4.6vw, 20px);
+      color: var(--ink-cream);
+      background: rgba(7, 7, 12, 0.5);
+      border: none;
+      border-bottom: 1px solid rgba(232, 220, 196, 0.42);
+      border-radius: 0;
+      padding: 14px 8px;
+      width: 100%;
+      text-align: center;
+      caret-color: var(--amber-warm);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      transition: border-color 280ms ease;
+    }
+    .name-input:focus { outline: none; border-bottom-color: var(--amber-warm); }
+    .name-input::placeholder { color: var(--ink-faint); font-style: italic; }
+
+    .name-actions { display: flex; gap: 12px; }
+    .name-actions .door-button { padding: 14px 20px; font-size: clamp(14px, 3.8vw, 16px); }
+    .name-actions .ghost { background: transparent; border-color: rgba(232, 220, 196, 0.22); color: var(--ink-muted); }
+
+    .crossing-bloom {
+      position: fixed;
+      left: 50%;
+      top: 60%;
+      transform: translate(-50%, -50%);
+      width: 1px;
+      height: 1px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 220, 160, 0.95) 0%, rgba(243, 176, 92, 0.6) 30%, rgba(243, 176, 92, 0) 70%);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 4;
+      filter: blur(2px);
+    }
+    body.crossing .crossing-bloom { animation: bloom 1600ms cubic-bezier(0.5, 0, 0.5, 1) forwards; }
+    body.crossing .threshold-image { transform: scale(1.06); filter: brightness(1.15); }
+    body.crossing .stage > *,
+    body.crossing .element-band,
+    body.crossing .window-glow,
+    body.crossing .particles { opacity: 0; transition: opacity 600ms ease-out; }
+    body.crossing .door-seam { opacity: 0; transition: opacity 400ms ease-out; }
+
+    @keyframes bloom {
+      0%   { width: 1px; height: 1px; opacity: 0; }
+      30%  { width: 80vw; height: 80vh; opacity: 1; }
+      70%  { width: 220vw; height: 220vh; opacity: 1; }
+      100% { width: 320vw; height: 320vh; opacity: 1; background: radial-gradient(circle, rgba(7,7,12,1) 60%, rgba(243, 176, 92, 0.4) 100%); }
+    }
+
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp   { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (min-width: 720px) {
+      .threshold-image { background-position: center 36%; }
+      .window-glow { top: 18%; width: min(42vw, 380px); }
+      .element-band { top: 38%; gap: 32px; }
+      .door-seam { max-width: 80px; max-height: 160px; top: 58%; }
+      .door-hotspot { top: 58%; }
+      .threshold-foot { padding-bottom: 56px; }
+      .phase-line { max-width: 38ch; }
+    }
+
+    @media (min-width: 1024px) {
+      .threshold-image { background-position: center 34%; }
+      .window-glow { top: 16%; width: min(28vw, 400px); }
+      .element-band { top: 36%; gap: 36px; }
+      .door-seam { max-width: 90px; max-height: 180px; top: 56%; }
+      .door-hotspot { top: 56%; }
+      header.wordmark { padding-top: 40px; }
+      .threshold-foot { padding-bottom: 72px; }
+    }
+
+    @media (min-aspect-ratio: 16/10) {
+      .threshold-image { background-position: center 28%; }
+      .window-glow { top: 22%; }
+      .element-band { top: 42%; }
+      .door-seam { top: 62%; }
+      .door-hotspot { top: 62%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .aurora, .mist, .firefly, .fairy, .mushroom-glow { animation: none; }
-    }
-
-    footer {
-      text-align: center;
-      font-family: system-ui, sans-serif;
-      color: rgba(255,248,238,.68);
-      margin: 22px 0 0;
-      font-size: .9rem;
+      .door-seam, .window-glow, .particle { animation: none !important; }
+      .particle { display: none; }
+      .threshold-image, .stage > *, .phase-name, .phase-line, .actions, header.wordmark, .window-glow, .element-band {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+      }
+      .window-glow, .element-band { transform: translate(-50%, -50%) !important; }
+      .door-seam { transform: translate(-50%, -50%) !important; opacity: 0.7 !important; }
+      header.wordmark, .threshold-foot, .stage > * { transform: none !important; }
+      body.crossing .crossing-bloom { animation: bloomReduced 800ms ease-out forwards; }
+      @keyframes bloomReduced {
+        from { opacity: 0; }
+        to   { opacity: 1; width: 320vw; height: 320vh; background: rgba(7,7,12,1); }
+      }
     }
   </style>
 </head>
 <body>
-  <div class="ambience" aria-hidden="true">
-    <div class="aurora one"></div>
-    <div class="aurora two"></div>
-    <div class="aurora three"></div>
-    <div class="mist"></div>
-    <span class="firefly" style="--left: 8%; --top: 18%; --x: 42px; --y: -55px; --duration: 7s; --delay: -1s;"></span>
-    <span class="firefly" style="--left: 18%; --top: 72%; --x: -34px; --y: -80px; --duration: 9s; --delay: -4s;"></span>
-    <span class="firefly" style="--left: 32%; --top: 28%; --x: 68px; --y: 36px; --duration: 8s; --delay: -2s;"></span>
-    <span class="firefly" style="--left: 54%; --top: 14%; --x: -80px; --y: 52px; --duration: 10s; --delay: -6s;"></span>
-    <span class="firefly" style="--left: 72%; --top: 66%; --x: 48px; --y: -88px; --duration: 8.5s; --delay: -3s;"></span>
-    <span class="firefly" style="--left: 88%; --top: 34%; --x: -58px; --y: 72px; --duration: 11s; --delay: -7s;"></span>
-    <span class="firefly" style="--left: 44%; --top: 82%; --x: 72px; --y: -46px; --duration: 9.5s; --delay: -5s;"></span>
-    <span class="firefly" style="--left: 94%; --top: 82%; --x: -92px; --y: -64px; --duration: 12s; --delay: -9s;"></span>
+  <div class="threshold-image" aria-hidden="true"></div>
+  <div class="gradient-top" aria-hidden="true"></div>
+  <div class="gradient-bottom" aria-hidden="true"></div>
+
+  <div class="window-glow" id="window-glow" aria-hidden="true"></div>
+
+  <div class="element-band" aria-label="The four elements held by the threshold">
+    <img class="glyph" data-season="spring" src="images/glyph_spring_air.jpg" alt="The Whispering Current — Air, Spring" />
+    <img class="glyph" data-season="summer" src="images/glyph_summer_fire.jpg" alt="The Everflame Mark — Fire, Summer" />
+    <img class="glyph" data-season="autumn" src="images/glyph_autumn_earth.jpg" alt="The Rooted Remnant — Earth, Autumn" />
+    <img class="glyph" data-season="winter" src="images/glyph_winter_water.jpg" alt="The Veilborn Depths — Water, Winter" />
   </div>
-  <div class="hidden-magic" aria-hidden="true">
-    <div class="fairy">🧚</div>
-    <div class="mushroom-patch">
-      <div class="mushroom small"><span class="cap"></span><span class="stem"></span></div>
-      <div class="mushroom tall"><span class="cap"></span><span class="stem"></span></div>
-      <div class="mushroom"><span class="cap"></span><span class="stem"></span></div>
-      <div class="mushroom-glow"></div>
-    </div>
-  </div>
-  <main class="wrap">
-    <header>
-      <div class="crest">A</div>
-      <div class="eyebrow">Aetherwood Retreat Kitchen</div>
-      <h1>Aetherwood<br><span class="title-pink">Potion Bar</span></h1>
-      <p class="subtitle">Magical smoothies, blended fresh for your retreat.</p>
+
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <div class="door-seam" aria-hidden="true"></div>
+
+  <button class="door-hotspot" id="door-hotspot" aria-label="Step through the doors"></button>
+
+  <div class="crossing-bloom" aria-hidden="true"></div>
+
+  <div class="stage">
+    <header class="wordmark">
+      <div class="wordmark-text">Aetherwood</div>
     </header>
 
-    <form id="smoothieForm">
-      <div class="section">
-        <h2>Who enters the woodland café?</h2>
-        <input type="text" name="customer" placeholder="The Boy" required />
+    <main class="threshold-foot">
+      <div class="phase-name" id="phase-name">&nbsp;</div>
+      <p class="phase-line" id="phase-line">&nbsp;</p>
+
+      <div class="actions" id="actions">
+        <button type="button" class="door-button" id="btn-cross">cross the threshold</button>
+        <button type="button" class="door-button" id="btn-name">give your name to the doors</button>
       </div>
 
-      <div class="section">
-        <h2>Choose Your Potion</h2>
-        <div class="grid">
-          <label class="card"><input type="radio" name="smoothie" value="Sunfire Nectar" required><span class="emoji">☀️</span><span class="name">Sunfire Nectar</span><span class="desc">Tropical sunshine in a glass. Mango, pineapple, lime and coconut water.</span></label>
-          <label class="card"><input type="radio" name="smoothie" value="Dragon Berry Potion"><span class="emoji">🐉</span><span class="name">Dragon Berry Potion</span><span class="desc">Bursting with berries gathered from the ancient hedgerows of Aetherwood.</span></label>
-          <label class="card"><input type="radio" name="smoothie" value="Moonshadow Brew"><span class="emoji">🌙</span><span class="name">Moonshadow Brew</span><span class="desc">A rich chocolate potion crafted beneath silver moonlight.</span></label>
-          <label class="card"><input type="radio" name="smoothie" value="Forestheart Elixir"><span class="emoji">🌿</span><span class="name">Forestheart Elixir</span><span class="desc">The favourite drink of wandering healers and woodland guardians.</span></label>
-          <label class="card"><input type="radio" name="smoothie" value="Riverstone Renewal"><span class="emoji">💧</span><span class="name">Riverstone Renewal</span><span class="desc">Cleansing and refreshing, like a crystal stream for your insides.</span></label>
-          <label class="card"><input type="radio" name="smoothie" value="Forest Fate"><span class="emoji">✨</span><span class="name">Forest Fate</span><span class="desc">Can’t decide? Let the forest spirits choose your perfect potion.</span></label>
+      <div class="name-input-wrap" id="name-input-wrap">
+        <input
+          type="text"
+          class="name-input"
+          id="name-input"
+          placeholder="your name"
+          autocomplete="off"
+          autocapitalize="words"
+          spellcheck="false"
+          maxlength="40"
+          aria-label="your name" />
+        <div class="name-actions">
+          <button type="button" class="door-button ghost" id="btn-back">step back</button>
+          <button type="button" class="door-button" id="btn-name-cross">cross</button>
         </div>
       </div>
-
-      <div class="section">
-        <h2>Choose Your Base Essence</h2>
-        <div class="grid three">
-          <label class="pill"><input type="radio" name="base" value="Coconut Water Spring" required><span class="icon">💧</span><span class="pill-text"><span class="pill-title">Coconut Water Spring</span><span class="pill-desc">Light, hydrating and pure</span></span></label>
-          <label class="pill"><input type="radio" name="base" value="Almond Moon Milk"><span class="icon">🌰</span><span class="pill-text"><span class="pill-title">Almond Moon Milk</span><span class="pill-desc">Creamy and smooth</span></span></label>
-          <label class="pill"><input type="radio" name="base" value="Woodland Yoghurt Blend"><span class="icon">🥣</span><span class="pill-text"><span class="pill-title">Woodland Yoghurt Blend</span><span class="pill-desc">Silky and nourishing</span></span></label>
-          <label class="pill"><input type="radio" name="base" value="Fresh Juice Potion"><span class="icon">🍊</span><span class="pill-text"><span class="pill-title">Fresh Juice Potion</span><span class="pill-desc">Bursting with natural goodness</span></span></label>
-          <label class="pill"><input type="radio" name="base" value="Whatever Ma Recommends"><span class="icon">🪄</span><span class="pill-text"><span class="pill-title">Whatever Ma Recommends</span><span class="pill-desc">Trust the kitchen magic</span></span></label>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Add Enchantments</h2>
-        <div class="grid three">
-          <label class="pill"><input type="checkbox" name="extras" value="Golden Banana"><span class="icon">🍌</span><span class="pill-text"><span class="pill-title">Golden Banana</span><span class="pill-desc">Sweet and magical</span></span></label>
-          <label class="pill"><input type="checkbox" name="extras" value="Pixie Peanut Butter"><span class="icon">🥜</span><span class="pill-text"><span class="pill-title">Pixie Peanut Butter</span><span class="pill-desc">Smooth and enchanted</span></span></label>
-          <label class="pill"><input type="checkbox" name="extras" value="Chia Stardust"><span class="icon">✨</span><span class="pill-text"><span class="pill-title">Chia Stardust</span><span class="pill-desc">Tiny seeds of energy</span></span></label>
-          <label class="pill"><input type="checkbox" name="extras" value="Cacao Magic"><span class="icon">🍫</span><span class="pill-text"><span class="pill-title">Cacao Magic</span><span class="pill-desc">Rich and chocolatey</span></span></label>
-          <label class="pill"><input type="checkbox" name="extras" value="Forest Honey"><span class="icon">🍯</span><span class="pill-text"><span class="pill-title">Forest Honey</span><span class="pill-desc">From the hives of Aetherwood</span></span></label>
-          <label class="pill"><input type="checkbox" name="extras" value="No Enchantments Today"><span class="icon">🫧</span><span class="pill-text"><span class="pill-title">No Enchantments Today</span><span class="pill-desc">Keep it pure and simple</span></span></label>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Potion Strength</h2>
-        <div class="grid three">
-          <label class="pill"><input type="radio" name="texture" value="Light and Flowing" required><span class="icon">🌊</span><span class="pill-text"><span class="pill-title">Light and Flowing</span><span class="pill-desc">Smooth and easy</span></span></label>
-          <label class="pill"><input type="radio" name="texture" value="Perfectly Balanced"><span class="icon">⚖️</span><span class="pill-text"><span class="pill-title">Perfectly Balanced</span><span class="pill-desc">Just right</span></span></label>
-          <label class="pill"><input type="radio" name="texture" value="Thick as Dragon Breath"><span class="icon">🐲</span><span class="pill-text"><span class="pill-title">Thick as Dragon Breath</span><span class="pill-desc">Creamy, thick and satisfying</span></span></label>
-          <label class="pill"><input type="radio" name="texture" value="Ice Cold and Slushy"><span class="icon">❄️</span><span class="pill-text"><span class="pill-title">Ice Cold and Slushy</span><span class="pill-desc">Extra frosty and refreshing</span></span></label>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Any Special Notes For The Aetherwood Alchemists?</h2>
-        <textarea name="notes" placeholder="Tell us your wishes, allergies, or anything else the forest should know..."></textarea>
-      </div>
-
-      <button type="submit">Place My Potion Order</button>
-      <div class="message" id="message">The forest has received your request. Your potion is being prepared by the Aetherwood Alchemists. 🌿✨</div>
-    </form>
-
-    <footer>Thank you for visiting the Aetherwood Potion Bar. Freshly blended in the borderlands between breakfast and enchantment.</footer>
-  </main>
+    </main>
+  </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLZrR_dl0w6A6YeZo8nmwTJYOb2ZA6vxY2provnruzEDIqlavd7dA1m_ObUdT4Orc/exec";
+    const VESTIBULE_URL = "vestibule.html";
 
-    const form = document.getElementById("smoothieForm");
-    const message = document.getElementById("message");
+    const KEYS = {
+      crossed: "aetherwood.crossed",
+      name: "aetherwood.name",
+      firstCrossing: "aetherwood.firstCrossing"
+    };
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const button = form.querySelector("button");
-      button.disabled = true;
-      button.textContent = "Sending to the Aetherwood Alchemists...";
-
-      const formData = new FormData(form);
-      const extras = formData.getAll("extras").join(", ");
-
-      const order = {
-        customer: formData.get("customer"),
-        smoothie: formData.get("smoothie"),
-        base: formData.get("base"),
-        extras: extras || "None",
-        texture: formData.get("texture"),
-        notes: formData.get("notes") || "None",
-        submittedAt: new Date().toLocaleString()
-      };
-
+    (function checkReturning() {
       try {
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(order)
-        });
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("recross")) {
+          localStorage.removeItem(KEYS.crossed);
+          history.replaceState(null, "", window.location.pathname);
+          return;
+        }
+        const status = localStorage.getItem(KEYS.crossed);
+        if (status === "named" || status === "wanderer") {
+          window.location.replace(VESTIBULE_URL);
+        }
+      } catch (e) {}
+    })();
 
-        form.reset();
-        message.style.display = "block";
-        message.textContent = "The forest has received your request. Your potion is being prepared by the Aetherwood Alchemists. 🌿✨";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } catch (error) {
-        message.style.display = "block";
-        message.textContent = "Hmm, the forest sprites dropped the order. Try again in a moment.";
-      } finally {
-        button.disabled = false;
-        button.textContent = "Place My Potion Order";
+    const REF_NEW_MOON = Date.UTC(2000, 0, 6, 18, 14, 0);
+    const SYNODIC_DAYS = 29.53058867;
+
+    const PHASE_WINDOWS = [
+      { key: "dark",            from: 0.000, to: 0.020 },
+      { key: "new",             from: 0.020, to: 0.060 },
+      { key: "waxing-crescent", from: 0.060, to: 0.225 },
+      { key: "first-quarter",   from: 0.225, to: 0.275 },
+      { key: "waxing-gibbous",  from: 0.275, to: 0.475 },
+      { key: "full",            from: 0.475, to: 0.525 },
+      { key: "waning-gibbous",  from: 0.525, to: 0.725 },
+      { key: "last-quarter",    from: 0.725, to: 0.775 },
+      { key: "waning-crescent", from: 0.775, to: 0.980 },
+      { key: "dark",            from: 0.980, to: 1.000 }
+    ];
+
+    const PHASE_LINES = {
+      "dark":            { name: "Dark Moon",        line: "No light shines. There can be no light without darkness. Balance within yourself." },
+      "new":             { name: "New Moon",         line: "The light is reborn. The Loom has been waiting to hear your dreams. Craft them carefully as you step through the veil." },
+      "waxing-crescent": { name: "Waxing Crescent",  line: "Something within is arising. Take steps to make your dreams become reality. Sing with the Threadsingers of the path you hope to weave." },
+      "first-quarter":   { name: "First Quarter",    line: "Beneath the light of the half moon. Your resolve may be tested. Share your commitment with the Resonance." },
+      "waxing-gibbous":  { name: "Waxing Gibbous",   line: "Blossoming light. There is still time. Believe in your strength. Your thread is weaving its path." },
+      "full":            { name: "Full Moon",        line: "A deep surrender. Your work is done. You are at one with the Resonance." },
+      "waning-gibbous":  { name: "Waning Gibbous",   line: "Reflect in the light. Breathe. Let the threads be illuminated for a while longer." },
+      "last-quarter":    { name: "Last Quarter",     line: "As the light dims. Release the negative thoughts and energy. Let the Loom hold you close one last time in this cycle." },
+      "waning-crescent": { name: "Waning Crescent",  line: "Darkness approaches. Do not fear what the dark holds. The threads of the Resonance won't allow you to lose your way." }
+    };
+
+    // Window glow intensity per phase. Tunable.
+    const PHASE_GLOW = {
+      "dark":            0.05,
+      "new":             0.12,
+      "waxing-crescent": 0.22,
+      "first-quarter":   0.32,
+      "waxing-gibbous":  0.42,
+      "full":            0.55,
+      "waning-gibbous":  0.40,
+      "last-quarter":    0.30,
+      "waning-crescent": 0.20
+    };
+
+    function getPhaseFraction(date = new Date()) {
+      const days = (date.getTime() - REF_NEW_MOON) / 86400000;
+      const pos = ((days % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
+      return pos / SYNODIC_DAYS;
+    }
+    function getPhaseKey(date = new Date()) {
+      const f = getPhaseFraction(date);
+      for (const w of PHASE_WINDOWS) if (f >= w.from && f < w.to) return w.key;
+      return "dark";
+    }
+
+    function detectHemisphere() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        const southern = [
+          "Australia/", "Pacific/Auckland", "Pacific/Chatham", "Pacific/Fiji",
+          "Pacific/Tahiti", "Pacific/Tongatapu", "Pacific/Apia",
+          "America/Argentina", "America/Santiago", "America/Sao_Paulo",
+          "America/La_Paz", "America/Lima", "America/Asuncion",
+          "America/Montevideo", "America/Punta_Arenas",
+          "Africa/Johannesburg", "Africa/Maputo", "Africa/Harare",
+          "Africa/Lusaka", "Africa/Windhoek", "Africa/Gaborone",
+          "Antarctica/", "Indian/Reunion", "Indian/Mauritius"
+        ];
+        return southern.some(s => tz.startsWith(s) || tz.includes(s)) ? "S" : "N";
+      } catch (e) { return "N"; }
+    }
+    function detectSeason(hemisphere) {
+      const m = new Date().getMonth();
+      let s;
+      if (m >= 2 && m <= 4) s = "spring";
+      else if (m >= 5 && m <= 7) s = "summer";
+      else if (m >= 8 && m <= 10) s = "autumn";
+      else s = "winter";
+      if (hemisphere === "S") s = { spring: "autumn", summer: "winter", autumn: "spring", winter: "summer" }[s];
+      return s;
+    }
+
+    function render() {
+      const hem = detectHemisphere();
+      const phaseKey = getPhaseKey();
+      const phase = PHASE_LINES[phaseKey];
+      const season = detectSeason(hem);
+
+      document.getElementById("phase-name").textContent = phase.name;
+      document.getElementById("phase-line").textContent = phase.line;
+      document.documentElement.dataset.phase = phaseKey;
+      document.documentElement.dataset.hemisphere = hem;
+      document.documentElement.dataset.season = season;
+
+      const glowEl = document.getElementById("window-glow");
+      glowEl.style.setProperty("--phase-glow", String(PHASE_GLOW[phaseKey] ?? 0.25));
+      setTimeout(() => glowEl.classList.add("lit"), 800);
+
+      seedParticles(season);
+    }
+
+    function seedParticles(season) {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduced) return;
+
+      const container = document.getElementById("particles");
+      container.innerHTML = "";
+
+      const profiles = {
+        autumn: { cls: "leaf",  count: 14, durMin: 14, durMax: 28, dxRange: 80 },
+        spring: { cls: "petal", count: 16, durMin: 12, durMax: 24, dxRange: 70 },
+        summer: { cls: "mote",  count: 22, durMin: 10, durMax: 22, dxRange: 40 },
+        winter: { cls: "snow",  count: 18, durMin: 16, durMax: 32, dxRange: 50 }
+      };
+      const p = profiles[season] || profiles.autumn;
+
+      for (let i = 0; i < p.count; i++) {
+        const el = document.createElement("div");
+        el.className = `particle ${p.cls}`;
+        el.style.left = `${Math.random() * 100}%`;
+        const duration = p.durMin + Math.random() * (p.durMax - p.durMin);
+        const delay = -Math.random() * duration;
+        el.style.animationDuration = `${duration}s`;
+        el.style.animationDelay = `${delay}s`;
+        el.style.setProperty("--dx", `${(Math.random() - 0.5) * p.dxRange * 2}px`);
+        el.style.setProperty("--rot", `${(Math.random() - 0.5) * 360}deg`);
+        el.style.opacity = String(0.4 + Math.random() * 0.4);
+        container.appendChild(el);
       }
+    }
+
+    render();
+
+    function scheduleMidnightRefresh() {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+      setTimeout(() => { render(); scheduleMidnightRefresh(); }, next - now);
+    }
+    scheduleMidnightRefresh();
+
+    function storeVisitor(status, name = null) {
+      try {
+        localStorage.setItem(KEYS.crossed, status);
+        if (name) localStorage.setItem(KEYS.name, name);
+        if (!localStorage.getItem(KEYS.firstCrossing)) {
+          localStorage.setItem(KEYS.firstCrossing, new Date().toISOString());
+        }
+      } catch (e) {}
+    }
+
+    let crossingInFlight = false;
+    function cross(status, name = null) {
+      if (crossingInFlight) return;
+      crossingInFlight = true;
+      storeVisitor(status, name);
+      document.body.classList.add("crossing");
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const delay = reduced ? 600 : 1500;
+      setTimeout(() => { window.location.href = VESTIBULE_URL; }, delay);
+    }
+
+    const actions = document.getElementById("actions");
+    const nameWrap = document.getElementById("name-input-wrap");
+    const nameInput = document.getElementById("name-input");
+    const btnCross = document.getElementById("btn-cross");
+    const btnName = document.getElementById("btn-name");
+    const btnBack = document.getElementById("btn-back");
+    const btnNameCross = document.getElementById("btn-name-cross");
+    const doorHotspot = document.getElementById("door-hotspot");
+
+    function showNameForm() {
+      actions.classList.add("naming");
+      nameWrap.classList.add("active");
+      setTimeout(() => nameInput.focus(), 50);
+    }
+    function hideNameForm() {
+      actions.classList.remove("naming");
+      nameWrap.classList.remove("active");
+      nameInput.value = "";
+    }
+    function submitName() {
+      const name = nameInput.value.trim();
+      if (!name) { nameInput.focus(); return; }
+      cross("named", name);
+    }
+
+    btnCross.addEventListener("click", () => cross("wanderer"));
+    btnName.addEventListener("click", showNameForm);
+    btnBack.addEventListener("click", hideNameForm);
+    btnNameCross.addEventListener("click", submitName);
+    nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); submitName(); }
+      else if (e.key === "Escape") { hideNameForm(); }
     });
+
+    doorHotspot.addEventListener("click", () => {
+      if (nameWrap.classList.contains("active")) return;
+      cross("wanderer");
+    });
+
+    let scrollArmed = true;
+    function onScrollLikeGesture() {
+      if (!scrollArmed) return;
+      if (nameWrap.classList.contains("active")) return;
+      scrollArmed = false;
+      cross("wanderer");
+    }
+    window.addEventListener("wheel", (e) => {
+      if (e.deltaY > 0) onScrollLikeGesture();
+    }, { passive: true });
+
+    let touchStartY = null;
+    window.addEventListener("touchstart", (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    window.addEventListener("touchmove", (e) => {
+      if (touchStartY === null) return;
+      const delta = touchStartY - e.touches[0].clientY;
+      if (delta > 30) onScrollLikeGesture();
+    }, { passive: true });
   </script>
 </body>
 </html>
