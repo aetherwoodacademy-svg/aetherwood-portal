@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood — The Threshold</title>
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/threshold">
+  <meta property="og:title"       content="Aetherwood — The Threshold">
+  <meta property="og:description" content="The portal is not yet open. Leave word at the threshold to be called when the time comes.">
+  <meta property="og:image"       content="https://aetherwood.au/images/threshold_background.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep:   #07070c;
+      --ink-cream: #e8dcc4;
+      --ink-muted: rgba(232, 220, 196, 0.66);
+      --ink-faint: rgba(232, 220, 196, 0.36);
+      --amber:     #f3b05c;
+      --serif:     "Cormorant Garamond", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      color: var(--ink-cream);
+      font-family: var(--serif);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ——— BACKGROUND ——— */
+    .bg {
+      position: fixed; inset: 0;
+      background: url('images/threshold_background.png') center 38% / cover no-repeat;
+      transform: scale(1.02);
+      z-index: 0;
+    }
+
+    .gradient-top {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 20vh;
+      background: linear-gradient(to bottom, rgba(7,7,12,0.72), transparent);
+      z-index: 1; pointer-events: none;
+    }
+
+    .gradient-bottom {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60vh;
+      background: linear-gradient(to top,
+        rgba(7,7,12,0.97) 0%,
+        rgba(7,7,12,0.82) 35%,
+        rgba(7,7,12,0.48) 68%,
+        transparent 100%);
+      z-index: 1; pointer-events: none;
+    }
+
+    /* ——— CONTENT ——— */
+    .content {
+      position: fixed; inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: max(9vh, 52px);
+      animation: rise 2.8s ease 0.4s both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ——— WORDMARK ——— */
+    .wordmark {
+      font-size: clamp(10px, 1.1vw, 13px);
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 5vh;
+    }
+
+    /* ——— INVOCATION ——— */
+    .invocation {
+      text-align: center;
+      margin-bottom: 5vh;
+    }
+
+    .invocation-line {
+      display: block;
+      font-size: clamp(18px, 2.4vw, 26px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.9;
+      color: rgba(232, 220, 196, 0.92);
+      letter-spacing: 0.04em;
+    }
+
+    .invocation-line.bold {
+      font-style: normal;
+      font-weight: 400;
+      color: var(--ink-cream);
+    }
+
+    /* ——— FORM ——— */
+    .form-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.8vh;
+      width: min(88vw, 380px);
+    }
+
+    .form-field {
+      width: 100%;
+      position: relative;
+    }
+
+    .form-field input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(232, 220, 196, 0.28);
+      padding: 10px 0;
+      font-family: var(--serif);
+      font-size: clamp(15px, 1.6vw, 18px);
+      font-style: italic;
+      color: var(--ink-cream);
+      text-align: center;
+      letter-spacing: 0.06em;
+      outline: none;
+      transition: border-color 0.6s ease;
+    }
+
+    .form-field input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .form-field input:focus {
+      border-bottom-color: rgba(243, 176, 92, 0.6);
+    }
+
+    /* ——— BUTTON ——— */
+    .summons-btn {
+      background: transparent;
+      border: 1px solid rgba(243, 176, 92, 0.38);
+      color: rgba(243, 176, 92, 0.82);
+      font-family: var(--serif);
+      font-size: clamp(11px, 1.2vw, 13px);
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+      padding: 13px 32px;
+      cursor: pointer;
+      transition: border-color 0.6s ease, color 0.6s ease, background 0.6s ease;
+      margin-top: 1vh;
+    }
+
+    .summons-btn:hover {
+      border-color: rgba(243, 176, 92, 0.78);
+      color: rgba(243, 176, 92, 1);
+      background: rgba(243, 176, 92, 0.06);
+    }
+
+    /* ——— THANK YOU STATE ——— */
+    .thankyou {
+      display: none;
+      text-align: center;
+      animation: rise 1.8s ease both;
+    }
+
+    .thankyou.show { display: block; }
+
+    .thankyou-line {
+      display: block;
+      font-size: clamp(16px, 2vw, 22px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 2;
+      color: rgba(232, 220, 196, 0.88);
+      letter-spacing: 0.04em;
+    }
+
+    /* ——— BACK LINK ——— */
+    .back {
+      margin-top: 5vh;
+      font-size: clamp(10px, 1vw, 12px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-decoration: none;
+      transition: color 0.6s ease;
+    }
+
+    .back:hover { color: var(--ink-muted); }
+
+    /* ——— HONEYPOT ——— */
+    .bot-field { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="gradient-top"></div>
+  <div class="gradient-bottom"></div>
+
+  <div class="content">
+
+    <div class="wordmark">Aetherwood</div>
+
+    <div class="invocation" id="invocation">
+      <span class="invocation-line bold">The portal is not yet open.</span>
+      <span class="invocation-line">Leave word at the threshold</span>
+      <span class="invocation-line">To be called when the time comes.</span>
+    </div>
+
+    <!-- Netlify form — detected at deploy time -->
+    <form
+      class="form-wrap"
+      id="thresholdForm"
+      name="threshold-interest"
+      method="POST"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+    >
+      <input type="hidden" name="form-name" value="threshold-interest">
+      <p class="bot-field"><input name="bot-field"></p>
+
+      <div class="form-field">
+        <input
+          type="email"
+          name="email"
+          placeholder="your email"
+          required
+          autocomplete="email"
+        >
+      </div>
+
+      <button type="submit" class="summons-btn">Agree to the summons</button>
+    </form>
+
+    <div class="thankyou" id="thankyou">
+      <span class="thankyou-line">Your word has been heard.</span>
+      <span class="thankyou-line">The Loom knows your name.</span>
+    </div>
+
+    <a class="back" href="lantern.html">← return to the lantern</a>
+
+  </div>
+
+  <script>
+    var form = document.getElementById('thresholdForm');
+    var thankyou = document.getElementById('thankyou');
+    var invocation = document.getElementById('invocation');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var data = new FormData(form);
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(data).toString()
+      })
+      .then(function() {
+        form.style.display = 'none';
+        invocation.style.display = 'none';
+        thankyou.classList.add('show');
+      })
+      .catch(function() {
+        // Fallback: submit normally
+        form.submit();
+      });
+    });
+  </script>
+
+</body>
+</html>
