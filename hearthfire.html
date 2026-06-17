@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood — The Hearthfire</title>
+
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/hearthfire">
+  <meta property="og:title"       content="Aetherwood — The Hearthfire">
+  <meta property="og:description" content="A place to return to. The forest is the room, the fire is always lit.">
+  <meta property="og:image"       content="https://aetherwood.au/images/hearthfire.jpeg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep: #060309;
+      --ink-cream: rgba(235, 215, 165, 0.92);
+      --ink-muted: rgba(210, 185, 130, 0.6);
+      --ink-faint: rgba(190, 165, 110, 0.32);
+      --serif: "Cormorant Garamond", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— BACKGROUND ——— */
+    .bg {
+      position: fixed; inset: 0;
+      /* center 70%: shows the inhabited lower half — fire, table, noticeboard, staircase */
+      background: url('images/hearthfire.jpeg') center 70% / cover no-repeat;
+      z-index: 0;
+      transition: filter 1.4s ease;
+    }
+    .bg.dimmed { filter: brightness(0.5) blur(2px); }
+
+    /* Atmospheric edge vignette — preserves the luminous centre */
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 48%, transparent 35%, rgba(6,3,9,0.52) 68%, rgba(6,3,9,0.82) 100%),
+        linear-gradient(to bottom, rgba(6,3,9,0.48) 0%, transparent 14%, transparent 74%, rgba(6,3,9,0.9) 100%);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('images/everflame.jpeg') center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(1.1);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-1deg)  scaleX(1.02); }
+      82%  { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+
+    /* ——————————————————————————————————————
+       HOTSPOT SYSTEM
+       Invisible zones embedded in the image.
+       Hover / touch reveals an amber glow and a whispered label.
+       Nothing is visible on load — discovery is the mechanic.
+    —————————————————————————————————————— */
+    .hotspot {
+      position: fixed;
+      z-index: 10;
+      cursor: pointer;
+    }
+
+    /* Radial amber glow — echoes the lantern light already in the image */
+    .hs-glow {
+      position: absolute; inset: -40%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(215, 148, 48, 0.32) 0%,
+        rgba(185, 115, 32, 0.12) 50%,
+        transparent 72%);
+      /* idle breath — very faint, slow, matches the living lanterns */
+      animation: glowBreath 6s ease-in-out infinite;
+      transition: opacity 0.8s ease, animation 0s;
+      pointer-events: none;
+    }
+    @keyframes glowBreath {
+      0%, 100% { opacity: 0.08; }
+      50%       { opacity: 0.22; }
+    }
+    .hotspot:hover .hs-glow,
+    .hotspot.active .hs-glow {
+      animation: none;
+      opacity: 1;
+    }
+
+    /* Whispered label */
+    .hs-label {
+      position: absolute;
+      left: 50%; bottom: -2.6em;
+      transform: translateX(-50%);
+      font-size: clamp(9px, 0.82vw, 11px);
+      letter-spacing: 0.48em;
+      text-transform: uppercase;
+      color: rgba(225, 185, 100, 0.82);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.2s;
+      pointer-events: none;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.8);
+    }
+    .hotspot:hover .hs-label,
+    .hotspot.active  .hs-label { opacity: 1; }
+
+    /* ——— NOTICEBOARD — right side of image ——— */
+    #hs-board {
+      right: 2%;
+      top: 28%;
+      width: 20vw;
+      height: 55vh;
+      min-width: 90px;
+      min-height: 140px;
+    }
+
+    /* ——— STAIRCASE — right center, leads to Year Wheel ——— */
+    #hs-stair {
+      right: 26%;
+      top: 12%;
+      width: 16vw;
+      height: 42vh;
+      min-width: 70px;
+      min-height: 110px;
+    }
+
+    /* ——— MEMORY HALL — inscribed wooden piece above the fireplace ——— */
+    #hs-memory {
+      left: 9%;
+      top: 18%;
+      width: 20vw;
+      height: 28vh;
+      min-width: 80px;
+      min-height: 80px;
+    }
+
+    /* ——— FIREPLACE — the fire itself in the grate, lower left ——— */
+    #hs-fire {
+      left: 14%;
+      top: 63%;
+      width: 9vw;
+      height: 19vh;
+      min-width: 50px;
+      min-height: 60px;
+    }
+
+    /* ——————————————————————————————————————
+       NOTICEBOARD PANEL
+       Slides in from the right when the hotspot is engaged.
+       Background image dims behind it.
+    —————————————————————————————————————— */
+    .board-panel {
+      position: fixed;
+      right: 0; top: 0; bottom: 0;
+      width: min(90vw, 380px);
+      z-index: 60;
+      padding: max(9vh, 52px) 28px 8vh 32px;
+      overflow-y: auto;
+      transform: translateX(102%);
+      transition: transform 1s cubic-bezier(0.22, 0.1, 0.18, 1);
+      background:
+        linear-gradient(to left,
+          rgba(6,3,9,0.98) 0%,
+          rgba(9,5,13,0.95) 60%,
+          rgba(12,7,16,0.88) 100%);
+      /* subtle right-edge border */
+      border-left: 1px solid rgba(160, 120, 55, 0.12);
+    }
+    .board-panel.open { transform: translateX(0); }
+
+    /* Tap-anywhere overlay to close */
+    .board-scrim {
+      position: fixed; inset: 0; z-index: 55;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .board-scrim.open { opacity: 1; pointer-events: all; cursor: pointer; }
+
+    .board-close {
+      position: absolute; top: max(4vh, 22px); right: 22px;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: 18px; line-height: 1;
+      color: rgba(190, 155, 85, 0.4);
+      padding: 8px;
+      transition: color 0.5s ease;
+    }
+    .board-close:hover { color: rgba(220, 185, 110, 0.85); }
+
+    .board-label {
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(185, 150, 80, 0.38);
+      margin-bottom: 5vh;
+      display: block;
+    }
+
+    /* ——— NOTES ——— */
+    .notes {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .note {
+      position: relative;
+      padding: 14px 16px 18px;
+      border-left: 1px solid rgba(170, 130, 55, 0.18);
+      background: rgba(22, 13, 4, 0.6);
+    }
+    /* pin */
+    .note::before {
+      content: '';
+      position: absolute;
+      top: -5px; left: 20px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(185, 140, 52, 0.48);
+      box-shadow: 0 0 5px rgba(195, 148, 55, 0.3);
+    }
+
+    .note-body {
+      display: block;
+      font-size: clamp(13px, 1.35vw, 16px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.88;
+      color: rgba(228, 205, 152, 0.84);
+      letter-spacing: 0.02em;
+    }
+
+    .note-sig {
+      display: block;
+      margin-top: 9px;
+      font-size: clamp(8px, 0.78vw, 10px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(165, 135, 75, 0.36);
+    }
+
+    /* Ghost notes — coming-soon rooms, more spectral */
+    .note.ghost { background: rgba(16, 9, 3, 0.4); }
+    .note.ghost .note-body {
+      font-style: normal;
+      font-size: clamp(9px, 0.88vw, 11px);
+      letter-spacing: 0.1em;
+      color: rgba(185, 155, 100, 0.35);
+    }
+
+    /* ——— SEALED WHISPER — shown when a locked hotspot is clicked ——— */
+    .sealed-whisper {
+      position: fixed;
+      left: 50%; bottom: 12vh;
+      transform: translateX(-50%);
+      z-index: 80;
+      font-size: clamp(11px, 1.1vw, 13px);
+      font-style: italic;
+      letter-spacing: 0.08em;
+      color: rgba(195, 165, 100, 0.65);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      white-space: nowrap;
+    }
+    .sealed-whisper.show { opacity: 1; }
+
+    /* ——— SUBSCRIBE ——— */
+    .subscribe-wrap {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(160, 125, 55, 0.14);
+    }
+
+    .subscribe-label {
+      display: block;
+      font-size: clamp(8px, 0.8vw, 10px);
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: rgba(185, 150, 80, 0.38);
+      margin-bottom: 16px;
+    }
+
+    .subscribe-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .subscribe-form input[type="email"] {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(200, 165, 80, 0.22);
+      padding: 8px 0;
+      font-family: var(--serif);
+      font-size: clamp(13px, 1.3vw, 15px);
+      font-style: italic;
+      color: var(--ink-cream);
+      letter-spacing: 0.04em;
+      outline: none;
+      transition: border-color 0.5s ease;
+    }
+    .subscribe-form input[type="email"]::placeholder { color: var(--ink-faint); }
+    .subscribe-form input[type="email"]:focus { border-bottom-color: rgba(220, 175, 80, 0.5); }
+
+    .subscribe-form button {
+      align-self: flex-start;
+      background: transparent;
+      border: 1px solid rgba(200, 160, 65, 0.28);
+      color: rgba(215, 175, 90, 0.65);
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: border-color 0.5s ease, color 0.5s ease;
+    }
+    .subscribe-form button:hover {
+      border-color: rgba(215, 175, 85, 0.6);
+      color: rgba(230, 195, 110, 0.9);
+    }
+
+    .subscribe-thanks {
+      display: none;
+      font-size: clamp(12px, 1.2vw, 14px);
+      font-style: italic;
+      color: rgba(215, 185, 115, 0.65);
+      letter-spacing: 0.04em;
+      line-height: 1.8;
+    }
+    .subscribe-thanks.show { display: block; }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    /* Dark atmospheric bloom — no box, just readable shadow */
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%,
+        rgba(6,3,9,0.82) 0%,
+        rgba(6,3,9,0.5) 45%,
+        transparent 78%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .ef-section-label {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(175, 140, 72, 0.35);
+      margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block;
+      background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(220, 180, 95, 0.72);
+      cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease;
+      white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160, 125, 55, 0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim {
+      position: fixed; inset: 0;
+      z-index: 199; pointer-events: none;
+    }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——— WORDMARK ——— */
+    .wordmark {
+      position: fixed;
+      bottom: max(2.5vh, 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: rgba(155, 130, 82, 0.18);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ——— MOBILE ——— */
+    @media (max-width: 600px) {
+      #hs-board {
+        right: 2%;
+        top: 32%;
+        width: 32vw;
+        height: 28vh;
+      }
+      .board-panel { width: 92vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="fadeCover"></div>
+
+  <div class="bg" id="bg"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- Everflame — always alive, opens the navigation menu -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+
+  <!-- Everflame menu -->
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- ——— FIREPLACE — the fire itself, lower left ——— -->
+  <div class="hotspot" id="hs-fire" role="button" tabindex="0" aria-label="The Hearthfire">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the hearthfire</span>
+  </div>
+
+  <!-- ——— STAIRCASE — Year Wheel, sealed ——— -->
+  <div class="hotspot" id="hs-stair" role="button" tabindex="0" aria-label="The Year Wheel">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the year wheel</span>
+  </div>
+
+  <!-- ——— MEMORY HALL — center, sealed ——— -->
+  <div class="hotspot" id="hs-memory" role="button" tabindex="0" aria-label="The Memory Hall">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the memory hall</span>
+  </div>
+
+  <!-- ——— NOTICEBOARD HOTSPOT ——— -->
+  <div class="hotspot" id="hs-board" role="button" tabindex="0" aria-label="The noticeboard">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the noticeboard</span>
+  </div>
+
+  <!-- Sealed door whisper -->
+  <div class="sealed-whisper" id="sealedWhisper"></div>
+
+  <!-- ——— NOTICEBOARD PANEL ——— -->
+  <div class="board-scrim" id="boardScrim"></div>
+  <div class="board-panel" id="boardPanel" role="dialog" aria-modal="true" aria-label="The noticeboard">
+    <button class="board-close" id="boardClose" aria-label="Close">×</button>
+    <span class="board-label">Notices</span>
+
+    <div class="notes">
+
+      <!-- ——— YOUR NOTES GO HERE ———
+           Replace the note-body text with your voice.
+           Copy the <div class="note">…</div> block to add more.
+      -->
+      <div class="note">
+        <span class="note-body">From my heart to yours, stay a while, rest your feet by the fire, give yourself time to see where you wish to travel to next.</span>
+        <span class="note-sig">— the keeper</span>
+      </div>
+
+      <div class="note">
+        <span class="note-body">Has anyone seen my grimoire? There's nothing too important that I can't remember, but I need it for submission this week. Contact Lyra, room 5. Reward available. Bribes will not be considered.</span>
+        <span class="note-sig">— Lyra</span>
+      </div>
+
+      <div class="note">
+        <span class="note-body">Students, I'd like you all to be gracious in your welcome of an esteemed professor, Dr. Eirik Ward. He will be engaging with the archives for the foreseeable future, but is an expert on folklore and lost languages. If you happen upon Professor Eirik near the hearthfire, be sure to introduce yourself.</span>
+        <span class="note-sig">— Draven</span>
+      </div>
+
+      <!-- Coming-soon rooms — replace or remove as rooms open -->
+      <div class="note ghost">
+        <span class="note-body">The Whispered Archives</span>
+        <span class="note-sig">— coming</span>
+      </div>
+
+      <div class="note ghost">
+        <span class="note-body">The Resonance Chamber</span>
+        <span class="note-sig">— coming</span>
+      </div>
+
+      <div class="note ghost">
+        <span class="note-body">Leave word at the board</span>
+        <span class="note-sig">— coming soon</span>
+      </div>
+
+    </div>
+
+    <!-- SUBSCRIBE -->
+    <div class="subscribe-wrap">
+      <span class="subscribe-label">receive word when the board is updated</span>
+      <form class="subscribe-form" id="subscribeForm" name="hearthfire-updates" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="hearthfire-updates">
+        <p style="display:none"><input name="bot-field"></p>
+        <input type="email" name="email" placeholder="your email" required autocomplete="email">
+        <button type="submit">leave word</button>
+      </form>
+      <div class="subscribe-thanks" id="subscribeThanks">
+        Word received. The board will find you.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="wordmark">Aetherwood</div>
+
+  <script>
+    /* ——— ALL ELEMENT REFERENCES ——— */
+    var cover        = document.getElementById('fadeCover');
+    var bg           = document.getElementById('bg');
+    var hs           = document.getElementById('hs-board');
+    var hsStair      = document.getElementById('hs-stair');
+    var hsMemory     = document.getElementById('hs-memory');
+    var hsFire       = document.getElementById('hs-fire');
+    var panel        = document.getElementById('boardPanel');
+    var scrim        = document.getElementById('boardScrim');
+    var whisper      = document.getElementById('sealedWhisper');
+    var subForm      = document.getElementById('subscribeForm');
+    var subThanks    = document.getElementById('subscribeThanks');
+    var efMenu       = document.getElementById('efMenu');
+    var efScrim      = document.getElementById('efScrim');
+    var efTrail      = document.getElementById('efTrail');
+    var efTrailList  = document.getElementById('efTrailList');
+    var whisperTimer = null;
+    var efOpen       = false;
+
+    /* ——— FADE IN ——— */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        cover.style.opacity = '0';
+        setTimeout(function(){ cover.style.display = 'none'; }, 2600);
+      });
+    });
+
+    /* ——— FADE NAVIGATION ——— */
+    function navigateTo(href){
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        cover.style.opacity = '1';
+        setTimeout(function(){ window.location.href = href; }, 1500);
+      }); });
+    }
+
+    /* ——— TRAIL LOGGING ——— */
+    function logTrail(name, href) {
+      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 5) trail = trail.slice(0, 5);
+      localStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the hearthfire', 'hearthfire.html');
+
+    /* ——— EVERFLAME MENU ——— */
+    function buildTrail() {
+      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'hearthfire.html'; });
+      if (trail.length === 0) {
+        efTrail.style.display = 'none';
+        return;
+      }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(e){
+        var li = document.createElement('li');
+        li.className = 'ef-item';
+        var btn = document.createElement('button');
+        btn.className = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn);
+        efTrailList.appendChild(li);
+      });
+    }
+
+    function openEfMenu() {
+      buildTrail();
+      efMenu.classList.add('open');
+      efScrim.classList.add('open');
+      efOpen = true;
+    }
+    function closeEfMenu() {
+      efMenu.classList.remove('open');
+      efScrim.classList.remove('open');
+      efOpen = false;
+    }
+
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function(){ efOpen ? closeEfMenu() : openEfMenu(); });
+    ef.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efCorridor').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('vestibule.html?walk=1');
+    });
+    document.getElementById('efLeave').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('threshold.html');
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape'){ closeEfMenu(); closeBoard(); }
+    });
+
+    /* ——— NOTICEBOARD ——— */
+    function openBoard(){
+      bg.classList.add('dimmed');
+      panel.classList.add('open');
+      scrim.classList.add('open');
+    }
+    function closeBoard(){
+      bg.classList.remove('dimmed');
+      panel.classList.remove('open');
+      scrim.classList.remove('open');
+    }
+
+    hs.addEventListener('click', openBoard);
+    hs.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openBoard(); }
+    });
+    scrim.addEventListener('click', closeBoard);
+    document.getElementById('boardClose').addEventListener('click', closeBoard);
+
+    /* ——— SEALED WHISPER ——— */
+    function showWhisper(text){
+      whisper.textContent = text;
+      whisper.classList.add('show');
+      clearTimeout(whisperTimer);
+      whisperTimer = setTimeout(function(){ whisper.classList.remove('show'); }, 3500);
+    }
+
+    /* ——— YEAR WHEEL (staircase) — sealed ——— */
+    hsStair.addEventListener('click', function(){
+      showWhisper('The Year Wheel turns in its own time. It is not yet open.');
+    });
+    hsStair.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsStair.click(); }
+    });
+
+    /* ——— MEMORY HALL — sealed ——— */
+    hsMemory.addEventListener('click', function(){
+      showWhisper('The Memory Hall holds what has been. Its door will open when the time is right.');
+    });
+    hsMemory.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsMemory.click(); }
+    });
+
+    /* ——— FIREPLACE — interactive ——— */
+    hsFire.addEventListener('click', function(){
+      showWhisper('The fire is always burning for those who seek its warmth.');
+    });
+    hsFire.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsFire.click(); }
+    });
+
+    /* ——— TOUCH FEEDBACK ——— */
+    [hs, hsStair, hsMemory, hsFire].forEach(function(el){
+      el.addEventListener('touchstart', function(){ el.classList.add('active'); }, {passive:true});
+      el.addEventListener('touchend', function(){ setTimeout(function(){ el.classList.remove('active'); }, 800); });
+    });
+
+    /* ——— SUBSCRIBE FORM ——— */
+    subForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(subForm)).toString()
+      }).then(function(){
+        subForm.style.display = 'none';
+        subThanks.classList.add('show');
+      }).catch(function(){ subForm.submit(); });
+    });
+  </script>
+
+</body>
+</html>
