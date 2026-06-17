@@ -300,9 +300,12 @@ html,body{width:100%;height:100%;background:var(--indigo-deep);overflow:hidden;f
   'use strict';
 
   /* ——— RETURNING VISITOR — hearthfire is home ——— */
-  /* ?walk=1 means they chose to return to the corridor from the hearthfire */
-  var wantsToWalk = new URLSearchParams(window.location.search).get('walk');
-  if (localStorage.getItem('aetherwood_visited') && !wantsToWalk) {
+  /* ?walk=1  = returning from hearthfire, enter at tree end */
+  /* ?from=threshold = entering via the Threshold, always walk from the start */
+  var params        = new URLSearchParams(window.location.search);
+  var wantsToWalk   = params.get('walk');
+  var fromThreshold = params.get('from') === 'threshold';
+  if (localStorage.getItem('aetherwood_visited') && !wantsToWalk && !fromThreshold) {
     window.location.replace('hearthfire.html');
     return;
   }
