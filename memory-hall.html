@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Memory Hall · Aetherwood</title>
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
+  <style>
+    /* ——————————————————————————————————————
+       FONTS & BASE
+    —————————————————————————————————————— */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --caps:  'Cinzel', serif;
+      --bg-deep:   #060a12;
+      --pearl:     #ecebe4;
+      --silver:    #c8cdd2;
+      --birch:     #aeb6bb;
+      --ember:     #f4be6e;
+      --ember-hot: #ffd79a;
+      --indigo:    #1a2438;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+      color: var(--pearl);
+    }
+
+    /* ——————————————————————————————————————
+       BACKGROUND — the silver birch grove
+       On Cloudinary (7 Jul 2026 confirmed). Renders well as-is, no portrait
+       crop needed here.
+    —————————————————————————————————————— */
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733043/Memory_hall_f1mtnx.png') center 45% / cover no-repeat;
+      transform: scale(1.04);
+      transition: filter 1.2s ease, transform 1.2s ease;
+    }
+    /* Grove brightens as candles accumulate — set via JS */
+    #bg.warmed { filter: brightness(1.12) saturate(1.06); }
+
+    /* Drifting silver mist */
+    #mist {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 30% 70%, rgba(200,210,225,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 72% 62%, rgba(200,210,225,0.05) 0%, transparent 50%);
+      animation: mistBreath 11s ease-in-out infinite;
+    }
+    @keyframes mistBreath { 0%,100%{opacity:.55} 50%{opacity:1} }
+
+    /* Vignette */
+    #vignette {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 44%, transparent 30%, rgba(4,7,14,0.45) 66%, rgba(4,7,14,0.86) 100%),
+        linear-gradient(to bottom, rgba(4,7,14,0.55) 0%, transparent 24%, transparent 66%, rgba(4,7,14,0.92) 100%);
+    }
+
+    /* Floating ember motes */
+    #motes { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+    .mote {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: var(--ember-hot);
+      box-shadow: 0 0 6px 2px rgba(244,190,110,0.55);
+      opacity: 0; animation: moteFloat var(--md,9s) ease-in-out var(--mdl,0s) infinite;
+    }
+    @keyframes moteFloat {
+      0%   { opacity: 0; transform: translateY(0) translateX(0) scale(.7); }
+      20%  { opacity: .9; }
+      80%  { opacity: .7; }
+      100% { opacity: 0; transform: translateY(-70px) translateX(var(--mdx,8px)) scale(1.1); }
+    }
+
+    /* ——————————————————————————————————————
+       DOORWAY — entry transition (the stone archway)
+       On Cloudinary (7 Jul 2026 confirmed).
+    —————————————————————————————————————— */
+    #doorway {
+      position: fixed; inset: 0; z-index: 60;
+      background: #05070d;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 1.6s ease;
+    }
+    #doorway.gone { opacity: 0; pointer-events: none; }
+    #doorway { cursor: pointer; }
+    #doorwayImg {
+      position: absolute; inset: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733057/Memory_hall_doorway_r0nxqa.png') center center / cover no-repeat;
+      filter: brightness(0.84);
+    }
+    /* darker toward the foot of the arch, where the words rest — so they read clearly */
+    #doorwayShade {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 80%, rgba(5,7,13,0.82) 0%, rgba(5,7,13,0.34) 32%, transparent 58%),
+        radial-gradient(ellipse at 50% 46%, transparent 18%, rgba(5,7,13,0.4) 64%, rgba(5,7,13,0.9) 100%);
+    }
+    #doorwayInner {
+      position: relative; z-index: 2; text-align: center;
+      transform: translateY(30vh); padding: 0 1.6rem;
+    }
+    #doorwayWelcome {
+      font-family: var(--serif); font-size: 1.26rem; line-height: 1.62; color: #f4f2ea;
+      max-width: 30rem; margin: 0 auto 1.2rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 2px 26px rgba(0,0,0,0.95);
+      opacity: 0; animation: doorwayFadeIn 2.4s ease forwards .4s;
+    }
+    #doorwayInvocation {
+      font-family: var(--serif); font-style: italic; font-size: 1.18rem; line-height: 1.5;
+      color: var(--ember-hot); max-width: 28rem; margin: 0 auto 2rem; min-height: 1.5em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 2px 20px rgba(0,0,0,0.95);
+      opacity: 0; transition: opacity 1.6s ease;
+    }
+    #doorwayInvocation.show { opacity: .95; }
+    @keyframes doorwayFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    /* not a button — a breathing invitation; the whole archway is the way in */
+    #enterBtn {
+      font-family: var(--serif); font-style: italic; letter-spacing: .08em; font-size: 1.06rem;
+      color: var(--pearl); background: none; border: none; padding: .4rem 1rem; cursor: pointer;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.95); opacity: 0; animation: promptGhost 4.6s ease-in-out 1.8s infinite;
+    }
+    #enterBtn:hover { color: var(--ember-hot); }
+    @keyframes promptGhost { 0%,100% { opacity: .38; } 50% { opacity: .95; } }
+
+    /* ——————————————————————————————————————
+       ROOM TITLE
+    —————————————————————————————————————— */
+    #roomTitle {
+      position: fixed; top: 5.2vh; left: 50%; transform: translateX(-50%);
+      z-index: 8; text-align: center; pointer-events: none;
+      opacity: 0; transition: opacity 2s ease 0.4s;
+    }
+    #roomTitle.show { opacity: 1; }
+    #roomTitle h1 {
+      font-family: var(--caps); font-weight: 300; letter-spacing: .34em;
+      text-transform: uppercase; font-size: 1.5rem; color: var(--pearl);
+      text-shadow: 0 2px 30px rgba(0,0,0,0.8);
+    }
+    #roomTitle p {
+      font-style: italic; font-size: 1.02rem; color: var(--silver);
+      margin-top: .5rem; letter-spacing: .02em;
+    }
+
+    /* ——————————————————————————————————————
+       HOTSPOTS — places in the grove
+    —————————————————————————————————————— */
+    .hotspot {
+      position: fixed; z-index: 6; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      opacity: 0; transition: opacity 1.4s ease;
+    }
+    .hotspot.show { opacity: 1; }
+    /* a small bright point with a slow ripple ring — a placed marker, not a floating moon */
+    .hs-orb {
+      position: relative; width: 15px; height: 15px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,226,172,0.95) 0%, rgba(244,190,110,0.35) 55%, transparent 76%);
+      box-shadow: 0 0 13px 3px rgba(244,190,110,0.4);
+      animation: orbBreath 5s ease-in-out infinite;
+    }
+    .hs-orb::before {
+      content: ''; position: absolute; inset: -8px; border-radius: 50%;
+      border: 1px solid rgba(244,190,110,0.35); animation: ringRipple 5s ease-in-out infinite;
+    }
+    /* the bloom — a soft halo behind the dot that swells and fades, the actual "come find me"
+       glow (the dot alone was too small/subtle to be alluring — Ange, 6 Jul 2026) */
+    .hs-orb::after {
+      content: ''; position: absolute; inset: -60%; border-radius: 50%; z-index: -1; pointer-events: none;
+      background: radial-gradient(circle, rgba(255,214,140,0.62) 0%, rgba(230,175,90,0.3) 45%, transparent 74%);
+      filter: blur(1px); animation: orbGlowBreath 5s ease-in-out infinite;
+    }
+    @keyframes orbBreath { 0%,100%{opacity:.82;transform:scale(1)} 50%{opacity:1;transform:scale(1.18)} }
+    @keyframes orbGlowBreath { 0%,100%{opacity:.4} 50%{opacity:.9} }
+    @keyframes ringRipple { 0%,100%{transform:scale(.85);opacity:.5} 50%{transform:scale(1.55);opacity:0} }
+    .hs-orb.cold { background: radial-gradient(circle, rgba(206,216,230,0.92) 0%, rgba(150,165,190,0.3) 55%, transparent 76%); box-shadow: 0 0 12px 3px rgba(150,170,200,0.32); }
+    .hs-orb.cold::before { border-color: rgba(170,185,210,0.42); }
+    .hs-orb.cold::after { background: radial-gradient(circle, rgba(210,222,240,0.6) 0%, rgba(150,170,200,0.28) 45%, transparent 74%); }
+    .hs-orb.key { background: radial-gradient(circle, rgba(255,212,150,0.92) 0%, rgba(220,170,110,0.3) 55%, transparent 76%); box-shadow: 0 0 12px 3px rgba(220,170,110,0.34); }
+    .hs-orb.key::after { background: radial-gradient(circle, rgba(255,220,160,0.62) 0%, rgba(220,170,110,0.3) 45%, transparent 74%); }
+    /* staggered so the six don't breathe in unison — same idea as Hearthfire/Apothecary (6 Jul 2026) */
+    #hs-wonder .hs-orb, #hs-wonder .hs-orb::before, #hs-wonder .hs-orb::after { animation-delay: 0s; }
+    #hs-hearth .hs-orb, #hs-hearth .hs-orb::before, #hs-hearth .hs-orb::after { animation-delay: 1.4s; }
+    #hs-laughter .hs-orb, #hs-laughter .hs-orb::before, #hs-laughter .hs-orb::after { animation-delay: 2.7s; }
+    #hs-keepers .hs-orb, #hs-keepers .hs-orb::before, #hs-keepers .hs-orb::after { animation-delay: 3.6s; }
+    #hs-legacy .hs-orb, #hs-legacy .hs-orb::before, #hs-legacy .hs-orb::after { animation-delay: 4.8s; }
+    #hs-tribute .hs-orb, #hs-tribute .hs-orb::before, #hs-tribute .hs-orb::after { animation-delay: 6s; }
+    #hs-candle .hs-orb, #hs-candle .hs-orb::before, #hs-candle .hs-orb::after { animation-delay: 5.4s; }
+    /* ——— WANING GIBBOUS — the hall's own phase (Ange's idea, 29 Jun 2026).
+       The constellations burn brighter and a soft line marks the night.
+       Purely additive, the hall stays always open. ——— */
+    body.gibbous-night .hs-orb { filter: brightness(1.4) saturate(1.12); }
+    body.gibbous-night #moonGlow { filter: brightness(1.25); }
+    #gibbousLine {
+      position: fixed; left: 50%; bottom: 3.2vmin; transform: translateX(-50%);
+      z-index: 12; pointer-events: none; text-align: center;
+      font-style: italic; font-size: clamp(12px, 1vw, 14px); letter-spacing: 0.14em;
+      color: rgba(226, 232, 244, 0.72);
+      text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 18px rgba(0,0,0,0.9);
+      opacity: 0; transition: opacity 3s ease;
+      max-width: 92vw;
+    }
+    #gibbousLine.show { opacity: 1; }
+
+    /* labels ghost in softly, italic and unhurried — an invitation, not a command */
+    .hs-label {
+      font-family: var(--serif); font-style: italic; letter-spacing: .03em; font-size: 1.02rem; color: var(--pearl);
+      text-shadow: 0 2px 16px rgba(0,0,0,0.95); white-space: nowrap;
+      opacity: 0; transform: translateY(5px); transition: opacity 1.1s ease, transform 1.1s ease;
+    }
+    .hotspot.show .hs-label { transform: translateY(0); }
+    /* discovery, not clutter — the orb's own ripple is the idle invitation; the name only
+       surfaces on hover, or the touch-equivalent .active flash (6 Jul 2026, portal standard) */
+    .hotspot:hover .hs-label, .hotspot:focus .hs-label, .hotspot.active .hs-label { opacity: 1; }
+    .hotspot:hover .hs-orb { animation-duration: 2.8s; }
+
+    /* The five constellations + the Veil (at the moon) — desktop */
+    #hs-wonder   { left: 20%; top: 42%; }
+    #hs-hearth   { left: 36%; top: 64%; }
+    #hs-laughter { left: 54%; top: 50%; }
+    #hs-keepers  { left: 70%; top: 60%; }
+    #hs-legacy   { left: 85%; top: 40%; }
+    #hs-tribute  { left: 71%; top: 17%; }   /* on the moon */
+    #hs-candle   { left: 46%; top: 78%; }   /* placeholder, not yet calibrated */
+
+    /* mobile: drawn inward so every label fits the portrait */
+    @media (max-width: 700px) {
+      #hs-wonder   { left: 24%; top: 40%; }
+      #hs-hearth   { left: 21.2%; top: 58.9%; }
+      #hs-laughter { left: 50%; top: 50%; }
+      #hs-keepers  { left: 92.6%; top: 51.9%; }
+      #hs-legacy   { left: 78%; top: 40%; }
+      #hs-tribute  { left: 66%; top: 18%; }
+      #hs-candle   { left: 46%; top: 82%; }   /* placeholder, not yet calibrated */
+      .hs-label { font-size: .86rem; }
+    }
+
+    /* a small flash on the candle hotspot's own label when it's just been lit */
+    #candleLabel.pulse { animation: countPulse 1.5s ease-out; }
+    @keyframes countPulse {
+      0%   { text-shadow: 0 1px 10px rgba(0,0,0,0.9); transform: scale(1); }
+      28%  { text-shadow: 0 0 20px rgba(255,205,120,0.95); transform: scale(1.14); color: var(--ember-hot); }
+      100% { text-shadow: 0 1px 10px rgba(0,0,0,0.9); transform: scale(1); }
+    }
+
+    /* ——————————————————————————————————————
+       MANIFESTATION LAYERS — leaves in the branches,
+       flames at the roots. These persist on the visitor's
+       device, so the grove they tend is waiting when they return.
+    —————————————————————————————————————— */
+    #candleLayer { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+    #leafLayer   { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+
+    /* Lighting a candle blooms a breath of warm light, then fades —
+       it lifts the grove's own candlelight rather than drawing a new flame. */
+    .bloom {
+      position: absolute; width: 150px; height: 150px; pointer-events: none;
+      transform: translate(-50%, -50%) scale(.3); border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,210,130,0.5) 0%, rgba(244,170,80,0.16) 42%, transparent 70%);
+      animation: bloom 3s ease-out forwards;
+    }
+    @keyframes bloom {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(.3); }
+      22%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); }
+    }
+    .ember {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%; pointer-events: none;
+      background: var(--ember-hot); box-shadow: 0 0 7px 2px rgba(255,205,120,0.6);
+      animation: emberRise var(--er,2.8s) ease-out forwards;
+    }
+    @keyframes emberRise {
+      0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+      20%  { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-86px) translateX(var(--ex,6px)) scale(.4); }
+    }
+
+    /* A candle that stays lit — small, warm, gathered in the foreground roots.
+       Many small flames read as a gathering; one big one reads as a blob. */
+    .candle-flame {
+      position: absolute; width: 6px; height: 12px; transform-origin: 50% 95%;
+      border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+      background: linear-gradient(to top, rgba(255,160,60,0) 0%, rgba(255,168,72,0.85) 20%, rgba(255,214,140,0.95) 55%, rgba(255,246,214,0.95) 84%, transparent 100%);
+      box-shadow: 0 0 9px 3px rgba(244,180,90,0.32);
+      animation: cflicker var(--cf,2.6s) ease-in-out infinite;
+    }
+    .candle-flame::after {
+      content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+      width: 16px; height: 7px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(244,180,90,0.22), transparent 70%);
+    }
+    .candle-flame.kindling { animation: ckindle 1s ease-out, cflicker var(--cf,2.6s) ease-in-out 1s infinite; }
+    @keyframes cflicker {
+      0%,100% { transform: scaleY(1)    scaleX(1)    rotate(-1deg); opacity: .9; }
+      28%     { transform: scaleY(1.1)  scaleX(0.94) rotate(1.5deg); opacity: 1; }
+      55%     { transform: scaleY(0.95) scaleX(1.05) rotate(-1deg); opacity: .82; }
+      80%     { transform: scaleY(1.06) scaleX(0.97) rotate(1deg); opacity: .96; }
+    }
+    @keyframes ckindle { 0% { transform: scaleY(0) scaleX(.4); opacity: 0; } 65% { transform: scaleY(1.25) scaleX(1.1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1); opacity: .92; } }
+    /* the gathering glows a touch brighter when you reach for it */
+    #candleLayer { transition: filter .8s ease; }
+    #candleLayer.focus { filter: brightness(1.35) saturate(1.1); }
+
+    /* ——————————————————————————————————————
+       RITUAL — the candle & branch acts. Not a form: a hush, a line of
+       light, a single gesture. No boxes, no caps labels, no buttons.
+    —————————————————————————————————————— */
+    .ritual {
+      position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .8s ease;
+      background: radial-gradient(ellipse at 50% 58%, rgba(12,8,4,0.5) 0%, rgba(4,5,10,0.86) 68%);
+    }
+    .ritual.open { opacity: 1; pointer-events: auto; }
+    .ritual-inner { text-align: center; width: min(560px, 86vw); transform: translateY(10px); transition: transform .9s ease; }
+    .ritual.open .ritual-inner { transform: translateY(0); }
+    .ritual-whisper {
+      font-family: var(--serif); font-style: italic; font-size: 1.55rem; line-height: 1.5;
+      color: var(--pearl); opacity: .92; margin-bottom: 2rem; text-shadow: 0 2px 30px rgba(0,0,0,0.85);
+    }
+    .ritual-line, .ritual-area {
+      width: 100%; background: transparent; border: none; outline: none; text-align: center;
+      font-family: var(--serif); font-size: 1.4rem; letter-spacing: .02em; caret-color: var(--ember);
+    }
+    .ritual-line { color: var(--ember-hot); border-bottom: 1px solid rgba(244,190,110,0.18); padding: .55rem 0; transition: border-color .5s ease; }
+    .ritual-line:focus { border-color: rgba(244,190,110,0.5); }
+    .ritual-area { color: var(--pearl); min-height: 96px; resize: none; line-height: 1.6; margin-bottom: 1.2rem; }
+    .ritual-line::placeholder, .ritual-area::placeholder { color: rgba(200,205,210,0.4); font-style: italic; }
+    .ritual-act {
+      display: inline-block; margin-top: 1.9rem; background: none; border: none; cursor: pointer;
+      font-family: var(--caps); letter-spacing: .24em; text-transform: uppercase; font-size: .8rem;
+      color: var(--ember); text-shadow: 0 0 18px rgba(244,190,110,0.4); transition: all .5s ease;
+    }
+    .ritual-act:hover { color: var(--ember-hot); text-shadow: 0 0 32px rgba(244,190,110,0.75); letter-spacing: .3em; }
+    .ritual-dismiss {
+      display: block; margin: 1.5rem auto 0; background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-style: italic; font-size: 1.02rem; color: var(--birch); transition: color .4s ease;
+    }
+    .ritual-dismiss:hover { color: var(--pearl); }
+    .ritual-confirm { margin-top: 1.1rem; }
+    .ritual-links { display: flex; flex-wrap: wrap; gap: 1rem 1.8rem; justify-content: center; margin-top: 1.3rem; }
+    .ritual-links .ritual-dismiss { margin: 0; }
+    .ritual #leafList { text-align: left; margin-top: 1.5rem; }
+
+    /* What has been lit — a soft constellation of words */
+    .lights-list { max-height: 52vh; overflow-y: auto; margin-top: .4rem; padding-right: .3rem; }
+    .lights-list::-webkit-scrollbar { width: 6px; }
+    .lights-list::-webkit-scrollbar-thumb { background: rgba(236,235,228,0.18); border-radius: 3px; }
+    .lit { display: flex; align-items: center; gap: .8rem; justify-content: center; padding: .5rem 0;
+      font-family: var(--serif); font-size: 1.16rem; color: var(--pearl); }
+    .lit::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--ember-hot); box-shadow: 0 0 10px 3px rgba(255,205,120,0.6); animation: leafPulse 4s ease-in-out infinite; }
+    .lit.wordless { color: var(--birch); font-style: italic; font-size: 1.02rem; }
+    .lit.wordless::before { background: rgba(200,210,225,0.7); box-shadow: 0 0 8px 2px rgba(200,210,225,0.4); }
+
+    /* the hall's breath of light when a candle is lit — big and warm */
+    .hall-flare {
+      position: fixed; inset: -20%; z-index: 38; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 58%, rgba(255,240,210,0.7) 0%, rgba(255,212,142,0.34) 22%, rgba(244,182,92,0.14) 46%, transparent 72%);
+      animation: hallFlare 3.1s ease-out forwards;
+    }
+    @keyframes hallFlare {
+      0%   { opacity: 0; transform: scale(0.7); }
+      14%  { opacity: 1; }
+      100% { opacity: 0; transform: scale(1.4); }
+    }
+
+    /* THE HALL'S SKY — every light lit becomes a star, and the stars accumulate */
+    #skyLayer { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+    .sky-star {
+      position: absolute; width: 4px; height: 4px; border-radius: 50%;
+      background: #fff7e6; box-shadow: 0 0 8px 2px rgba(255,232,186,0.7);
+      animation: starTwinkle var(--st, 5s) ease-in-out infinite;
+    }
+    @keyframes starTwinkle { 0%,100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.12); } }
+    /* a freshly lit light rises from the grove and settles as a star */
+    .sky-star.ascending { animation: starRise 2.6s cubic-bezier(.2,.7,.25,1) forwards, starTwinkle var(--st,5s) ease-in-out 2.6s infinite; }
+    @keyframes starRise {
+      0%   { opacity: 0; transform: translate(var(--fromX,0), var(--fromY,0)) scale(2.6); box-shadow: 0 0 22px 8px rgba(255,232,186,0.9); }
+      12%  { opacity: 1; }
+      100% { opacity: 1; transform: translate(0,0) scale(1); box-shadow: 0 0 8px 2px rgba(255,232,186,0.7); }
+    }
+
+    /* A leaf the visitor hung on the branches */
+    .leaf-glyph {
+      position: absolute; width: 13px; height: 13px; pointer-events: auto; cursor: default;
+      background: radial-gradient(circle at 40% 35%, rgba(244,239,228,0.95), rgba(190,205,215,0.5) 60%, transparent 75%);
+      border-radius: 0 60% 0 60%;
+      box-shadow: 0 0 10px 3px rgba(210,222,232,0.35);
+      animation: leafPulse var(--lp,5.5s) ease-in-out infinite;
+      transition: transform .5s ease;
+    }
+    .leaf-glyph:hover { transform: scale(1.5); }
+    .leaf-glyph.settling { animation: settle 2.6s ease-out, leafPulse var(--lp,5.5s) ease-in-out 2.6s infinite; }
+    @keyframes leafPulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+    @keyframes settle {
+      0%   { transform: translateY(120px) scale(.6) rotate(-20deg); opacity: 0; }
+      30%  { opacity: 1; }
+      100% { transform: translateY(0) scale(1) rotate(0deg); opacity: .8; }
+    }
+
+    /* Tooltip when reading a leaf */
+    #leafTip {
+      position: fixed; z-index: 20; pointer-events: none; max-width: 240px;
+      background: rgba(10,14,22,0.94); border: 1px solid rgba(236,235,228,0.18);
+      border-radius: 4px; padding: .6rem .8rem; opacity: 0; transition: opacity .35s ease;
+      font-size: .96rem; line-height: 1.4; color: var(--pearl);
+    }
+    #leafTip.show { opacity: 1; }
+    #leafTip .tip-who { display: block; font-style: italic; font-size: .82rem; color: var(--ember); margin-top: .3rem; }
+
+    /* Ambient: a stray leaf drifting down */
+    .falling-leaf {
+      position: fixed; top: -20px; width: 10px; height: 10px; z-index: 5; pointer-events: none;
+      background: radial-gradient(circle at 40% 35%, rgba(220,228,235,0.8), transparent 72%);
+      border-radius: 0 60% 0 60%;
+      animation: drift var(--df,16s) linear forwards;
+    }
+    @keyframes drift {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: .7; }
+      90%  { opacity: .5; }
+      100% { transform: translateY(102vh) translateX(var(--dx,40px)) rotate(360deg); opacity: 0; }
+    }
+
+    /* Ambient: breath of moonlight, high and cool */
+    #moonGlow {
+      position: fixed; left: 50%; top: 14%; transform: translate(-50%,-50%);
+      width: 42vmin; height: 42vmin; z-index: 1; pointer-events: none;
+      background: radial-gradient(circle, rgba(200,214,230,0.10) 0%, rgba(180,200,225,0.04) 40%, transparent 68%);
+      animation: moonBreath 9s ease-in-out infinite;
+    }
+    @keyframes moonBreath { 0%,100%{opacity:.5; transform:translate(-50%,-50%) scale(1)} 50%{opacity:1; transform:translate(-50%,-50%) scale(1.06)} }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ember, .leaf-glyph, .falling-leaf, #moonGlow, #everflame { animation: none !important; }
+    }
+
+    /* ——————————————————————————————————————
+       PANELS (shared)
+    —————————————————————————————————————— */
+    #scrim {
+      position: fixed; inset: 0; z-index: 40; background: rgba(4,7,14,0.72);
+      backdrop-filter: blur(4px); opacity: 0; pointer-events: none;
+      transition: opacity .6s ease;
+    }
+    #scrim.open { opacity: 1; pointer-events: auto; }
+
+    .panel {
+      position: fixed; z-index: 50; left: 50%; top: 50%;
+      transform: translate(-50%, -46%); width: min(540px, 90vw);
+      background: linear-gradient(160deg, rgba(20,26,40,0.96), rgba(10,14,22,0.97));
+      border: 1px solid rgba(236,235,228,0.16);
+      border-radius: 6px; padding: 2.4rem 2.4rem 2rem;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 60px rgba(244,190,110,0.04);
+      opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s ease;
+    }
+    .panel.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+    .panel .eyebrow {
+      font-family: var(--caps); letter-spacing: .32em; text-transform: uppercase;
+      font-size: .68rem; color: var(--ember); opacity: .85; margin-bottom: .9rem;
+    }
+    .panel h2 {
+      font-family: var(--caps); font-weight: 300; letter-spacing: .12em;
+      font-size: 1.5rem; color: var(--pearl); margin-bottom: 1rem;
+    }
+    .panel p { font-size: 1.06rem; line-height: 1.6; color: var(--silver); margin-bottom: 1rem; }
+    .panel p.lore { font-style: italic; }
+    .panel label {
+      display: block; font-family: var(--caps); letter-spacing: .16em; text-transform: uppercase;
+      font-size: .62rem; color: var(--birch); margin: 1.1rem 0 .4rem;
+    }
+    .panel input, .panel textarea {
+      width: 100%; background: rgba(0,0,0,0.32); color: var(--pearl);
+      border: 1px solid rgba(236,235,228,0.18); border-radius: 4px;
+      padding: .7rem .8rem; font-family: var(--serif); font-size: 1.04rem;
+      transition: border-color .4s ease;
+    }
+    .panel input:focus, .panel textarea:focus { outline: none; border-color: var(--ember); }
+    .panel textarea { resize: vertical; min-height: 90px; }
+    .panel .actions { display: flex; gap: .8rem; margin-top: 1.6rem; align-items: center; }
+    .btn {
+      font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase;
+      font-size: .74rem; padding: .72rem 1.6rem; border-radius: 3px; cursor: pointer;
+      background: transparent; border: 1px solid rgba(236,235,228,0.32); color: var(--pearl);
+      transition: all .45s ease;
+    }
+    .btn.primary { border-color: rgba(244,190,110,0.55); color: var(--ember-hot); }
+    .btn.primary:hover { background: rgba(244,190,110,0.12); box-shadow: 0 0 24px rgba(244,190,110,0.2); }
+    .btn:hover { border-color: var(--pearl); }
+    .btn.ghost { border: none; color: var(--birch); letter-spacing: .16em; }
+    .btn.ghost:hover { color: var(--pearl); }
+    .panel .closeX {
+      position: absolute; top: 1rem; right: 1.2rem; cursor: pointer;
+      font-family: var(--serif); font-size: 1.6rem; color: var(--birch);
+      line-height: 1; transition: color .4s ease;
+    }
+    .panel .closeX:hover { color: var(--pearl); }
+    .panel .confirm { font-style: italic; color: var(--ember); opacity: 0; transition: opacity .6s ease; min-height: 1.4em; }
+    .panel .confirm.show { opacity: 1; }
+
+    /* Locked-door note */
+    .lockline {
+      display: flex; align-items: center; gap: .6rem; margin-top: 1.2rem;
+      font-family: var(--caps); letter-spacing: .14em; text-transform: uppercase;
+      font-size: .62rem; color: var(--birch);
+    }
+    .lockline .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .lockline .dot.cold { background: var(--silver); box-shadow: 0 0 10px rgba(200,210,225,0.6); }
+    .lockline .dot.warm { background: var(--ember); box-shadow: 0 0 10px rgba(244,190,110,0.7); }
+
+    /* Branch / leaves reader */
+    #leafList { max-height: 46vh; overflow-y: auto; margin-top: 1rem; padding-right: .4rem; }
+    #leafList::-webkit-scrollbar { width: 6px; }
+    #leafList::-webkit-scrollbar-thumb { background: rgba(236,235,228,0.18); border-radius: 3px; }
+    .leaf {
+      border-left: 2px solid rgba(244,190,110,0.4); padding: .5rem 0 .7rem .9rem;
+      margin-bottom: 1rem;
+    }
+    .leaf .msg { font-size: 1.06rem; line-height: 1.5; color: var(--pearl); }
+    .leaf .who { font-style: italic; font-size: .88rem; color: var(--ember); margin-top: .3rem; opacity: .9; }
+    .leaf-empty { font-style: italic; color: var(--birch); }
+
+    /* ——————————————————————————————————————
+       MEMORY THREAD DECK
+    —————————————————————————————————————— */
+    #deckOverlay {
+      position: fixed; inset: 0; z-index: 55;
+      /* the grove stays visible behind, softly — the doors float in the forest */
+      background: radial-gradient(ellipse at 50% 50%, rgba(6,9,16,0.42) 0%, rgba(5,7,13,0.72) 100%);
+      backdrop-filter: blur(9px); opacity: 0; pointer-events: none;
+      transition: opacity .7s ease; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 5vh 4vw;
+    }
+    #deckOverlay.open { opacity: 1; pointer-events: auto; }
+    #deckOverlay .deck-head { text-align: center; margin-bottom: 2.2rem; }
+    #deckOverlay .deck-head .eyebrow {
+      font-family: var(--caps); letter-spacing: .34em; text-transform: uppercase;
+      font-size: .66rem; color: var(--silver); opacity: .8;
+    }
+    #deckOverlay .deck-head h2 {
+      font-family: var(--caps); font-weight: 300; letter-spacing: .2em;
+      font-size: 1.7rem; color: var(--pearl); margin-top: .6rem;
+    }
+    #deckOverlay .deck-head p { font-style: italic; color: var(--silver); margin-top: .5rem; }
+    .suit-row { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; max-width: 1100px; }
+    /* each thread is a DOORWAY showing the place beyond — arched top, the painting within */
+    /* —— THE DOORS — lit windows into the five places, breathing invitingly —— */
+    .suit-card {
+      position: relative; width: 174px; height: 256px; cursor: pointer; overflow: hidden;
+      border-radius: 87px 87px 8px 8px; border: 1px solid rgba(236,235,228,0.18);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      transition: transform .55s cubic-bezier(.2,.7,.3,1), box-shadow .55s ease, border-color .55s ease, opacity .55s ease;
+      animation: doorBreath 6.5s ease-in-out infinite;
+    }
+    @keyframes doorBreath {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(244,190,110,0)); }
+      50%      { filter: drop-shadow(0 0 18px rgba(244,190,110,0.3)); }
+    }
+    .suit-card:nth-child(2) { animation-delay: -1.3s; }
+    .suit-card:nth-child(3) { animation-delay: -2.6s; }
+    .suit-card:nth-child(4) { animation-delay: -3.9s; }
+    .suit-card:nth-child(5) { animation-delay: -5.2s; }
+    /* the painting within — leans toward you on hover */
+    .door-img { position: absolute; inset: 0; background-size: cover; background-position: center;
+      transform: scale(1.03); filter: brightness(.9) saturate(1.02);
+      transition: transform 1.2s cubic-bezier(.2,.7,.3,1), filter .6s ease; }
+    /* warm light pooling from inside the room — the inviting pulse */
+    .door-glow { position: absolute; left: 50%; bottom: -8%; width: 150%; height: 75%; transform: translateX(-50%);
+      pointer-events: none; opacity: .25; animation: glowPulse 4.6s ease-in-out infinite;
+      background: radial-gradient(ellipse at 50% 100%, rgba(255,206,122,0.55) 0%, rgba(244,180,90,0.18) 38%, transparent 70%); }
+    @keyframes glowPulse { 0%,100% { opacity: .2; transform: translateX(-50%) scale(.92); } 50% { opacity: .58; transform: translateX(-50%) scale(1.08); } }
+    /* dark base so the name reads */
+    .door-shade { position: absolute; inset: 0; pointer-events: none; transition: background .55s ease;
+      background: linear-gradient(to top, rgba(4,6,12,0.92) 0%, rgba(4,6,12,0.16) 44%, transparent 74%); }
+    .suit-card .sname { position: absolute; left: 0; right: 0; bottom: 1.6rem; z-index: 3; text-align: center;
+      font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: .98rem; color: var(--pearl);
+      text-shadow: 0 2px 16px rgba(0,0,0,0.95); transition: color .5s ease, letter-spacing .5s ease; }
+    .suit-card .scount { position: absolute; left: 0; right: 0; bottom: .7rem; z-index: 3; text-align: center;
+      font-style: italic; color: var(--ember); font-size: .8rem; opacity: 0; transition: opacity .5s ease; text-shadow: 0 1px 10px rgba(0,0,0,0.95); }
+    /* hover — the room leans out to meet you, the others step back */
+    .suit-card:hover { transform: translateY(-10px) scale(1.015); border-color: var(--ember);
+      box-shadow: 0 0 46px rgba(244,190,110,0.36), 0 18px 58px rgba(0,0,0,0.62); }
+    .suit-card:hover .door-img { transform: scale(1.14); filter: brightness(1.12) saturate(1.06); }
+    .suit-card:hover .door-shade { background: linear-gradient(to top, rgba(4,6,12,0.85) 0%, rgba(26,16,6,0.18) 48%, transparent 100%); }
+    .suit-card:hover .sname { color: var(--ember-hot); letter-spacing: .28em; }
+    .suit-card:hover .scount { opacity: .9; }
+    .suit-row:hover .suit-card:not(:hover) { opacity: .5; }
+
+    /* drifting embers in the chamber, so it isn't dead air */
+    #deckMotes { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+    /* —— the loom on mobile: a swipeable carousel of doorways, not broken slivers —— */
+    @media (max-width: 700px) {
+      #deckOverlay { padding: 0; justify-content: center; }
+      #deckOverlay .deck-head { margin-bottom: 1.4rem; padding: 0 1.2rem; }
+      #deckOverlay .deck-head h2 { font-size: 1.3rem; }
+      #deckOverlay .deck-head p { font-size: .92rem; }
+      .suit-row {
+        flex-wrap: nowrap; width: 100vw; max-width: 100vw; gap: 5vw; padding: 0 19vw;
+        overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+        transform: none !important;
+      }
+      .suit-row::-webkit-scrollbar { display: none; }
+      .suit-card { flex: 0 0 auto; width: 62vw; height: 70vh; scroll-snap-align: center; }
+      .suit-card .scount { opacity: .85; }
+      .suit-row:hover .suit-card:not(:hover) { opacity: 1; }
+      .deck-note { padding: 0 1.5rem; font-size: .92rem; }
+    }
+
+    /* walking into the painting — the chosen door's place fills the view, then we arrive */
+    #portalWipe {
+      position: fixed; inset: 0; z-index: 80; background-color: var(--bg-deep); background-size: cover; background-position: center;
+      opacity: 0; transform: scale(1.18); pointer-events: none;
+    }
+    #portalWipe.go { opacity: 1; transform: scale(1); transition: opacity 1.05s ease, transform 1.2s cubic-bezier(.3,.7,.3,1); }
+
+    /* a trail of stars threading you through the doorway */
+    .startrail { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff7e6;
+      box-shadow: 0 0 8px 2px rgba(255,232,186,0.7); pointer-events: none; z-index: 95; opacity: 0;
+      animation: trailFly var(--tf,1.1s) ease-out forwards; }
+    @keyframes trailFly { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 15% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--tx,0), var(--ty,-80px)) scale(1.1); } }
+    .deck-close {
+      margin-top: 2.6rem; font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase;
+      font-size: .72rem; color: var(--birch); background: none; border: none; cursor: pointer;
+    }
+    .deck-close:hover { color: var(--pearl); }
+    .deck-note {
+      margin-top: 1.8rem; max-width: 560px; text-align: center; font-style: italic;
+      font-size: .9rem; color: var(--birch); line-height: 1.5;
+    }
+
+    /* ——————————————————————————————————————
+       EVERFLAME — sentient wayfinding presence
+       Matched to the room standard (hearthfire/apothecary/fountain):
+       top-left, 14vmin, slow 8s breath. Not the fast vestibule version.
+    —————————————————————————————————————— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen; filter: brightness(1.1);
+      transition: filter 0.7s ease; z-index: 45; cursor: pointer;
+      animation: efLive 8s ease-in-out infinite;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+
+    /* ——— RETURN TO HEARTHFIRE — visual doorway, bottom-left ———
+       The grove's top level had no exit besides the Everflame (walkthrough
+       log, 3 Jul); the chapter-rooms inside already had their own good
+       "step back" door. Same z-index as Everflame (45) so it naturally
+       hides behind chapter-room overlays the same way Everflame does,
+       and reappears once you're back at grove level. */
+    #returnHearthfire {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/hearthfire.jpg') center 70% / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 45;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnHearthfire:hover,
+    #returnHearthfire.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-1deg)  scaleX(1.02); }
+      82%  { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+    #efMenu {
+      position: fixed; top: calc(3.5vmin + 14vmin + 14px); left: 3.5vmin; z-index: 46;
+      background: linear-gradient(160deg, rgba(18,24,38,0.97), rgba(8,12,20,0.98));
+      border: 1px solid rgba(236,235,228,0.14); border-radius: 6px;
+      padding: 1.1rem 1.2rem; min-width: 230px;
+      opacity: 0; pointer-events: none; transform: translateY(-10px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    #efMenu.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .ef-section-label {
+      font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase;
+      font-size: .75rem; color: var(--birch); display: block; margin-bottom: .5rem;
+    }
+    .ef-links { list-style: none; }
+    .ef-item { margin: .15rem 0; }
+    .ef-link {
+      width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-size: 1.06rem; color: var(--silver);
+      padding: .35rem .3rem; transition: color .35s ease; letter-spacing: .01em;
+    }
+    .ef-link:hover { color: var(--ember-hot); }
+    .ef-link.ef-current { color: var(--pearl); font-style: italic; cursor: default; }
+    .ef-divider { border: none; border-top: 1px solid rgba(236,235,228,0.12); margin: .7rem 0; }
+    #efScrim { position: fixed; inset: 0; z-index: 44; opacity: 0; pointer-events: none; }
+    #efScrim.open { pointer-events: auto; }
+
+    /* Fade cover for navigation */
+    #cover {
+      position: fixed; inset: 0; z-index: 90; background: #05070d;
+      opacity: 0; pointer-events: none; display: none;
+    }
+
+    @media (max-width: 640px) {
+      #roomTitle h1 { font-size: 1.2rem; }
+      .hs-label { font-size: .64rem; }
+      .suit-card { width: 44%; }
+    }
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Same tool as year-wheel.html/hearthfire.html: shows cursor/touch position
+       as % of viewport so hotspot coordinates can be read straight off the phone. */
+    #calib {
+      position: fixed; top: 8px; right: 8px; z-index: 999;
+      font-family: monospace; font-size: 12px; color: #ffd27a;
+      background: rgba(0,0,0,.6); padding: 4px 8px; border-radius: 4px;
+      display: none; pointer-events: none;
+    }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <!-- Calibration aid — ?calib=1, mirrors hearthfire.html/year-wheel.html -->
+  <div id="calib">· move mouse / touch ·</div>
+
+  <!-- Background grove -->
+  <div id="bg"></div>
+  <div id="moonGlow"></div>
+  <div id="mist"></div>
+  <div id="vignette"></div>
+  <div id="motes"></div>
+
+  <!-- Room title -->
+  <div id="roomTitle">
+    <h1>The Memory Hall</h1>
+    <p>a sanctuary for change</p>
+  </div>
+
+  <!-- The candle hotspot — cold and quiet, wakes at the Waning Gibbous moon -->
+  <div class="hotspot" id="hs-candle" role="button" tabindex="0" aria-label="Light a candle at the roots"><div class="hs-orb cold"></div><span class="hs-label" id="candleLabel">the roots</span></div>
+
+  <!-- Waning Gibbous only: the hall marks its own phase. Line is Ange's (9 Jul 2026). -->
+  <div id="gibbousLine">The grove hums with the Threadsingers this night.</div>
+
+  <!-- Manifestation layers for the candle ritual -->
+  <div id="candleLayer"></div>
+  <div id="skyLayer"></div>
+
+  <!-- ——— THE CANDLE RITUAL — Waning Gibbous only ——— -->
+  <div class="ritual" id="candleRitual">
+    <div class="ritual-inner">
+      <div id="candleFormState">
+        <p class="ritual-whisper" id="candleWhisper">Here we see the reflection of our intention in the flickering light of the candles. What do you want to see reflected back to you?</p>
+        <textarea class="ritual-area" id="candleWord" maxlength="120" placeholder="The intention you want to glow." rows="2"></textarea>
+        <button class="ritual-act" id="candleAct">light it</button>
+      </div>
+      <p class="ritual-confirm" id="candleConfirm"></p>
+      <div class="lights-list" id="candleLightsList" style="display:none;"></div>
+      <div class="ritual-links">
+        <button class="ritual-dismiss" id="candleSeeLights">see what's been lit</button>
+        <button class="ritual-dismiss" data-close id="candleDismiss">leave it dark for now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Return to Hearthfire — visual doorway, bottom-left -->
+  <div id="returnHearthfire" role="button" tabindex="0" aria-label="Return to the Hearthfire"></div>
+
+  <!-- ——— EVERFLAME ——— -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link ef-current" disabled>the memory hall</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- ——— THE FIVE CONSTELLATIONS — points of light, discovered in the grove ——— -->
+  <div class="hotspot" id="hs-wonder" role="button" tabindex="0" aria-label="Wonder"><div class="hs-orb"></div><span class="hs-label">wonder</span></div>
+  <div class="hotspot" id="hs-hearth" role="button" tabindex="0" aria-label="Hearth"><div class="hs-orb"></div><span class="hs-label">hearth</span></div>
+  <div class="hotspot" id="hs-laughter" role="button" tabindex="0" aria-label="Laughter"><div class="hs-orb"></div><span class="hs-label">laughter</span></div>
+  <div class="hotspot" id="hs-keepers" role="button" tabindex="0" aria-label="Keepers"><div class="hs-orb"></div><span class="hs-label">keepers</span></div>
+  <div class="hotspot" id="hs-legacy" role="button" tabindex="0" aria-label="Legacy"><div class="hs-orb"></div><span class="hs-label">legacy</span></div>
+
+  <!-- ——— THE VEIL THINS — at the moon ——— -->
+  <div class="hotspot" id="hs-tribute" role="button" tabindex="0" aria-label="Where the veil thins"><div class="hs-orb cold"></div><span class="hs-label">the veil thins</span></div>
+
+  <!-- ——— SCRIM + VEIL PANEL ——— -->
+  <div id="scrim"></div>
+  <div class="panel" id="panel-tribute">
+    <span class="closeX" data-close>&times;</span>
+    <span class="eyebrow">when the worlds stand close</span>
+    <h2>The Veil Thins</h2>
+    <p class="lore">Twice a year, as the wheel turns through Samhain in each hemisphere, the veil grows thin. The grove gathers the names then, spoken aloud, remembered together, held in one place while the worlds stand close.</p>
+    <p id="tributeStatus">It is cold and still. The veil thins twice a year, at Samhain, north and south.</p>
+    <div class="lockline"><span class="dot cold"></span> <span id="tributeWhen">time-locked</span></div>
+    <div class="actions">
+      <button class="btn ghost" data-close>step back</button>
+    </div>
+  </div>
+
+  <!-- ——— DOORWAY (entry) ——— -->
+  <div id="doorway">
+    <div id="doorwayImg"></div>
+    <div id="doorwayShade"></div>
+    <div id="doorwayInner">
+      <p id="doorwayWelcome">Welcome to the Memory Hall, where memories and thoughts are brought alive into constellations. Eternity lighting your path.</p>
+      <p id="doorwayInvocation"></p>
+      <button id="enterBtn">step through the archway</button>
+    </div>
+  </div>
+
+  <div id="portalWipe"></div>
+  <div id="cover"></div>
+
+  <script>
+  /* ============================================================
+     THE MEMORY HALL — interactions
+     Backend touchpoints (already live in submit.js / read.js):
+       submit('candle', { cycle_id, word? })   read('candle_count', { cycle_id })
+       submit('leaf',   { message, for_whom? }) read('leaves')
+     All calls fail quietly — the grove always works.
+  ============================================================ */
+  (function () {
+    'use strict';
+
+    var state   = (window.LUNAR ? LUNAR.getLunarState() : { cycleId: 'unknown' });
+    var cycleId = state.cycleId;
+
+    /* ——— DOORWAY: step through into the grove ——— */
+    var doorway  = document.getElementById('doorway');
+    var enterBtn = document.getElementById('enterBtn');
+    function enterGrove() {
+      doorway.classList.add('gone');
+      document.getElementById('roomTitle').classList.add('show');
+      document.querySelectorAll('.hotspot').forEach(function (h, i) {
+        setTimeout(function () { h.classList.add('show'); }, 600 + i * 220);
+      });
+      setTimeout(function () { doorway.style.display = 'none'; }, 1700);
+    }
+    /* touch-equivalent of hover — a brief flash of the label on tap, same as Hearthfire/the Wheel */
+    document.querySelectorAll('.hotspot').forEach(function (h) {
+      h.addEventListener('touchstart', function () { h.classList.add('active'); }, { passive: true });
+      h.addEventListener('touchend', function () { setTimeout(function () { h.classList.remove('active'); }, 800); });
+    });
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Move the mouse (or drag a finger on the phone) and read the % position
+       off the corner readout, then set that hotspot's left/top in the CSS above. */
+    if (/[?&]calib=1/.test(location.search)) {
+      var calibBox = document.getElementById('calib');
+      calibBox.style.display = 'block';
+      function showCalib(x, y) {
+        var px = (x / window.innerWidth  * 100).toFixed(1);
+        var py = (y / window.innerHeight * 100).toFixed(1);
+        calibBox.textContent = 'x: ' + px + '%  y: ' + py + '%';
+      }
+      document.addEventListener('mousemove', function(e){ showCalib(e.clientX, e.clientY); });
+      document.addEventListener('touchmove', function(e){
+        if (e.touches && e.touches[0]) showCalib(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+    }
+
+    enterBtn.addEventListener('click', enterGrove);
+    /* the whole archway is the entrance, not a button */
+    doorway.addEventListener('click', enterGrove);
+    doorway.setAttribute('role', 'button'); doorway.setAttribute('tabindex', '0');
+    doorway.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterGrove(); } });
+
+    /* returning from a constellation lands you INSIDE the grove, not back at the archway */
+    if (new URLSearchParams(window.location.search).get('in') === '1') {
+      doorway.style.transition = 'none';
+      doorway.classList.add('gone');
+      doorway.style.display = 'none';
+      document.getElementById('roomTitle').classList.add('show');
+      document.querySelectorAll('.hotspot').forEach(function (h) { h.classList.add('show'); });
+    }
+
+    /* The rotating invocation beneath the welcome — a different line each visit,
+       so the threshold feels alive. !! ANGE: these are PLACEHOLDERS in my hand —
+       swap in your own set (4–6 lines that name the visitor's state, not the room). */
+    var INVOCATIONS = [
+      'Whatever you carry tonight, the hall has room for it.',
+      'For what has changed, and for what endures.',
+      'Bring a memory, or an intention. Both belong here.',
+      'For the ones who shaped you, and the ones you are still becoming.',
+      'For the ordinary moments that turned out to be everything.'
+    ];
+    (function setInvocation() {
+      var inv = document.getElementById('doorwayInvocation');
+      inv.textContent = INVOCATIONS[Math.floor(Math.random() * INVOCATIONS.length)];
+      setTimeout(function () { inv.classList.add('show'); }, 1500);
+    })();
+
+    /* ——— MOTES ——— */
+    (function buildMotes() {
+      var wrap = document.getElementById('motes');
+      for (var i = 0; i < 26; i++) {
+        var m = document.createElement('div');
+        m.className = 'mote';
+        m.style.left = Math.random() * 100 + '%';
+        m.style.top  = (55 + Math.random() * 40) + '%';
+        m.style.setProperty('--md',  (7 + Math.random() * 7) + 's');
+        m.style.setProperty('--mdl', (Math.random() * 8) + 's');
+        m.style.setProperty('--mdx', (Math.random() * 24 - 12) + 'px');
+        wrap.appendChild(m);
+      }
+    })();
+
+    var bg = document.getElementById('bg');
+
+    /* preload the chapter-room paintings (Cloudinary) so the room arrives without a blink */
+    [
+      'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733022/Memory_hall_wonder_yv2wlm.png',
+      'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733047/Memory_hall_hearth_ucrawp.png',
+      'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733474/Memory_hall_laughter_web_zjxwaa.png',
+      'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733030/Memory_hall_keepers_ipmsmy.png',
+      'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733053/Memory_hall_legacy_fzvxb6.png'
+    ].forEach(function (u) { var im = new Image(); im.src = u; });
+
+    /* ——— PANEL PLUMBING ——— */
+    var scrim = document.getElementById('scrim');
+    function openPanel(id) {
+      closeAllPanels();
+      scrim.classList.add('open');
+      document.getElementById(id).classList.add('open');
+    }
+    function closeAllPanels() {
+      scrim.classList.remove('open');
+      document.querySelectorAll('.panel, .ritual').forEach(function (p) { p.classList.remove('open'); });
+    }
+    scrim.addEventListener('click', closeAllPanels);
+    document.querySelectorAll('[data-close]').forEach(function (el) {
+      el.addEventListener('click', closeAllPanels);
+    });
+    /* clicking the hush around a ritual lets it be */
+    document.querySelectorAll('.ritual').forEach(function (r) {
+      r.addEventListener('click', function (e) { if (e.target === r) closeAllPanels(); });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeAllPanels(); } });
+
+    function bindHotspot(id, fn) {
+      var el = document.getElementById(id);
+      el.addEventListener('click', fn);
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+      });
+    }
+
+    /* ——— THE FIVE CONSTELLATIONS — points of light you discover and step into ——— */
+    function enterConstellation(k) {
+      starTrail();
+      cover.style.display = ''; cover.style.transition = 'opacity .7s ease';
+      requestAnimationFrame(function () { requestAnimationFrame(function () { cover.style.opacity = '1'; }); });
+      setTimeout(function () { window.location.href = 'constellation.html?room=' + k; }, 720);
+    }
+    ['wonder', 'hearth', 'laughter', 'keepers', 'legacy'].forEach(function (k) {
+      bindHotspot('hs-' + k, function () { enterConstellation(k); });
+    });
+
+    /* ——— THE VEIL THINS (time-locked) ———
+       Opens twice a year — Samhain in each hemisphere.
+       Northern: 31 October.  Southern: 1 May.  The grove opens on both. */
+    var VEIL_DATES = [
+      { m: 10, d: 31 },  // Samhain, northern hemisphere
+      { m: 5,  d: 1  }   // Samhain, southern hemisphere
+    ];
+    (function setupVeil() {
+      var now = new Date();
+      var orb = document.querySelector('#hs-tribute .hs-orb');
+      var whenEl = document.getElementById('tributeWhen');
+      var statusEl = document.getElementById('tributeStatus');
+
+      /* test override, since this is hardcoded to the real calendar date
+         and can't otherwise be previewed without changing the system clock */
+      var urlPhase = new URLSearchParams(window.location.search).get('phase');
+
+      var openNow = (urlPhase === 'veil-open') ||
+        (urlPhase !== 'veil-closed' && VEIL_DATES.some(function (v) { return now.getMonth() === v.m - 1 && now.getDate() === v.d; }));
+      if (openNow) {
+        whenEl.textContent = 'open now, the veil is thin';
+        statusEl.textContent = 'The veil is thin. Tonight the names are gathered and remembered together.';
+        if (orb) orb.classList.remove('cold');
+        return;
+      }
+
+      var soonest = null;
+      VEIL_DATES.forEach(function (v) {
+        var d = new Date(now.getFullYear(), v.m - 1, v.d);
+        if (d < now) d = new Date(now.getFullYear() + 1, v.m - 1, v.d);
+        if (!soonest || d < soonest) soonest = d;
+      });
+      var days = Math.ceil((soonest - now) / 86400000);
+      var when = soonest.toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+      whenEl.textContent = 'wakes when the veil thins · ' + when + ' (' + days + ' days)';
+    })();
+    bindHotspot('hs-tribute', function () { openPanel('panel-tribute'); });
+
+    /* ——— THE CANDLE RITUAL — Waning Gibbous only ———
+       Locked to phase like every other lunar touchpoint in the portal
+       (Ange, 7 Jul 2026). Out of phase the hotspot stays cold and quiet,
+       the room itself doesn't change. Backend already live:
+       submit('candle', {cycle_id, word?}) -> waning_gibbous_candles,
+       read('candle_count', {cycle_id}). */
+    (function () {
+      var urlPhase   = new URLSearchParams(window.location.search).get('phase');
+      var candlePhase = urlPhase || (state && state.phase) || 'other';
+      var IS_WGC = (candlePhase === 'waning-gibbous');
+
+      /* The hall marks its own phase: constellations brighten, a soft line
+         fades in (Ange's 29 Jun idea). No gating, decoration only. */
+      if (IS_WGC) {
+        document.body.classList.add('gibbous-night');
+        var gibbousLine = document.getElementById('gibbousLine');
+        if (gibbousLine) setTimeout(function () { gibbousLine.classList.add('show'); }, 4200);
+      }
+
+      var trigger  = document.getElementById('hs-candle');
+      var orb      = trigger ? trigger.querySelector('.hs-orb') : null;
+      var label    = document.getElementById('candleLabel');
+      var ritualEl = document.getElementById('candleRitual');
+      var formState = document.getElementById('candleFormState');
+      var wordEl   = document.getElementById('candleWord');
+      var actEl    = document.getElementById('candleAct');
+      var confirmEl = document.getElementById('candleConfirm');
+      var lightsListEl = document.getElementById('candleLightsList');
+      var seeLightsEl  = document.getElementById('candleSeeLights');
+      var dismissEl    = document.getElementById('candleDismiss');
+      var candleLayer = document.getElementById('candleLayer');
+      var skyLayer     = document.getElementById('skyLayer');
+
+      var storeKey = 'aetherwood_candles_' + cycleId;
+      function storedCandles() { try { return JSON.parse(localStorage.getItem(storeKey) || '[]'); } catch (e) { return []; } }
+      function saveCandles(arr) { try { localStorage.setItem(storeKey, JSON.stringify(arr)); } catch (e) {} }
+
+      function renderFlame(x, y) {
+        var f = document.createElement('div');
+        f.className = 'candle-flame kindling';
+        f.style.left = x + '%'; f.style.top = y + '%';
+        f.style.setProperty('--cf', (2.2 + Math.random() * 1.1).toFixed(1) + 's');
+        candleLayer.appendChild(f);
+      }
+      function renderStar(x, y, fromX, fromY) {
+        var s = document.createElement('div');
+        s.className = 'sky-star ascending';
+        s.style.left = x + '%'; s.style.top = y + '%';
+        s.style.setProperty('--st', (4 + Math.random() * 2).toFixed(1) + 's');
+        s.style.setProperty('--fromX', (fromX - x) + 'vw');
+        s.style.setProperty('--fromY', (fromY - y) + 'vh');
+        skyLayer.appendChild(s);
+      }
+
+      /* redraw whatever this visitor has already lit this cycle, so the
+         grove they tended is waiting when they return */
+      var existing = storedCandles();
+      existing.forEach(function (c) {
+        renderFlame(c.x, c.y);
+        renderStar(c.sx, c.sy, c.x, c.y);
+      });
+      if (existing.length >= 3) bg.classList.add('warmed');
+
+      function refreshCount() {
+        if (!trigger) return;
+        if (typeof PortalData === 'undefined') { paintTrigger(existing.length); return; }
+        PortalData.read('candle_count', { cycle_id: cycleId }).then(function (data) {
+          paintTrigger(data && typeof data.count === 'number' ? data.count : existing.length);
+        }).catch(function () { paintTrigger(existing.length); });
+      }
+      function paintTrigger(count) {
+        if (!IS_WGC) {
+          if (orb) orb.classList.add('cold');
+          label.textContent = 'the roots';
+          return;
+        }
+        if (orb) orb.classList.remove('cold');
+        label.textContent = count > 0
+          ? count + (count === 1 ? ' candle lit' : ' candles lit') + ' tonight · light yours'
+          : 'light a candle';
+      }
+      refreshCount();
+
+      function showForm() {
+        formState.style.display = '';
+        confirmEl.textContent = '';
+        lightsListEl.style.display = 'none';
+        seeLightsEl.textContent = "see what's been lit";
+        seeLightsEl.setAttribute('data-mode', 'closed');
+      }
+
+      function renderLightsList() {
+        var mine = storedCandles().filter(function (c) { return c.word; }).map(function (c) {
+          return { word: c.word, mine: true };
+        });
+        function paint(others) {
+          var rows = mine.concat((others || []).map(function (o) { return { word: o.word }; }));
+          lightsListEl.innerHTML = '';
+          if (!rows.length) {
+            var empty = document.createElement('p');
+            empty.className = 'lit wordless';
+            empty.textContent = 'no words yet, only quiet flames.';
+            lightsListEl.appendChild(empty);
+            return;
+          }
+          rows.forEach(function (r) {
+            var row = document.createElement('p');
+            row.className = 'lit';
+            row.textContent = r.word;
+            lightsListEl.appendChild(row);
+          });
+        }
+        if (typeof PortalData === 'undefined') { paint([]); return; }
+        PortalData.read('candles', { cycle_id: cycleId }).then(function (data) {
+          paint(data && data.items ? data.items.filter(function (i) { return i.word; }) : []);
+        }).catch(function () { paint([]); });
+      }
+
+      seeLightsEl.addEventListener('click', function () {
+        var open = seeLightsEl.getAttribute('data-mode') === 'open';
+        if (open) { showForm(); return; }
+        formState.style.display = 'none';
+        confirmEl.textContent = '';
+        lightsListEl.style.display = '';
+        renderLightsList();
+        seeLightsEl.textContent = 'light a candle instead';
+        seeLightsEl.setAttribute('data-mode', 'open');
+      });
+
+      function openCandleRitual() {
+        if (!IS_WGC) return;
+        wordEl.value = '';
+        wordEl.style.display = '';
+        actEl.style.display = '';
+        showForm();
+        if (dismissEl) dismissEl.textContent = 'leave it dark for now';
+        ritualEl.classList.add('open');
+        setTimeout(function () { wordEl.focus(); }, 220);
+      }
+      trigger.addEventListener('click', openCandleRitual);
+      trigger.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCandleRitual(); } });
+
+      function lightCandle() {
+        var word = wordEl.value.trim();
+        var x = 32 + Math.random() * 36, y = 80 + Math.random() * 10;
+        var sx = 8 + Math.random() * 84, sy = 10 + Math.random() * 30;
+
+        renderFlame(x, y);
+        renderStar(sx, sy, x, y);
+
+        var bloom = document.createElement('div');
+        bloom.className = 'bloom'; bloom.style.left = x + '%'; bloom.style.top = y + '%';
+        candleLayer.appendChild(bloom);
+        setTimeout(function () { if (bloom.parentNode) bloom.parentNode.removeChild(bloom); }, 3100);
+
+        var flare = document.createElement('div');
+        flare.className = 'hall-flare';
+        document.body.appendChild(flare);
+        setTimeout(function () { if (flare.parentNode) flare.parentNode.removeChild(flare); }, 3200);
+
+        var saved = storedCandles();
+        saved.push({ x: x, y: y, sx: sx, sy: sy, word: word || null });
+        saveCandles(saved);
+        if (saved.length >= 3) bg.classList.add('warmed');
+
+        try { PortalData.submit('candle', { cycle_id: cycleId, word: word || undefined }); } catch (e) {}
+
+        wordEl.style.display = 'none';
+        actEl.style.display = 'none';
+        confirmEl.textContent = 'Your intention burns bright. As last quarter builds, the fountain will be waiting.';
+        if (dismissEl) dismissEl.textContent = 'step back';
+
+        label.classList.add('pulse');
+        setTimeout(function () { label.classList.remove('pulse'); }, 1500);
+        refreshCount();
+      }
+      actEl.addEventListener('click', lightCandle);
+    })();
+
+    /* ——— AMBIENT — a hush of movement ——— */
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function dropLeaf() {
+      var l = document.createElement('div');
+      l.className = 'falling-leaf';
+      l.style.left = (Math.random() * 100) + '%';
+      l.style.setProperty('--df', (13 + Math.random() * 8).toFixed(1) + 's');
+      l.style.setProperty('--dx', (Math.random() * 80 - 30).toFixed(0) + 'px');
+      document.body.appendChild(l);
+      setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 23000);
+    }
+    if (!reduce) {
+      setInterval(function () { if (!document.hidden && Math.random() < 0.6) dropLeaf(); }, 9000);
+
+      /* gentle parallax — the grove has depth */
+      window.addEventListener('mousemove', function (e) {
+        var dx = (e.clientX / window.innerWidth - 0.5), dy = (e.clientY / window.innerHeight - 0.5);
+        bg.style.transform = 'scale(1.04) translate(' + (dx * -10) + 'px,' + (dy * -7) + 'px)';
+      });
+    }
+
+    /* ——— STAR TRAIL — threads of starlight through the doorways (enter & exit) ——— */
+    function starTrail() {
+      for (var i = 0; i < 26; i++) {
+        var s = document.createElement('div'); s.className = 'startrail';
+        s.style.left = (Math.random() * 100) + 'vw'; s.style.top = (Math.random() * 100) + 'vh';
+        s.style.setProperty('--tx', (Math.random() * 60 - 30).toFixed(0) + 'px');
+        s.style.setProperty('--ty', (-60 - Math.random() * 50).toFixed(0) + 'px');
+        s.style.setProperty('--tf', (0.8 + Math.random() * 0.8).toFixed(2) + 's');
+        document.body.appendChild(s);
+        (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1900); })(s);
+      }
+    }
+
+    /* ——— EVERFLAME NAV ——— */
+    var cover = document.getElementById('cover');
+    function navigateTo(href) {
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        cover.style.opacity = '1';
+        setTimeout(function () { window.location.href = href; }, 1500);
+      }); });
+    }
+
+    /* Return to Hearthfire — visual doorway, bottom-left */
+    var returnHearthfireEl = document.getElementById('returnHearthfire');
+    returnHearthfireEl.addEventListener('click', function(){ navigateTo('hearthfire.html'); });
+    returnHearthfireEl.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); navigateTo('hearthfire.html'); }
+    });
+    returnHearthfireEl.addEventListener('touchstart', function(){ returnHearthfireEl.classList.add('active'); }, {passive:true});
+    returnHearthfireEl.addEventListener('touchend', function(){ setTimeout(function(){ returnHearthfireEl.classList.remove('active'); }, 800); });
+
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    function logTrail(name, href) {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function (e) { return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the memory hall', 'memory-hall.html');
+
+    var efMenu = document.getElementById('efMenu');
+    var efScrim = document.getElementById('efScrim');
+    var efTrail = document.getElementById('efTrail');
+    var efTrailList = document.getElementById('efTrailList');
+    var efOpen = false;
+
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function (e) { return e.href !== 'memory-hall.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (trail.length === 0) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function (e) {
+        var li = document.createElement('li'); li.className = 'ef-item';
+        var btn = document.createElement('button'); btn.className = 'ef-link'; btn.textContent = e.name;
+        btn.addEventListener('click', function () { closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn); efTrailList.appendChild(li);
+      });
+    }
+    function openEfMenu() { buildTrail(); efMenu.classList.add('open'); efScrim.classList.add('open'); efOpen = true; }
+    function closeEfMenu() { efMenu.classList.remove('open'); efScrim.classList.remove('open'); efOpen = false; }
+
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function () { efOpen ? closeEfMenu() : openEfMenu(); });
+    ef.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efArchives').addEventListener('click', function () { closeEfMenu(); navigateTo('whispered-archives.html'); });
+    document.getElementById('efHearthfire').addEventListener('click', function () { closeEfMenu(); navigateTo('hearthfire.html'); });
+    document.getElementById('efCorridor').addEventListener('click', function () { closeEfMenu(); navigateTo('vestibule.html?walk=1'); });
+    document.getElementById('efLeave').addEventListener('click', function () { closeEfMenu(); navigateTo('index.html'); });
+
+  })();
+  </script>
+</body>
+</html>

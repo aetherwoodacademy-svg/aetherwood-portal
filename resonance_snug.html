@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The Resonance Chamber · Aetherwood</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{ --serif:'Cormorant Garamond',Georgia,serif; --caps:'Cinzel',serif; --cream:rgba(248,232,206,0.94); }
+  html,body{width:100%;height:100%;background:#0a0603;overflow:hidden;font-family:var(--serif);}
+
+  /* the fire-lit snug */
+  #bg{ position:fixed; inset:0; z-index:0;
+    background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/resonance_chamber_snug_lugkhq.png') center 52% / cover no-repeat;
+    transform:scale(1.06); will-change:transform;
+    animation:breathe 26s ease-in-out infinite alternate; }
+  @keyframes breathe{ 0%{transform:scale(1.06) translate(0,0);} 100%{transform:scale(1.12) translate(-1%,-1.2%);} }
+
+  /* warm ember motes rising from the hearth */
+  #embers{ position:fixed; inset:0; z-index:1; pointer-events:none; }
+
+  /* the fire's living flicker (warm glow, breathing like flame) */
+  #firelight{ position:fixed; inset:0; z-index:2; pointer-events:none; mix-blend-mode:screen;
+    background:radial-gradient(ellipse 42% 44% at 50% 55%, rgba(255,172,84,0.24) 0%, rgba(255,140,60,0.09) 42%, transparent 70%);
+    animation:fireFlicker 3.6s ease-in-out infinite; }
+  @keyframes fireFlicker{ 0%{opacity:.70} 11%{opacity:1} 23%{opacity:.72} 38%{opacity:.96} 52%{opacity:.66} 67%{opacity:.92} 81%{opacity:.74} 100%{opacity:.82} }
+
+  /* a warm dark that hugs the edges — enclosure, intimacy */
+  #vignette{ position:fixed; inset:0; z-index:3; pointer-events:none;
+    background:
+      radial-gradient(ellipse at 50% 56%, transparent 32%, rgba(22,9,3,0.5) 70%, rgba(8,3,1,0.94) 100%),
+      linear-gradient(to bottom, rgba(10,4,1,0.55) 0%, transparent 22%, transparent 60%, rgba(8,3,1,0.7) 100%); }
+
+  #fadeCover{ position:fixed; inset:0; z-index:80; background:#08030a; transition:opacity 3.4s ease; pointer-events:none; }
+
+  /* the welcome — soft, warm, fades in and out, then leaves you in the room */
+  #welcome{ position:fixed; left:50%; top:76%; transform:translate(-50%,-50%); z-index:20; text-align:center; width:min(90vw,640px); opacity:0; transition:opacity 2.6s ease; pointer-events:none; }
+  #welcome span{ font-style:italic; font-weight:300; font-size:clamp(21px,2.5vw,35px); color:var(--cream); letter-spacing:0.03em; line-height:1.5;
+    text-shadow:0 0 3px rgba(0,0,0,0.98), 0 0 12px rgba(0,0,0,0.95), 0 2px 20px rgba(0,0,0,0.95); }
+  #welcome.show{ opacity:1; }
+
+  /* the offering to the fire */
+  #offer{ position:fixed; left:50%; top:72%; transform:translate(-50%,-50%); z-index:22; width:min(90vw,560px); text-align:center; opacity:0; transition:opacity 2.2s ease; pointer-events:none; }
+  #offer.show{ opacity:1; pointer-events:auto; }
+  #offerPrompt{ font-style:italic; font-weight:300; font-size:clamp(17px,2vw,26px); color:var(--cream); line-height:1.5; margin-bottom:0.9em; text-shadow:0 0 3px rgba(0,0,0,0.98),0 0 12px rgba(0,0,0,0.95),0 2px 18px rgba(0,0,0,0.95); }
+  #offerInput{ width:100%; max-width:440px; background:rgba(20,10,3,0.30); border:none; border-bottom:1px solid rgba(255,210,150,0.28); padding:0.5em 0.4em; color:var(--cream); font-family:var(--serif); font-style:italic; font-size:clamp(16px,1.7vw,22px); text-align:center; outline:none; caret-color:rgba(255,190,120,0.9); }
+  #offerInput::placeholder{ color:rgba(255,225,190,0.30); }
+  #offerActions{ margin-top:1.3em; }
+  .warm-btn{ display:inline-block; margin:0.3em 0.6em; padding:0.5em 0.7em; background:none; border:none; font-family:var(--caps); font-size:clamp(12px,1.05vw,14px); letter-spacing:0.42em; text-transform:uppercase; color:rgba(255,214,160,0.66); cursor:pointer; -webkit-tap-highlight-color:transparent; text-shadow:0 0 14px rgba(255,150,70,0); transition:color .6s ease,text-shadow .6s ease,letter-spacing .6s ease; }
+  .warm-btn:hover,.warm-btn:focus{ color:rgba(255,236,208,0.98); text-shadow:0 0 18px rgba(255,160,80,0.6); letter-spacing:0.48em; outline:none; }
+  .warm-btn.faint{ color:rgba(230,200,160,0.36); }
+
+  #burnWord{ position:fixed; z-index:23; pointer-events:none; font-family:var(--serif); font-style:italic; font-weight:300; font-size:clamp(17px,1.9vw,24px); color:var(--cream); white-space:nowrap; text-shadow:0 0 16px rgba(255,170,90,0.5); left:0; top:0; transform:translate(-50%,-50%); }
+
+  #acknowledge{ position:fixed; left:50%; top:76%; transform:translate(-50%,-50%); z-index:22; width:min(90vw,560px); text-align:center; opacity:0; transition:opacity 1.8s ease; pointer-events:none; font-style:italic; font-weight:300; font-size:clamp(18px,2vw,28px); color:var(--cream); text-shadow:0 0 3px rgba(0,0,0,0.98),0 0 12px rgba(0,0,0,0.95),0 2px 18px rgba(0,0,0,0.95); }
+  #acknowledge.show{ opacity:1; }
+
+  /* a warm flare when the fire takes something */
+  #flare{ position:fixed; inset:0; z-index:2; pointer-events:none; mix-blend-mode:screen; opacity:0;
+    background:radial-gradient(ellipse 46% 46% at 50% 63%, rgba(255,190,110,0.5) 0%, rgba(255,150,70,0.18) 40%, transparent 70%); }
+  #flare.go{ animation:flareBloom 1.8s ease-out; }
+  @keyframes flareBloom{ 0%{opacity:0} 22%{opacity:1} 100%{opacity:0} }
+
+  /* the visions that drift in over the fire and fade */
+  #vision{ position:fixed; left:50%; top:33%; transform:translate(-50%,-50%); width:min(38vw,300px); height:min(28vw,220px); z-index:4; pointer-events:none; opacity:0;
+    background-position:center; background-size:cover; filter:blur(0.4px) brightness(1.0);
+    -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 68%); mask-image:radial-gradient(ellipse at center,#000 30%,transparent 68%);
+    transition:opacity 3.4s ease;
+    animation:visionDrift 16s ease-in-out infinite alternate; }   /* drift always on, so leaving never snaps */
+  #vision.in{ opacity:0.66; }
+  @keyframes visionDrift{ 0%{transform:translate(-50%,-50%) scale(1.0);} 100%{transform:translate(-50%,-52%) scale(1.05);} }
+  @media (max-aspect-ratio:3/4){ #vision{ top:26%; width:60vw; height:45vw; } }
+
+  /* the gate — permission before sound */
+  #gate{ position:fixed; left:50%; top:72%; transform:translate(-50%,-50%); z-index:22; width:min(90vw,560px); text-align:center; opacity:0; transition:opacity 2s ease; pointer-events:none; }
+  #gate.show{ opacity:1; pointer-events:auto; }
+  #gatePrompt{ font-style:italic; font-weight:300; font-size:clamp(17px,2vw,26px); color:var(--cream); line-height:1.5; margin-bottom:1em; text-shadow:0 0 3px rgba(0,0,0,0.98),0 0 12px rgba(0,0,0,0.95); }
+
+  /* the controls once immersed */
+  #controls{ position:fixed; left:50%; bottom:5.6vmin; transform:translateX(-50%); z-index:40; display:flex; flex-wrap:nowrap; justify-content:center; gap:clamp(13px,4.5vw,26px); max-width:96vw; align-items:center; opacity:0; transition:opacity 1s ease; pointer-events:none; }
+  #controls.show{ opacity:1; pointer-events:auto; }
+  #controls.show ~ #roomLabel{ opacity:0 !important; }   /* room label steps aside while immersed */
+  .ctl{ background:none; border:none; cursor:pointer; padding:0.5em 0.35em; white-space:nowrap; color:rgba(255,220,175,0.72); font-family:var(--caps); font-size:clamp(12px,1.05vw,14px); letter-spacing:clamp(0.16em,0.9vw,0.34em); text-transform:uppercase; -webkit-tap-highlight-color:transparent; transition:color .4s ease,text-shadow .4s ease; text-shadow:0 1px 8px rgba(0,0,0,0.9); }
+  .ctl:hover,.ctl:focus{ color:rgba(255,240,214,0.98); text-shadow:0 0 16px rgba(255,160,80,0.6); outline:none; }
+
+  /* read by candlelight — a real paginated book, never a scroll */
+  #reader{ position:fixed; inset:0; z-index:30; overflow:hidden; opacity:0; transition:opacity 1.6s ease; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%, rgba(20,10,3,0.6) 0%, rgba(8,4,1,0.92) 72%); }
+  #reader.show{ opacity:1; pointer-events:auto; }
+  #rbook{ position:absolute; inset:0; display:flex; flex-direction:column; }
+  #rpages{ position:relative; flex:1 1 auto; overflow:hidden; }
+  .rpage{ position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .55s ease; }
+  .rpage.on{ opacity:1; pointer-events:auto; }
+  .rpage-inner{ position:absolute; left:50%; top:0; transform:translateX(-50%); width:min(90vw,600px); padding:7vh 6px 3vh; }
+  .rtap{ position:absolute; top:0; bottom:0; z-index:3; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .rtap.prev{ left:0; width:34%; }
+  .rtap.next{ right:0; width:66%; }
+  #rnav{ flex:0 0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(14px,4.5vw,30px); padding:1.4vh 4vw calc(2vh + env(safe-area-inset-bottom,0px)); position:relative; z-index:5; }
+  .rnav-btn{ background:none; border:none; cursor:pointer; padding:0.5em 0.4em; white-space:nowrap; font-family:var(--caps); font-size:clamp(12px,1.05vw,14px); letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,220,175,0.72); -webkit-tap-highlight-color:transparent; transition:color .4s ease; text-shadow:0 1px 8px rgba(0,0,0,0.9); }
+  .rnav-btn:hover,.rnav-btn:focus{ color:rgba(255,240,214,0.98); outline:none; }
+  .rnav-btn:disabled{ color:rgba(255,220,175,0.16); cursor:default; }
+  #rCtr{ font-family:var(--caps); font-size:clamp(12px,1vw,13px); letter-spacing:0.32em; color:rgba(255,214,160,0.42); min-width:4em; text-align:center; }
+  .read-who{ display:block; text-align:center; font-family:var(--caps); font-size:clamp(12px,1vw,13px); letter-spacing:0.42em; text-transform:uppercase; color:rgba(255,214,160,0.6); margin:0 0 1.6em; }
+  .read-p{ font-size:clamp(17px,1.7vw,21px); font-weight:300; color:rgba(240,226,204,0.92); line-height:1.9; margin:0 0 1.15em; text-shadow:0 1px 10px rgba(0,0,0,0.8); }
+  .read-p.read-head{ margin-bottom:0; }
+  .read-p.read-cont{ margin-top:0; text-indent:0; }
+  .read-p.read-draven{ font-style:italic; text-align:center; color:rgba(224,208,240,0.9); }
+
+  #roomLabel{ position:fixed; bottom:3vmin; left:50%; transform:translateX(-50%); z-index:10; font-family:var(--caps);
+    font-size:clamp(8px,0.68vw,10px); letter-spacing:0.55em; text-transform:uppercase; color:rgba(232,196,150,0.30);
+    text-shadow:0 1px 8px rgba(0,0,0,0.9); pointer-events:none; opacity:0; transition:opacity 3s ease; }
+  #roomLabel.show{ opacity:1; }
+
+  /* —— the Everflame: cross-room navigation, warmed to the snug —— */
+  #everflame{ position:fixed; top:3.5vmin; left:3vmin; width:14vmin; height:14vmin; max-width:86px; max-height:86px; z-index:200; cursor:pointer; background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat; filter:brightness(1.22) saturate(1.05); transition:filter .5s ease, opacity 1.4s ease; opacity:0; }
+  #everflame.show{ opacity:.9; }
+  #everflame:hover{ filter:brightness(1.6) saturate(1.15); }
+  #efMenu{ position:fixed; top:calc(3.5vmin + 14vmin + 16px); left:3vmin; z-index:201; pointer-events:none; opacity:0; transform:translateY(8px); transition:opacity .7s ease, transform .7s ease; }
+  #efMenu.open{ opacity:1; pointer-events:all; transform:translateY(0); }
+  #efMenu::before{ content:''; position:absolute; top:-70px; left:-40px; right:-50px; bottom:-30px; background:radial-gradient(ellipse at 22% 0%, rgba(10,5,4,0.9) 0%, rgba(10,5,4,0.55) 45%, transparent 78%); z-index:-1; }
+  .ef-links{ list-style:none; margin:0; padding:0; }
+  .ef-item{ margin-bottom:0.35em; }
+  .ef-link{ display:block; background:none; border:none; padding:0; font-family:var(--serif); font-size:clamp(12px,1vw,13px); letter-spacing:0.3em; text-transform:uppercase; color:rgba(240,224,198,0.72); cursor:pointer; text-shadow:0 1px 8px rgba(0,0,0,0.95); transition:color .4s ease; white-space:nowrap; }
+  .ef-link:hover{ color:rgba(252,240,216,0.98); }
+  #efScrim{ position:fixed; inset:0; z-index:150; opacity:0; pointer-events:none; }
+  #efScrim.open{ pointer-events:all; }
+
+  /* —— the chamber sleeps unless the moon is dark —— */
+  #sealed{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:50; text-align:center; width:min(92vw,620px); opacity:0; pointer-events:none; transition:opacity 2.4s ease; }
+  #sealed.show{ opacity:1; pointer-events:auto; }
+  #sealedTitle{ font-family:var(--caps); font-size:clamp(12px,1vw,14px); letter-spacing:0.5em; text-transform:uppercase; color:rgba(240,224,198,0.55); margin-bottom:1.6em; }
+  #sealedBody{ font-size:clamp(18px,1.9vw,26px); font-weight:300; font-style:italic; color:var(--cream); line-height:1.75; text-shadow:0 2px 14px rgba(0,0,0,1); }
+  #sealedReturn{ margin-top:2.2em; font-family:var(--caps); font-size:clamp(12px,1.05vw,14px); letter-spacing:0.3em; text-transform:uppercase; color:rgba(240,224,198,0.5); background:none; border:none; cursor:pointer; transition:color .4s ease; }
+  #sealedReturn:hover{ color:rgba(252,240,216,0.9); }
+</style>
+  <script src="lunar.js"></script>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+  <div id="bg"></div>
+  <canvas id="embers"></canvas>
+  <div id="firelight"></div>
+  <div id="vision"></div>
+  <div id="vignette"></div>
+  <div id="welcome"><span></span></div>
+
+  <!-- the Everflame — cross-room navigation -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+  <nav id="efMenu" aria-label="The Everflame">
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- the chamber sleeps unless the moon is dark -->
+  <div id="sealed">
+    <div id="sealedTitle">The Resonance Chamber</div>
+    <div id="sealedBody">The fire has burned low.<br>The Chamber wakes only at the dark of the moon.</div>
+    <button id="sealedReturn" type="button">Return to the corridor</button>
+  </div>
+
+  <div id="offer">
+    <p id="offerPrompt">Is there something you would set down tonight?</p>
+    <input id="offerInput" type="text" maxlength="140" placeholder="name what you carry…" />
+    <div id="offerActions">
+      <button class="warm-btn" type="button" onclick="giveToFire()">Give it to the fire</button>
+      <button id="offerSkip" class="warm-btn faint" type="button" onclick="skipOffer()">Not tonight</button>
+    </div>
+  </div>
+  <div id="acknowledge"></div>
+  <div id="flare"></div>
+  <div id="burnWord" style="display:none"></div>
+
+  <div id="gate">
+    <p id="gatePrompt">Draven is ready to begin.<br>Would you like to hear him, or read by candlelight?</p>
+    <div>
+      <button class="warm-btn" type="button" onclick="chooseSound()">Wake the sound</button>
+      <button class="warm-btn faint" type="button" onclick="chooseRead()">Read by candlelight</button>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="ctl" type="button" onclick="taleBack()">◁ back</button>
+    <button class="ctl" id="ctlPause" type="button" onclick="togglePause()">Pause</button>
+    <button class="ctl" type="button" onclick="taleSkip()">skip ▷</button>
+    <button class="ctl" type="button" onclick="leaveFire()">leave</button>
+  </div>
+
+  <div id="reader"><div id="readerInner"></div></div>
+
+  <div id="roomLabel">The Resonance Chamber</div>
+  <div id="fadeCover"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* —— the chamber sleeps unless the moon is dark (test: ?phase=dark-moon, portal-wide standard) —— */
+  function devOpen(){ try{ var p=new URLSearchParams(location.search); return /^dark(-moon)?$/.test(p.get('phase')||''); }catch(e){ return false; } }
+  function isDarkMoon(){
+    if(devOpen()) return true;
+    if(typeof LUNAR!=='undefined'){ try{ var ls=LUNAR.getLunarState(); if(ls&&ls.phase){ var k=ls.phase.key||ls.phase; return /dark/i.test(k); } }catch(e){} }
+    return false;
+  }
+  var OPEN = isDarkMoon();
+  function showSealed(){ var s=document.getElementById('sealed'); if(s){ setTimeout(function(){ s.classList.add('show'); }, 1400); } }
+
+  /* —— warmth blooms in (the door closes behind you) —— */
+  setTimeout(function(){ document.getElementById('fadeCover').style.opacity='0'; }, 200);
+  setTimeout(function(){ document.getElementById('roomLabel').classList.add('show'); }, 6000);
+
+  /* —— on phones, use a portrait image so more of the snug survives —— */
+  var CDN='https://res.cloudinary.com/ds8pkprtb/image/upload/';
+  var VCDN='https://res.cloudinary.com/ds8pkprtb/video/upload/';
+  var LAND=CDN+'resonance_chamber_snug_lugkhq.png', PORT=CDN+'resonance_chamber_snug_portrait_besahf.png', portOk=false;
+  function applyBg(){
+    var bg=document.getElementById('bg'); if(!bg) return;
+    if(innerHeight > innerWidth && portOk){ bg.style.backgroundImage="url('"+PORT+"')"; bg.style.backgroundPosition='center'; }
+    else { bg.style.backgroundImage="url('"+LAND+"')"; bg.style.backgroundPosition='center 52%'; }
+  }
+  (function(){ var im=new Image(); im.onload=function(){ portOk=true; applyBg(); }; im.onerror=function(){ portOk=false; applyBg(); }; im.src=PORT; })();
+  addEventListener('resize', applyBg);
+
+  /* —— the welcome: placeholder lines, yours to make your own —— */
+  var LINES = [
+    'You made it.',
+    'The fire is warm. No one here will ask your name.',
+    'Stay as long as you like.'
+  ];
+  var w = document.getElementById('welcome'), span = w.querySelector('span'), i = 0;
+  function step(){
+    if(i >= LINES.length){ setTimeout(function(){ w.classList.remove('show'); }, 800); setTimeout(showOffer, 3400); return; }
+    span.textContent = LINES[i++];
+    w.classList.add('show');
+    setTimeout(function(){ w.classList.remove('show'); setTimeout(step, 1700); }, 4200);
+  }
+  if(OPEN){ setTimeout(step, 3200); } else { showSealed(); }
+
+  /* —— warm embers rising from the hearth —— */
+  var c = document.getElementById('embers'), ctx = c.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio||1, 2), W, H, parts;
+  function resize(){ W=c.width=Math.floor(innerWidth*dpr); H=c.height=Math.floor(innerHeight*dpr); c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px'; }
+  resize(); addEventListener('resize', resize);
+  function ember(spread){
+    // rise from the fire — the desktop and portrait crops seat the hearth differently
+    var h = (innerHeight > innerWidth)
+      ? { x0:0.44, xr:0.16, y0:0.40, yr:0.10 }   // portrait: the grate, not the floor plate
+      : { x0:0.36, xr:0.30, y0:0.58, yr:0.12 };   // desktop, unchanged
+    return { x:(h.x0+Math.random()*h.xr)*W, y: spread ? Math.random()*(h.y0+h.yr)*H : (h.y0+Math.random()*h.yr)*H,
+      r:(0.6+Math.random()*1.7)*dpr, s:(0.10+Math.random()*0.30)*dpr, drift:(Math.random()-0.5)*0.22*dpr,
+      a:0.0, amax:0.20+Math.random()*0.45, ph:Math.random()*6.28,
+      hue: Math.random()<0.6 ? '255,176,92' : '255,140,66' };
+  }
+  var N = innerWidth<560 ? 26 : 46; parts=[];
+  for(var k=0;k<N;k++){ parts.push(ember(true)); }
+  function loop(){
+    var t = performance.now();
+    ctx.clearRect(0,0,W,H);
+    for(var j=0;j<parts.length;j++){
+      var p=parts[j];
+      p.y -= p.s; p.x += p.drift + Math.sin(t*0.0011 + p.ph)*0.18*dpr;
+      // fade in near the fire, fade out as they rise
+      var life = 1 - (p.y/H);
+      var flick = 0.6 + 0.4*Math.sin(t*0.006 + p.ph);
+      var alpha = Math.max(0, Math.min(p.amax, life*0.9)) * flick;
+      if(p.y < -10*dpr){ parts[j]=ember(false); continue; }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.2832);
+      ctx.fillStyle='rgba('+p.hue+','+alpha.toFixed(3)+')';
+      ctx.shadowColor='rgba(255,150,70,'+(alpha*0.8).toFixed(3)+')'; ctx.shadowBlur=6*dpr;
+      ctx.fill();
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  /* —— the offering to the fire —— */
+  function isTouch(){ return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0); }
+  var offerCount = 0;
+  function showOffer(){
+    document.getElementById('offerPrompt').textContent = offerCount === 0
+      ? 'Is there something you would set down tonight?'
+      : 'Is there anything else?';
+    var skip = document.getElementById('offerSkip'); if(skip) skip.textContent = offerCount === 0 ? 'Not tonight' : "That's all";
+    var inp = document.getElementById('offerInput'); if(inp) inp.value = '';
+    document.getElementById('offer').classList.add('show');
+    if(inp && !isTouch()) inp.focus();
+  }
+  function acknowledge(msg){
+    var a = document.getElementById('acknowledge'); a.textContent = msg; a.classList.add('show');
+    setTimeout(function(){ a.classList.remove('show'); }, 4400);
+  }
+  function flare(){ var f = document.getElementById('flare'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+  function spawnBurst(n){
+    for(var b=0;b<n;b++){ var e = ember(false);
+      e.y = (0.60 + Math.random()*0.08)*H; e.x = (0.44 + Math.random()*0.14)*W;
+      e.s = (0.25 + Math.random()*0.5)*dpr; e.amax = 0.5 + Math.random()*0.4; e.a = e.amax;
+      parts.push(e);
+    }
+    if(parts.length > 150){ parts.splice(0, parts.length - 150); }   // keep the fire from over-filling
+  }
+  function giveToFire(){
+    var inp = document.getElementById('offerInput'); var text = (inp.value||'').trim();
+    if(!text){ skipOffer(); return; }
+    document.getElementById('offer').classList.remove('show');
+    var rect = inp.getBoundingClientRect();
+    var bw = document.getElementById('burnWord');
+    bw.textContent = text.length > 48 ? text.slice(0,46)+'…' : text;
+    bw.style.display=''; bw.style.transition='none'; bw.style.opacity='1'; bw.style.filter='none'; bw.style.color=''; bw.style.letterSpacing='0';
+    bw.style.left=(rect.left + rect.width/2)+'px'; bw.style.top=(rect.top + rect.height/2)+'px';
+    var fx = innerWidth*0.5, fy = innerHeight*0.66;
+    requestAnimationFrame(function(){
+      bw.style.transition='left 2.6s ease-in, top 2.6s ease-in, opacity 2.6s ease-in, filter 2.6s ease-in, color 2.2s ease-in, letter-spacing 2.6s ease-in';
+      bw.style.left=fx+'px'; bw.style.top=fy+'px';
+      bw.style.color='rgba(255,150,70,0.9)'; bw.style.letterSpacing='0.3em'; bw.style.filter='blur(3px)'; bw.style.opacity='0';
+    });
+    setTimeout(function(){ flare(); spawnBurst(30); }, 1900);
+    setTimeout(function(){ bw.style.display='none'; acknowledge('The fire has it now.'); }, 2700);
+    setTimeout(function(){ offerCount++; showOffer(); }, 4800);   // invite another
+  }
+  function skipOffer(){
+    document.getElementById('offer').classList.remove('show');
+    setTimeout(showGate, 1000);
+  }
+
+  /* —— Web Audio mixer: iOS ignores HTMLMediaElement.volume, so every levelled
+     clip routes element → GainNode → destination (JS rule 6; same pattern as
+     Lost Soul's atmosphere bed). Falls back to .volume if Web Audio is missing. —— */
+  var mixCtx=null;
+  function mixerCtx(){
+    if(!mixCtx){ try{ mixCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ mixCtx=null; } }
+    if(mixCtx && mixCtx.state==='suspended'){ try{ mixCtx.resume(); }catch(e){} }
+    return mixCtx;
+  }
+  function routeGain(a){
+    if(a._gain) return a._gain;
+    var ctx=mixerCtx(); if(!ctx) return null;
+    try{
+      var src=ctx.createMediaElementSource(a);
+      var g=ctx.createGain();
+      src.connect(g); g.connect(ctx.destination);
+      a._gain=g; return g;
+    }catch(e){ return null; }
+  }
+  function setLevel(a,v){ var g=routeGain(a); if(g){ try{ g.gain.value=v; }catch(e){} } else { a.volume=v; } }
+  function getLevel(a){ return a._gain ? a._gain.gain.value : a.volume; }
+
+  /* —— the fire (reused from Lost Soul) —— */
+  var crackle=null, crackleStarted=false;
+  function startCrackle(){
+    if(crackleStarted) return; crackleStarted=true;
+    crackle = new Audio(); crackle.crossOrigin='anonymous'; crackle.src=VCDN+'fire_crackle.mp3'; crackle.loop = true; setLevel(crackle, 1.0);
+    var p = crackle.play(); if(p && p.catch) p.catch(function(){ crackleStarted=false; });
+  }
+
+  /* —— the gate: permission before any sound —— */
+  function showGate(){ document.getElementById('gate').classList.add('show'); }
+  function chooseSound(){
+    document.getElementById('gate').classList.remove('show');
+    startCrackle();
+    document.getElementById('controls').classList.add('show');
+    setTimeout(startTale, 900);
+  }
+  function chooseRead(){
+    document.getElementById('gate').classList.remove('show');
+    setTimeout(showReader, 700);
+  }
+
+  /* —— THE TALE — 24 takes: audio + scene + text (text is for read mode only) —— */
+  var TAKES = [
+    { id:'00_draven_opening', who:'Draven', scene:0, text:"What a pleasure it is to welcome you all here on this dark moon. We can often fear to embrace the darkness, so to see you all is a light to my own heart. This month we are exploring a tale from the master of darkness himself. I'm sure you're all familiar with him, but no matter how many times I hear his work, it never fails to bring me joy. I challenge you all to find the message for yourself. The dark moon reminds us that our inner darkness is as magical as our light. I hope you enjoy our tale tonight. The Tell-Tale Heart, by Mr Edgar Allan Poe." },
+    { id:'01_tale', scene:1, text:"True! — nervous — very, very dreadfully nervous I had been and am; but why will you say that I am mad? The disease had sharpened my senses — not destroyed — not dulled them. Above all was the sense of hearing acute. I heard all things in the heaven and in the earth. I heard many things in hell. How, then, am I mad? Hearken! and observe how healthily — how calmly I can tell you the whole story." },
+    { id:'02_tale', scene:2, text:"It is impossible to say how first the idea entered my brain; but once conceived, it haunted me day and night. Object there was none. Passion there was none. I loved the old man. He had never wronged me. He had never given me insult. For his gold I had no desire. I think it was his eye! yes, it was this! He had the eye of a vulture — a pale blue eye, with a film over it. Whenever it fell upon me, my blood ran cold; and so by degrees — very gradually — I made up my mind to take the life of the old man, and thus rid myself of the eye forever." },
+    { id:'03_tale', scene:1, text:"Now this is the point. You fancy me mad. Madmen know nothing. But you should have seen me. You should have seen how wisely I proceeded — with what caution — with what foresight — with what dissimulation I went to work! I was never kinder to the old man than during the whole week before I killed him. And every night, about midnight, I turned the latch of his door and opened it — oh, so gently! And then, when I had made an opening sufficient for my head, I put in a dark lantern, all closed, closed, so that no light shone out, and then I thrust in my head. Oh, you would have laughed to see how cunningly I thrust it in!" },
+    { id:'04_tale', scene:3, text:"I moved it slowly — very, very slowly, so that I might not disturb the old man's sleep. It took me an hour to place my whole head within the opening so far that I could see him as he lay upon his bed. Ha! — would a madman have been so wise as this?" },
+    { id:'05_tale', scene:3, text:"And then, when my head was well in the room, I undid the lantern cautiously — oh, so cautiously — cautiously (for the hinges creaked) — I undid it just so much that a single thin ray fell upon the vulture eye. And this I did for seven long nights — every night just at midnight — but I found the eye always closed; and so it was impossible to do the work; for it was not the old man who vexed me, but his Evil Eye. And every morning, when the day broke, I went boldly into the chamber, and spoke courageously to him, calling him by name in a hearty tone, and inquiring how he had passed the night. So you see he would have been a very profound old man, indeed, to suspect that every night, just at twelve, I looked in upon him while he slept." },
+    { id:'06_tale', scene:4, text:"Upon the eighth night I was more than usually cautious in opening the door. A watch's minute hand moves more quickly than did mine. Never before that night had I felt the extent of my own powers — of my sagacity. I could scarcely contain my feelings of triumph. To think that there I was, opening the door, little by little, and he not even to dream of my secret deeds or thoughts. I fairly chuckled at the idea; and perhaps he heard me; for he moved on the bed suddenly, as if startled. Now you may think that I drew back — but no. His room was as black as pitch with the thick darkness (for the shutters were close fastened, through fear of robbers), and so I knew that he could not see the opening of the door, and I kept pushing it on steadily, steadily." },
+    { id:'07_tale', scene:5, text:"I had my head in, and was about to open the lantern, when my thumb slipped upon the tin fastening, and the old man sprang up in bed, crying out — \"Who's there?\"" },
+    { id:'08_tale', scene:2, text:"I kept quite still and said nothing. For a whole hour I did not move a muscle, and in the meantime I did not hear him lie down. He was still sitting up in the bed listening; — just as I have done, night after night, hearkening to the death watches in the wall." },
+    { id:'09_tale', scene:5, text:"Presently I heard a slight groan, and I knew it was the groan of mortal terror. It was not a groan of pain or of grief — oh, no! — it was the low stifled sound that arises from the bottom of the soul when overcharged with awe. I knew the sound well. Many a night, just at midnight, when all the world slept, it has welled up from my own bosom, deepening, with its dreadful echo, the terrors that distracted me. I say I knew it well. I knew what the old man felt, and pitied him, although I chuckled at heart. I knew that he had been lying awake ever since the first slight noise, when he had turned in the bed. His fears had been ever since growing upon him. He had been trying to fancy them causeless, but could not. He had been saying to himself — \"It is nothing but the wind in the chimney — it is only a mouse crossing the floor,\" or \"it is merely a cricket which has made a single chirp.\" Yes, he had been trying to comfort himself with these suppositions: but he had found all in vain. All in vain; because Death, in approaching him, had stalked with his black shadow before him, and enveloped the victim. And it was the mournful influence of the unperceived shadow that caused him to feel — although he neither saw nor heard — to feel the presence of my head within the room." },
+    { id:'10_tale', scene:3, text:"When I had waited a long time, very patiently, without hearing him lie down, I resolved to open a little — a very, very little crevice in the lantern. So I opened it — you cannot imagine how stealthily, stealthily — until, at length, a single dim ray, like the thread of the spider, shot from out the crevice and fell full upon the vulture eye." },
+    { id:'11_tale', scene:2, text:"It was open — wide, wide open — and I grew furious as I gazed upon it. I saw it with perfect distinctness — all a dull blue, with a hideous veil over it that chilled the very marrow in my bones; but I could see nothing else of the old man's face or person: for I had directed the ray as if by instinct, precisely upon the damned spot." },
+    { id:'12_tale', scene:2, text:"And now have I not told you that what you mistake for madness is but over-acuteness of the senses? — now, I say, there came to my ears a low, dull, quick sound, such as a watch makes when enveloped in cotton. I knew that sound well, too. It was the beating of the old man's heart. It increased my fury, as the beating of a drum stimulates the soldier into courage." },
+    { id:'13_tale', scene:5, text:"But even yet I refrained and kept still. I scarcely breathed. I held the lantern motionless. I tried how steadily I could maintain the ray upon the eye. Meantime the hellish tattoo of the heart increased. It grew quicker and quicker, and louder and louder every instant. The old man's terror must have been extreme! It grew louder, I say, louder every moment! — do you mark me well? I have told you that I am nervous: so I am. And now at the dead hour of the night, amid the dreadful silence of that old house, so strange a noise as this excited me to uncontrollable terror. Yet, for some minutes longer I refrained and stood still. But the beating grew louder, louder! I thought the heart must burst. And now a new anxiety seized me — the sound would be heard by a neighbour! The old man's hour had come! With a loud yell, I threw open the lantern and leaped into the room. He shrieked once — once only." },
+    { id:'14_tale', scene:7, text:"In an instant I dragged him to the floor, and pulled the heavy bed over him. I then smiled gaily, to find the deed so far done. But, for many minutes, the heart beat on with a muffled sound. This, however, did not vex me; it would not be heard through the wall. At length it ceased." },
+    { id:'15_tale', scene:7, text:"The old man was dead. I removed the bed and examined the corpse. Yes, he was stone, stone dead. I placed my hand upon the heart and held it there many minutes. There was no pulsation. He was stone dead. His eye would trouble me no more." },
+    { id:'16_draven_mid', who:'Draven', scene:0, text:"This tale does not get better, be warned. Even when we think we have reached the depths of darkness, there is always more to fall into. Prepare yourself for what's to come." },
+    { id:'17_tale', scene:7, text:"If still you think me mad, you will think so no longer when I describe the wise precautions I took for the concealment of the body. The night waned, and I worked hastily, but in silence. First of all I dismembered the corpse. I cut off the head and the arms and the legs. I then took up three planks from the flooring of the chamber, and deposited all between the scantlings. I then replaced the boards so cleverly, so cunningly, that no human eye — not even his — could have detected any thing wrong. There was nothing to wash out — no stain of any kind — no blood-spot whatever. I had been too wary for that. A tub had caught all — ha! ha!" },
+    { id:'18_tale', scene:8, text:"When I had made an end of these labors, it was four o'clock — still dark as midnight. As the bell sounded the hour, there came a knocking at the street door. I went down to open it with a light heart, — for what had I now to fear? There entered three men, who introduced themselves, with perfect suavity, as officers of the police. A shriek had been heard by a neighbour during the night; suspicion of foul play had been aroused; information had been lodged at the police office, and they (the officers) had been deputed to search the premises." },
+    { id:'19_tale', scene:8, text:"I smiled, — for what had I to fear? I bade the gentlemen welcome. The shriek, I said, was my own in a dream. The old man, I mentioned, was absent in the country. I took my visitors all over the house. I bade them search — search well. I led them, at length, to his chamber. I showed them his treasures, secure, undisturbed. In the enthusiasm of my confidence, I brought chairs into the room, and desired them here to rest from their fatigues, while I myself, in the wild audacity of my perfect triumph, placed my own seat upon the very spot beneath which reposed the corpse of the victim." },
+    { id:'20_tale', scene:8, text:"The officers were satisfied. My manner had convinced them. I was singularly at ease. They sat, and while I answered cheerily, they chatted of familiar things. But, ere long, I felt myself getting pale and wished them gone. My head ached, and I fancied a ringing in my ears: but still they sat and still chatted. The ringing became more distinct: — it continued and became more distinct: I talked more freely to get rid of the feeling: but it continued and gained definiteness — until, at length, I found that the noise was not within my ears." },
+    { id:'21_tale', scene:9, text:"No doubt I now grew very pale; — but I talked more fluently, and with a heightened voice. Yet the sound increased — and what could I do? It was a low, dull, quick sound — much such a sound as a watch makes when enveloped in cotton. I gasped for breath — and yet the officers heard it not. I talked more quickly — more vehemently; but the noise steadily increased. I arose and argued about trifles, in a high key and with violent gesticulations; but the noise steadily increased. Why would they not be gone? I paced the floor to and fro with heavy strides, as if excited to fury by the observations of the men — but the noise steadily increased. Oh God! what could I do? I foamed — I raved — I swore! I swung the chair upon which I had been sitting, and grated it upon the boards, but the noise arose over all and continually increased. It grew louder — louder — louder! And still the men chatted pleasantly, and smiled. Was it possible they heard not? Almighty God! — no, no! They heard! — they suspected! — they knew! — they were making a mockery of my horror! — this I thought, and this I think. But anything was better than this agony! Anything was more tolerable than this derision! I could bear those hypocritical smiles no longer! I felt that I must scream or die! and now — again! — hark! louder! louder! louder! louder! —" },
+    { id:'22_tale', scene:9, text:"\"Villains!\" I shrieked, \"dissemble no more! I admit the deed! — tear up the planks! here, here! — it is the beating of his hideous heart!\"" },
+    { id:'23_draven_closing', who:'Draven', scene:0, text:"And there it is. We can never hide from ourselves, my friends." }
+  ];
+  var SCENE_FILES = { 1:CDN+'tale01_scene1_pdo8wt.png', 2:CDN+'tale01_scene2_rkzybz.png', 3:CDN+'tale01_scene03_gb8p0v.png', 4:CDN+'tale01_scene04_dlczdw.png', 5:CDN+'tale01_scene5_z0eq2p.png', 7:CDN+'tale01_scene7_bvsn9h.png', 8:CDN+'tale01_scene8_c1uyp9.png', 9:CDN+'tale01_scene9_dhh2x8.png' };
+
+  /* —— audio fade helper —— */
+  function fade(a,to,ms,cb){ if(!a){ if(cb)cb(); return; } var from=getLevel(a),t0=Date.now(); var id=setInterval(function(){ var p=Math.min(1,(Date.now()-t0)/ms); setLevel(a,Math.max(0,Math.min(1,from+(to-from)*p))); if(p>=1){ clearInterval(id); if(cb)cb(); } },50); }
+
+  /* —— stems (soft, under Draven) —— */
+  var stems={};
+  function stemA(name){ if(!stems[name]){ var a=new Audio(); a.crossOrigin='anonymous'; a.src=VCDN+name+'.mp3'; a.preload='auto'; stems[name]=a; } return stems[name]; }
+  function loopStem(name, vol){ var a=stemA(name); a.loop=true; setLevel(a,0); var p=a.play(); if(p&&p.catch)p.catch(function(){}); fade(a,vol,2500); }
+  function stopStemFade(name){ var a=stems[name]; if(a) fade(a,0,1500,function(){ a.pause(); a.currentTime=0; }); }
+  function shot(name, delay, vol){ setTimeout(function(){ var a=new Audio(); a.crossOrigin='anonymous'; a.src=VCDN+name+'.mp3'; setLevel(a,(vol==null?0.5:vol)); var p=a.play(); if(p&&p.catch)p.catch(function(){}); }, (delay||0)*1000); }
+  function stemsForTake(i){
+    if(i===8) loopStem('keening',0.22);
+    if(i===11){ stopStemFade('keening'); loopStem('heartbeat_slow',0.22); }
+    if(i===13){ stopStemFade('heartbeat_slow'); loopStem('heartbeat_fast',0.30); }
+    if(i===14){ var h=stems['heartbeat_fast']; if(h) fade(h,0,4000,function(){ h.pause(); h.currentTime=0; }); }
+    if(i===3) shot('hinge_creak_2',1.4,0.45);
+    if(i===5) shot('hinge_creak_2',0.6,0.4);
+    if(i===6) shot('bed_creak',2.4,0.5);
+    if(i===18){ shot('bell_four',1.0,0.4); shot('door_knock',5.2,0.5); }
+  }
+
+  /* —— the scene that drifts in, then fades —— */
+  var curScene=-1, visionTimer=null;
+  function driftScene(n){
+    var v=document.getElementById('vision');
+    if(n===curScene && v.classList.contains('in')) return;
+    curScene=n;
+    var src=(n && SCENE_FILES[n]) ? SCENE_FILES[n] : null;
+    if(!src){ v.classList.remove('in'); return; }
+    v.style.backgroundImage="url('"+src+"')";
+    v.classList.add('in');
+    clearTimeout(visionTimer);
+    visionTimer=setTimeout(function(){ v.classList.remove('in'); }, 5000);   // drift in, brief hold, fade away
+  }
+
+  /* —— the sequence: Draven reads, scenes drift, no words —— */
+  var seqIdx=-1, narration=null, cryFired=false;
+  function startTale(){
+    acknowledge('Draven settles into his chair by the fire.');
+    setTimeout(function(){ playSeq(0); }, 2600);
+  }
+  function playSeq(i){
+    if(i<0) i=0;
+    seqIdx=i;
+    if(i>=TAKES.length){ endTale(); return; }
+    var tk=TAKES[i];
+    driftScene(tk.scene);
+    stemsForTake(i);
+    cryFired=false;
+    if(narration){ narration.onended=null; narration.ontimeupdate=null; try{ narration.pause(); }catch(e){} }
+    narration=new Audio(); narration.crossOrigin='anonymous'; narration.src=VCDN+tk.id+'.mp3'; setLevel(narration,1.0);
+    narration.onended=function(){ playSeq(i+1); };
+    narration.onerror=function(){ setTimeout(function(){ playSeq(i+1); }, 400); };  // never get stuck
+    if(i===13){ narration.ontimeupdate=function(){ if(!cryFired && narration.duration && narration.currentTime>narration.duration*0.9){ cryFired=true; shot('cry',0,0.45); } }; }
+    var p=narration.play(); if(p&&p.catch)p.catch(function(){});
+    updatePauseBtn();
+  }
+  function endTale(){
+    document.getElementById('vision').classList.remove('in'); curScene=-1;
+    for(var k in stems){ try{ stems[k].pause(); }catch(e){} }
+    document.getElementById('controls').classList.remove('show');
+    acknowledge('The tale is told. Sit as long as you like.');
+  }
+
+  /* —— controls —— */
+  function updatePauseBtn(){ var b=document.getElementById('ctlPause'); if(b) b.textContent = (narration && !narration.paused) ? 'Pause' : 'Play'; }
+  function togglePause(){
+    if(!narration) return;
+    if(narration.paused){ narration.play().catch(function(){}); } else { narration.pause(); }
+    updatePauseBtn();
+  }
+  function taleBack(){ playSeq(Math.max(0, seqIdx-1)); }
+  function taleSkip(){ playSeq(seqIdx+1); }
+  function leaveFire(){
+    if(narration) narration.pause();
+    for(var k in stems){ try{ stems[k].pause(); }catch(e){} }
+    if(crackle) fade(crackle,0,1500,function(){ crackle.pause(); crackleStarted=false; });
+    document.getElementById('vision').classList.remove('in');
+    document.getElementById('controls').classList.remove('show');
+    acknowledge('The fire settles. Rest a while.');
+    setTimeout(showGate, 2600);   // offer the choice again, so listen/read is never a one-way door
+  }
+
+  /* —— read by candlelight — a real paginated book (no scroll) —— */
+  function showReader(){
+    var reader = document.getElementById('reader');
+    // Rebuild fresh each open: page sizing depends on viewport + orientation
+    reader.innerHTML =
+      '<div id="rbook">'
+      +   '<div id="rpages"><div class="rtap prev" id="rTapPrev"></div><div class="rtap next" id="rTapNext"></div></div>'
+      +   '<div id="rnav">'
+      +     '<button class="rnav-btn" id="rPrev" type="button">‹ back</button>'
+      +     '<span id="rCtr"></span>'
+      +     '<button class="rnav-btn" id="rNext" type="button">on ›</button>'
+      +     '<button class="rnav-btn" id="rClose" type="button">close the book</button>'
+      +   '</div>'
+      + '</div>';
+
+    // Linear content: Draven's spoken interludes carry a name, the tale does not
+    var blocks = [];
+    for(var i=0;i<TAKES.length;i++){
+      var t=TAKES[i];
+      if(t.who) blocks.push({ who:t.who });
+      blocks.push({ text:t.text, draven:!!t.who });
+    }
+
+    // the Everflame steps back so it never covers the opening lines; it returns on close
+    var ef=document.getElementById('everflame'); if(ef){ ef.style.transition='opacity .8s ease'; ef.style.opacity='0'; ef.style.pointerEvents='none'; }
+
+    reader.classList.add('show');
+    // Paginate once the reader has real layout (so #rpages has a height to fit to)
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      paginateReader(document.getElementById('rpages'), blocks);
+      wireReader();
+    }); });
+  }
+
+  /* Split the tale into height-fitted pages. Long paragraphs continue across a
+     page break (head keeps its lines, tail resumes with no indent) so nothing
+     ever clips or scrolls. */
+  function paginateReader(rpages, blocks){
+    var availH = rpages.clientHeight;
+    function newPage(){
+      var pg=document.createElement('div'); pg.className='rpage';
+      var inner=document.createElement('div'); inner.className='rpage-inner';
+      pg.appendChild(inner); rpages.appendChild(pg); return inner;
+    }
+    var inner=newPage();
+    function fits(){ return inner.scrollHeight <= availH; }
+
+    for(var b=0;b<blocks.length;b++){
+      var blk=blocks[b];
+      if(blk.who!==undefined){
+        var wEl=document.createElement('span'); wEl.className='read-who'; wEl.textContent=blk.who;
+        inner.appendChild(wEl);
+        if(!fits() && inner.childElementCount>1){ inner.removeChild(wEl); inner=newPage(); inner.appendChild(wEl); }
+        continue;
+      }
+      var pEl=document.createElement('p'); pEl.className='read-p'+(blk.draven?' read-draven':'');
+      inner.appendChild(pEl);
+      if(!fits() && inner.childElementCount>1){ inner.removeChild(pEl); inner=newPage(); inner.appendChild(pEl); }
+      var words=blk.text.split(' '), cur='';
+      for(var wi=0;wi<words.length;wi++){
+        var test = cur ? cur+' '+words[wi] : words[wi];
+        pEl.textContent=test;
+        if(fits()){ cur=test; continue; }
+        if(cur===''){ cur=test; continue; }   // a single word taller than a page: accept
+        pEl.textContent=cur;                   // keep what fit
+        pEl.classList.add('read-head');        // no bottom margin — reads continuous
+        inner=newPage();
+        var cont=document.createElement('p'); cont.className='read-p'+(blk.draven?' read-draven':'')+' read-cont';
+        inner.appendChild(cont);
+        pEl=cont; cur=words[wi]; pEl.textContent=cur;
+      }
+    }
+  }
+
+  function wireReader(){
+    var pages=Array.prototype.slice.call(document.querySelectorAll('#rpages .rpage'));
+    if(!pages.length) return;
+    var idx=0, ctr=document.getElementById('rCtr');
+    var prev=document.getElementById('rPrev'), next=document.getElementById('rNext');
+    function render(){
+      for(var i=0;i<pages.length;i++) pages[i].classList.toggle('on', i===idx);
+      ctr.textContent=(idx+1)+' / '+pages.length;
+      prev.disabled=(idx===0); next.disabled=(idx===pages.length-1);
+    }
+    function go(d){ var n=idx+d; if(n<0||n>=pages.length) return; idx=n; render(); }
+    prev.onclick=function(){ go(-1); };
+    next.onclick=function(){ go(1); };
+    document.getElementById('rTapPrev').onclick=function(){ go(-1); };
+    document.getElementById('rTapNext').onclick=function(){ go(1); };
+    document.getElementById('rClose').onclick=function(){ leaveReader(); };
+    if(window.__rKey) document.removeEventListener('keydown', window.__rKey);
+    window.__rKey=function(e){
+      if(!document.getElementById('reader').classList.contains('show')) return;
+      if(e.key==='ArrowRight') go(1);
+      else if(e.key==='ArrowLeft') go(-1);
+      else if(e.key==='Escape') leaveReader();
+    };
+    document.addEventListener('keydown', window.__rKey);
+    render();
+  }
+  function leaveReader(){ document.getElementById('reader').classList.remove('show'); var ef=document.getElementById('everflame'); if(ef){ ef.style.opacity=''; ef.style.pointerEvents=''; } setTimeout(function(){ acknowledge('Rest a while by the fire.'); }, 600); setTimeout(showGate, 2400); }
+
+  window.giveToFire = giveToFire; window.skipOffer = skipOffer;
+  window.chooseSound = chooseSound; window.chooseRead = chooseRead; window.togglePause = togglePause; window.leaveFire = leaveFire; window.leaveReader = leaveReader;
+  window.taleBack = taleBack; window.taleSkip = taleSkip;
+  document.getElementById('offerInput').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); giveToFire(); } });
+
+  /* —— the Everflame: leave the chamber without being trapped —— */
+  function navigateTo(href){
+    var fc=document.getElementById('fadeCover');
+    if(fc){ fc.style.pointerEvents='none'; fc.style.opacity='1'; }
+    setTimeout(function(){ location.href=href; }, 900);
+  }
+  (function(){
+    var ef=document.getElementById('everflame'), menu=document.getElementById('efMenu'), scrim=document.getElementById('efScrim'), open=false;
+    function openM(){ open=true; menu.classList.add('open'); scrim.classList.add('open'); }
+    function closeM(){ open=false; menu.classList.remove('open'); scrim.classList.remove('open'); }
+    if(ef){ ef.addEventListener('click', function(){ open?closeM():openM(); });
+      ef.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open?closeM():openM(); } }); }
+    if(scrim){ scrim.addEventListener('click', closeM); }
+    var A=document.getElementById('efArchives'), H=document.getElementById('efHearthfire'), C=document.getElementById('efCorridor'), L=document.getElementById('efLeave'), SR=document.getElementById('sealedReturn');
+    if(A) A.addEventListener('click', function(){ closeM(); navigateTo('whispered-archives.html'); });
+    if(H) H.addEventListener('click', function(){ closeM(); navigateTo('hearthfire.html'); });
+    if(C) C.addEventListener('click', function(){ closeM(); navigateTo('vestibule.html?walk=1'); });
+    if(L) L.addEventListener('click', function(){ closeM(); navigateTo('index.html'); });
+    if(SR) SR.addEventListener('click', function(){ navigateTo('vestibule.html?walk=1'); });
+    setTimeout(function(){ if(ef) ef.classList.add('show'); }, 6500);
+  })();
+})();
+</script>
+
+<!-- Return to the corridor — visual doorway, bottom-left (portal nav standard) -->
+<div id="returnCorridor" role="button" tabindex="0" aria-label="Return to the corridor"></div>
+<style>
+#returnCorridor{position:fixed;left:5%;bottom:5%;width:12vmin;height:12vmin;min-width:64px;min-height:64px;border-radius:50%;overflow:hidden;background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/resonance_1.png') center / cover no-repeat;opacity:0.6;box-shadow:0 0 0 1px rgba(200,160,80,0.25),0 0 18px rgba(200,150,70,0.25);cursor:pointer;z-index:45;transition:opacity .6s ease,box-shadow .6s ease;}
+#returnCorridor:hover,#returnCorridor.active{opacity:1;box-shadow:0 0 0 2px rgba(220,180,100,0.55),0 0 26px rgba(220,170,90,0.45);}
+</style>
+<script>
+(function(){var r=document.getElementById('returnCorridor');if(!r)return;function go(){window.location.href='vestibule.html';}
+r.addEventListener('click',go);
+r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+r.addEventListener('touchstart',function(){r.classList.add('active');},{passive:true});
+r.addEventListener('touchend',function(){setTimeout(function(){r.classList.remove('active');},700);});})();
+</script>
+</body>
+</html>

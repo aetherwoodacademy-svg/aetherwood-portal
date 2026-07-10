@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Silver Beast · Aetherwood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ——— PALETTE ——— */
+    :root {
+      --bg-deep:       #05070e;
+      --silver:        #bfc8d6;
+      --moonlight:     #e5eaf2;
+      --eirik-gold:    rgba(195,180,135,0.78);
+      --lireal-violet: rgba(170,150,200,0.82);
+      --serif:         'IM Fell English', Georgia, serif;
+      --prose:         'Cormorant Garamond', Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--silver);
+      font-family: var(--prose);
+    }
+
+    /* ——— CANVAS ——— */
+    #atmoCanvas {
+      position: fixed; inset: 0;
+      z-index: 0; pointer-events: none;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— MOON DISPLAY ——— */
+    #moonDisplay {
+      position: fixed;
+      top: 3.5vmin; right: 3.5vmin;
+      z-index: 10; pointer-events: none;
+      opacity: 0.65;
+      transition: opacity 1.2s ease;
+    }
+    #moonDisplay svg {
+      width: clamp(38px, 5vmin, 54px);
+      height: clamp(38px, 5vmin, 54px);
+      overflow: visible;
+    }
+
+    /* ——— SOUND TOGGLE ——— */
+    #soundToggle {
+      position: fixed;
+      bottom: max(2.5vh, 14px); right: 3vmin;
+      z-index: 50;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.75vw, 9px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(191,200,214,0.22);
+      transition: color 0.4s ease;
+    }
+    #soundToggle:hover { color: rgba(191,200,214,0.52); }
+
+    /* ——— RETURN TO LIBRARY OF TALES — visual doorway, bottom-left, same
+       pattern as the rest of the portal (Ange, 7 Jul 2026). clip-path
+       restricts the actual clickable area to the visible circle. ——— */
+    #returnLibrary {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      clip-path: circle(50%);
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1781786699/reading-room_hyisvm.png') center 65% / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 210;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnLibrary:hover,
+    #returnLibrary.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin;
+      min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen; filter: brightness(1.1);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      70%  { transform: translateY(-2px) rotate(-0.5deg)scaleX(1.01); }
+      85%  { transform: translateY(-5px) rotate(1.2deg) scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201; pointer-events: none;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%, rgba(6,3,9,0.82) 0%, rgba(6,3,9,0.5) 45%, transparent 78%);
+      pointer-events: none; z-index: -1;
+    }
+    .ef-section-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(175,140,72,0.35); margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block; background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.42em; text-transform: uppercase;
+      color: rgba(220,180,95,0.72); cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease; white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245,215,135,0.96); }
+    .ef-link.ef-current { color: rgba(220,180,95,0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160,125,55,0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim { position: fixed; inset: 0; z-index: 199; pointer-events: none; }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——— WORDMARK ——— */
+    #wordmark {
+      position: fixed;
+      bottom: max(2.5vh, 14px); left: 50%;
+      transform: translateX(-50%);
+      z-index: 5; white-space: nowrap; pointer-events: none;
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.55em; text-transform: uppercase;
+      color: rgba(155,130,82,0.16);
+    }
+
+    /* ——— LANDING ——— */
+    #landing {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 0 clamp(24px, 6vw, 80px);
+      transition: opacity 0.8s ease;
+    }
+    #landing.hidden { opacity: 0; pointer-events: none; }
+
+    .landing-eyebrow {
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.72vw, 9px);
+      letter-spacing: 0.6em; text-transform: uppercase;
+      color: rgba(191,200,214,0.28);
+      margin-bottom: 1.6em;
+    }
+    .landing-title {
+      font-family: var(--serif);
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400; letter-spacing: 0.06em;
+      color: var(--moonlight); line-height: 1.15;
+      margin-bottom: 0.5em; text-align: center;
+    }
+    .landing-tagline {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(13px, 1.2vw, 16px);
+      color: rgba(191,200,214,0.32); line-height: 1.8;
+      margin-bottom: 3.5em; text-align: center;
+    }
+    .landing-rule {
+      width: 34px; border: none;
+      border-top: 1px solid rgba(191,200,214,0.12);
+      margin: 0 auto 3.5em;
+    }
+    .landing-choices {
+      display: flex; flex-direction: column; align-items: center; gap: 1.2em;
+    }
+    .choice-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(10px, 1vw, 13px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(220,180,95,0.6);
+      padding: 0.5em 0;
+      transition: color 0.5s ease, letter-spacing 0.5s ease;
+    }
+    .choice-btn:hover { color: rgba(245,215,135,0.9); letter-spacing: 0.55em; }
+
+    /* ——— BOOK SCREENS ——— */
+    .book {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: stretch;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+    .book.visible { opacity: 1; pointer-events: all; }
+
+    /* Book header bar */
+    .book-header {
+      position: relative; z-index: 20;
+      display: flex; align-items: center; justify-content: center;
+      padding: max(3vh, 20px) clamp(20px, 5vw, 60px) 0;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      position: absolute; left: clamp(20px, 5vw, 60px);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.72vw, 9px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(191,200,214,0.22);
+      transition: color 0.4s ease;
+    }
+    .back-btn:hover { color: rgba(191,200,214,0.55); }
+
+    .narr-sep {
+      color: rgba(191,200,214,0.15);
+      font-family: var(--serif);
+      font-size: clamp(10px, 0.9vw, 12px);
+      user-select: none;
+    }
+    .narr-btn {
+      background: none;
+      border: 1px solid rgba(195,180,135,0.4);
+      border-radius: 20px;
+      padding: 0.35em 1.2em;
+      cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: rgba(195,180,135,0.72);
+      transition: all 0.35s ease;
+    }
+    .narr-btn:hover {
+      border-color: rgba(195,180,135,0.65);
+      color: rgba(220,205,160,0.95);
+      background: rgba(195,180,135,0.1);
+    }
+    .narr-btn.playing {
+      border-color: rgba(220,180,95,0.5);
+      color: rgba(220,180,95,0.85);
+      background: rgba(220,180,95,0.08);
+    }
+
+    /* Pages wrapper */
+    .pages-wrap {
+      position: relative; flex: 1;
+      overflow: hidden;
+    }
+
+    /* Individual page */
+    .page {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 clamp(20px, 5vw, 60px);
+    }
+    .page.active { display: flex; }
+
+    /* Scrollable content within a page */
+    .page-inner {
+      width: 100%; max-width: 660px;
+      overflow-y: auto;
+      max-height: calc(100vh - 160px);
+      scrollbar-width: none; -ms-overflow-style: none;
+      padding: 0.5em 0;
+    }
+    .page-inner::-webkit-scrollbar { display: none; }
+
+    /* Book nav bar */
+    .book-nav {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: clamp(1.5em, 4vw, 3em);
+      padding: 0 clamp(20px, 5vw, 60px) max(3vh, 20px);
+      height: clamp(50px, 7vh, 70px);
+    }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.1vw, 15px);
+      color: rgba(191,200,214,0.3);
+      padding: 0.3em 0.6em;
+      transition: color 0.4s ease;
+      letter-spacing: 0.1em;
+    }
+    .nav-btn:hover { color: rgba(191,200,214,0.7); }
+    .nav-btn:disabled { color: rgba(191,200,214,0.08); cursor: default; }
+    .page-ctr {
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.4em;
+      color: rgba(191,200,214,0.22);
+      min-width: 3em; text-align: center;
+    }
+
+    /* ——— POEM PAGES ——— */
+    .poem-eyebrow {
+      display: block; font-family: var(--serif);
+      font-size: clamp(8px, 0.68vw, 9px);
+      letter-spacing: 0.6em; text-transform: uppercase;
+      color: rgba(191,200,214,0.2);
+      margin-bottom: 2.5em;
+    }
+    .poem-rule {
+      width: 30px; border: none;
+      border-top: 1px solid rgba(191,200,214,0.1);
+      margin: 0 0 2.5em 0;
+    }
+    .poem-para {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(15px, 1.35vw, 17px);
+      line-height: 2.05; color: rgba(191,200,214,0.68);
+      margin-bottom: 2em;
+    }
+    .poem-para:last-child { margin-bottom: 0; }
+
+    /* ——— JOURNAL PAGES ——— */
+    .entry-header {
+      display: flex; align-items: flex-start;
+      gap: 1em; margin-bottom: 2em;
+    }
+    .entry-moon-glyph { flex-shrink: 0; margin-top: 0.1em; }
+    .entry-moon-glyph svg { width: 20px; height: 20px; }
+    .entry-meta { flex: 1; }
+    .entry-number {
+      display: block; font-family: var(--serif);
+      font-size: clamp(8px, 0.68vw, 9px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(191,200,214,0.22); margin-bottom: 0.25em;
+    }
+    .entry-moon-label {
+      font-family: var(--serif);
+      font-size: clamp(10px, 0.88vw, 12px);
+      letter-spacing: 0.35em; text-transform: uppercase;
+      color: rgba(191,200,214,0.38);
+    }
+    .entry-continued {
+      display: block; font-family: var(--serif);
+      font-size: clamp(7px, 0.62vw, 8px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(191,200,214,0.16); margin-top: 0.2em;
+    }
+    .entry-prose p {
+      font-family: var(--prose);
+      font-size: clamp(15px, 1.38vw, 18px);
+      line-height: 1.95; color: rgba(191,200,214,0.76);
+      margin-bottom: 1.25em;
+    }
+    .entry-prose p:last-child { margin-bottom: 0; }
+
+    /* ——— ARCHIVE PAGES ——— */
+    .archive-header {
+      margin-bottom: 2.2em;
+    }
+    .archive-section-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(8px, 0.68vw, 9px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(191,200,214,0.18); margin-bottom: 0.6em;
+    }
+    .archive-section-title {
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(191,200,214,0.28);
+    }
+    .archive-block {
+      padding: 1.4em 0 1.4em 1.4em;
+      border-left: 1px solid rgba(191,200,214,0.1);
+      margin-bottom: 0.3em;
+    }
+    .archive-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(7px, 0.62vw, 8px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(191,200,214,0.15); margin-bottom: 0.8em;
+    }
+    .archive-text p {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(13px, 1.18vw, 15px);
+      line-height: 1.9; color: rgba(191,200,214,0.32);
+      margin-bottom: 1em;
+    }
+    .archive-text p:last-child { margin-bottom: 0; }
+
+    /* Eirik annotation — revealed by JS after delay on archive pages */
+    .eirik-annotation {
+      margin: 2.2em 0 0;
+      padding: 0 0 0 1.4em;
+      border-left: 1px solid rgba(195,180,135,0.28);
+      opacity: 0; transform: translateY(14px);
+    }
+    .eirik-annotation.appeared {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 3.5s ease, transform 5.5s ease;
+    }
+    .eirik-annotation p {
+      font-family: var(--prose);
+      font-size: clamp(14px, 1.28vw, 16px);
+      line-height: 1.95; color: var(--eirik-gold);
+    }
+    .eirik-annotation p + p { margin-top: 0.9em; }
+
+    /* ——— LIREAL PAGES ——— */
+    .fragment-header {
+      margin-bottom: 2em;
+    }
+    .fragment-section-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(8px, 0.68vw, 9px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(136,110,170,0.28); margin-bottom: 0.5em;
+    }
+    .fragment-title {
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(136,110,170,0.42);
+    }
+    .fragment-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(7px, 0.62vw, 8px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(136,110,170,0.28); margin-bottom: 1.2em;
+    }
+    .fragment-prose p {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(15px, 1.38vw, 18px);
+      line-height: 2; color: rgba(170,150,200,0.78);
+      margin-bottom: 1em;
+    }
+    .fragment-prose p:last-child { margin-bottom: 0; }
+    .fragment-rivendriel {
+      margin: 1.8em 0 0;
+      padding: 1.2em 0 1.2em 1.4em;
+      border-left: 1px solid rgba(136,110,170,0.16);
+    }
+    .fragment-rivendriel p {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(13px, 1.18vw, 15px);
+      line-height: 1.95; color: rgba(136,110,170,0.46);
+      margin-bottom: 0.8em;
+    }
+    .fragment-rivendriel p:last-child { margin-bottom: 0; }
+
+    /* ——— GLOSSARY PAGE ——— */
+    .glossary-header { margin-bottom: 2em; }
+    .glossary-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(8px, 0.68vw, 9px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(136,110,170,0.25); margin-bottom: 0.5em;
+    }
+    .glossary-title {
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(136,110,170,0.38);
+    }
+    .glossary-term {
+      display: grid; grid-template-columns: 1fr 2fr;
+      gap: 0.35em 1.4em; margin-bottom: 0.4em;
+      align-items: baseline;
+    }
+    .glossary-term span:first-child {
+      font-family: var(--prose); font-style: italic;
+      font-size: clamp(13px, 1.15vw, 15px);
+      color: rgba(136,110,170,0.52);
+    }
+    .glossary-term span:last-child {
+      font-family: var(--prose);
+      font-size: clamp(13px, 1.15vw, 15px);
+      color: rgba(191,200,214,0.3);
+    }
+
+    /* ——— MOOD OVERLAY ——— */
+    #moodOverlay {
+      position: fixed; inset: 0; z-index: 2;
+      pointer-events: none;
+      transition: background 2.5s ease;
+    }
+
+    /* ——— MOON PULSE (full moon pages) ——— */
+    .moon-pulse #moonDisplay {
+      animation: moonPulse 3s ease-in-out infinite;
+    }
+    @keyframes moonPulse {
+      0%, 100% { opacity: 0.55; filter: brightness(1); }
+      50%       { opacity: 1.0;  filter: brightness(1.5) drop-shadow(0 0 6px rgba(229,234,242,0.5)); }
+    }
+
+    /* ——— Everflame call-to-action (Closing) ——— */
+    #jp-close .page-inner {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; height: 100%; padding: 6vmin 2vmin;
+    }
+    .ef-closing-glyph { font-family: var(--serif); font-size: 2rem; color: rgba(191,200,214,0.28); margin-bottom: 1.6rem; }
+    .ef-closing-text { font-family: var(--serif); font-style: italic; font-size: clamp(1rem,1.9vw,1.15rem); color: rgba(191,200,214,0.55); line-height: 1.9; max-width: 380px; }
+    .everflame-call { margin: 2.8rem auto 0; display: flex; flex-direction: column; align-items: center; max-width: 380px; }
+    .everflame-call-flame {
+      width: 44px; height: 62px; margin-bottom: 1rem;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/w_200,q_auto,f_auto/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      animation: efCallFlicker 4.5s ease-in-out infinite;
+    }
+    @keyframes efCallFlicker { 0%,100%{ opacity:0.85; filter:brightness(1.05); } 45%{ opacity:1; filter:brightness(1.35); } 70%{ opacity:0.78; filter:brightness(1.0); } }
+    .everflame-call-line { font-family: var(--serif); font-style: italic; font-size: clamp(0.95rem,1.7vw,1.08rem); color: rgba(200,190,150,0.62); line-height: 1.85; margin: 0 0 1.5rem; }
+    .everflame-form { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; }
+    .ef-hp { display: none; }
+    .everflame-form input[type=email] {
+      width: 100%; max-width: 280px; background: transparent;
+      border: none; border-bottom: 1px solid rgba(195,180,135,0.32);
+      color: rgba(229,234,242,0.95); font-family: var(--serif); font-size: 1rem;
+      text-align: center; padding: 0.5em 0.2em; outline: none; transition: border-color 0.4s ease;
+    }
+    .everflame-form input[type=email]::placeholder { color: rgba(195,180,135,0.45); font-style: italic; }
+    .everflame-form input[type=email]:focus { border-bottom-color: rgba(220,205,150,0.8); }
+    .everflame-form button {
+      background: none; border: 1px solid rgba(195,180,135,0.5); border-radius: 24px;
+      color: rgba(220,205,150,0.95); font-family: var(--serif); font-size: 0.72rem;
+      letter-spacing: 0.28em; text-transform: uppercase; padding: 0.7em 2em; cursor: pointer;
+      transition: all 0.35s ease;
+    }
+    .everflame-form button:hover { border-color: rgba(220,205,150,0.85); color: rgba(230,215,160,1); background: rgba(195,180,135,0.08); }
+    .everflame-thanks {
+      display: none; font-family: var(--serif); font-style: italic;
+      font-size: clamp(0.95rem,1.7vw,1.08rem); color: rgba(220,205,150,0.78); line-height: 1.85; margin-top: 0.4rem;
+    }
+    .everflame-thanks.show { display: block; }
+
+    /* ——— JOURNAL NAV: scrubber + contents (matches Lost Soul) ——— */
+    .book-nav-col { flex-direction: column; height: auto; gap: 0.55rem; padding-top: 0.5rem; }
+    .book-nav-row { display: flex; align-items: center; justify-content: center; gap: clamp(1em, 3.5vw, 2.4em); }
+    .nav-contents { display: inline-flex; align-items: center; gap: 0.45rem; }
+    .nav-contents .nav-ic { color: rgba(195,180,135,0.72); font-size: 0.95em; line-height: 1; }
+    .scrubber { position: relative; width: min(92vw, 620px); padding: 0 0.2rem; }
+    .scrub-track { position: relative; height: 16px; cursor: pointer; display: flex; align-items: center; touch-action: none; }
+    .scrub-track::before { content:''; position:absolute; left:0; right:0; top:50%; height:2px; transform:translateY(-50%); background:rgba(191,200,214,0.16); border-radius:2px; }
+    .scrub-fill { position:absolute; left:0; top:50%; height:2px; transform:translateY(-50%); width:0; background:linear-gradient(to right, rgba(191,200,214,0.4), rgba(220,205,150,0.85)); border-radius:2px; pointer-events:none; }
+    .scrub-tick { position:absolute; top:50%; width:1px; height:7px; transform:translate(-50%,-50%); background:rgba(191,200,214,0.32); pointer-events:none; }
+    .scrub-handle { position:absolute; top:50%; left:0; width:12px; height:12px; transform:translate(-50%,-50%); border-radius:50%; background:rgba(229,234,242,0.97); box-shadow:0 0 8px rgba(195,180,135,0.6); pointer-events:none; }
+    .scrub-label { position:absolute; bottom:calc(100% + 4px); left:0; right:0; text-align:center; font-family:var(--serif); font-size:0.66rem; letter-spacing:0.14em; text-transform:uppercase; color:rgba(205,195,155,0.82); opacity:0; transition:opacity 0.2s ease; pointer-events:none; }
+    .scrub-label.show { opacity:1; }
+    .contents-scrim { position:fixed; inset:0; z-index:60; background:rgba(5,7,14,0.8); opacity:0; pointer-events:none; transition:opacity 0.4s ease; }
+    .contents-scrim.open { opacity:1; pointer-events:auto; }
+    .contents-panel { position:fixed; z-index:61; top:50%; left:50%; transform:translate(-50%,-46%); width:min(86vw,440px); max-height:78vh; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; background:linear-gradient(160deg, rgba(18,22,34,0.98), rgba(9,11,20,0.98)); border:1px solid rgba(191,200,214,0.18); border-radius:14px; padding:1.7rem 1.5rem 1.4rem; opacity:0; pointer-events:none; transition:opacity 0.4s ease, transform 0.4s ease; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+    .contents-panel::-webkit-scrollbar { display:none; }
+    .contents-panel.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%); }
+    .contents-head { font-family:var(--serif); letter-spacing:0.24em; text-transform:uppercase; font-size:0.74rem; color:rgba(191,200,214,0.6); text-align:center; margin-bottom:1.2rem; }
+    .contents-item { display:block; width:100%; text-align:left; background:none; border:none; border-bottom:1px solid rgba(191,200,214,0.08); cursor:pointer; font-family:var(--serif); font-size:1rem; color:rgba(210,218,230,0.82); padding:0.7rem 0.3rem; transition:color 0.25s ease; }
+    .contents-item:hover { color:rgba(229,234,242,1); }
+    .contents-item .ci-sub { display:block; font-size:0.72rem; font-style:italic; color:rgba(191,200,214,0.42); margin-top:0.15rem; letter-spacing:0.04em; }
+    .contents-item.current { color:rgba(229,234,242,1); }
+    .contents-item.current::after { content:' ❦'; color:rgba(195,180,135,0.75); }
+    .contents-close { display:block; margin:1.3rem auto 0; background:none; border:1px solid rgba(191,200,214,0.28); border-radius:18px; color:rgba(191,200,214,0.8); font-family:var(--serif); font-size:0.66rem; letter-spacing:0.2em; text-transform:uppercase; padding:0.5em 1.6em; cursor:pointer; transition: color 0.25s ease, border-color 0.25s ease; }
+    .contents-close:hover { color:rgba(229,234,242,1); border-color:rgba(191,200,214,0.5); }
+    @media (max-width: 768px) {
+      .scrub-track { height: 30px; }
+      .scrub-handle { width: 20px; height: 20px; box-shadow:0 0 10px rgba(195,180,135,0.7); }
+      .scrub-tick { height: 12px; width: 2px; }
+      .scrub-label { font-size: 0.72rem; }
+      .scrubber { width: min(94vw, 620px); }
+      .contents-item { padding: 1rem 0.4rem; font-size: 1.1rem; }
+      .contents-close { padding: 0.6em 1.8em; font-size: 0.72rem; }
+      .contents-panel { width: min(92vw, 460px); }
+    }
+
+    /* ——— MOBILE ——— */
+    @media (max-width: 600px) {
+      #moonDisplay { top: 2vmin; right: 2vmin; }
+      .entry-header { gap: 0.7em; }
+    }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec; placed last so it wins. #wordmark left atmospheric.
+    —————————————————————————————————————— */
+    /* reading + story (17px floor) */
+    .poem-para          { font-size: clamp(17px, 1.5vw, 19px); }
+    .entry-prose p      { font-size: clamp(17px, 1.5vw, 19px); }
+    .archive-text p     { font-size: clamp(17px, 1.4vw, 18px); }
+    .eirik-annotation p { font-size: clamp(17px, 1.4vw, 18px); }
+    /* subtitle / tagline (16px floor) */
+    .landing-tagline    { font-size: clamp(16px, 1.3vw, 17px); }
+    /* ritual buttons + CTAs (12–14px, tracking trimmed) */
+    .choice-btn         { font-size: clamp(12px, 1.05vw, 14px); }
+    .narr-btn           { font-size: clamp(12px, 1.05vw, 14px); }
+    .back-btn           { font-size: clamp(12px, 1vw, 13px); }
+    #soundToggle        { font-size: clamp(12px, 1vw, 13px); }
+    .ef-link            { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
+    /* names, eyebrows, small-caps labels (12–13px floor) */
+    .landing-eyebrow    { font-size: clamp(12px, 1vw, 13px); }
+    .ef-section-label   { font-size: clamp(12px, 1vw, 13px); }
+    .poem-eyebrow       { font-size: clamp(12px, 1vw, 13px); }
+    .entry-number       { font-size: clamp(12px, 1vw, 13px); }
+    .entry-moon-label   { font-size: clamp(12px, 1vw, 13px); }
+    .entry-continued    { font-size: clamp(12px, 1vw, 13px); }
+    .archive-section-label { font-size: clamp(12px, 1vw, 13px); }
+    .archive-label      { font-size: clamp(12px, 1vw, 13px); }
+    .page-ctr           { font-size: clamp(12px, 1vw, 13px); }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+<div id="fadeCover"></div>
+<canvas id="atmoCanvas"></canvas>
+<div id="moodOverlay"></div>
+
+<div id="moonDisplay">
+  <svg id="moonSvg" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<button id="soundToggle" aria-label="Toggle ambient sound">sound</button>
+<div id="wordmark">Aetherwood</div>
+
+<!-- Everflame -->
+<div id="returnLibrary" role="button" tabindex="0" aria-label="Return to the Library of Tales"></div>
+<div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+<nav id="efMenu" aria-label="The Everflame">
+  <div id="efTrail">
+    <span class="ef-section-label">where you've walked</span>
+    <ul class="ef-links" id="efTrailList"></ul>
+    <hr class="ef-divider">
+  </div>
+  <ul class="ef-links">
+    <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+    <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+    <li class="ef-item"><button class="ef-link" id="efLibrary">the library of tales</button></li>
+    <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+    <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+  </ul>
+</nav>
+<div id="efScrim"></div>
+
+<!-- Audio scaffold -->
+<audio id="audioEl" preload="none"></audio>
+<audio id="atmosEl" loop preload="none"></audio>
+
+<!-- ================================================================
+     LANDING SCREEN
+================================================================ -->
+<div id="landing">
+  <p class="landing-eyebrow">an Aetherwood story</p>
+  <h1 class="landing-title">The Silver Beast</h1>
+  <p class="landing-tagline">
+    Sometimes the love can't be stopped.<br>
+    Sometimes the love is not enough.
+  </p>
+  <hr class="landing-rule">
+  <div class="landing-choices">
+    <button class="choice-btn" id="openPoem">The Overture &nbsp;/&nbsp; a poem in verse</button>
+    <button class="choice-btn" id="openJournal">The Journal of Eirik &nbsp;/&nbsp; kept in confidence</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     POEM BOOK
+================================================================ -->
+<div class="book" id="poem-book">
+  <div class="book-header">
+    <button class="back-btn" id="poemBack">← The Silver Beast</button>
+  </div>
+
+  <div class="pages-wrap" id="poemPages">
+
+    <!-- pp-0 · i -->
+    <div class="page active" id="pp-0">
+      <div class="page-inner">
+        <span class="poem-eyebrow">The Overture</span>
+        <hr class="poem-rule">
+        <p class="poem-para">When the sun rises in the east, beware of the Silver Beast. No one knows from where he comes, why or to what he succumbs. The Silver Beast stalks across the land, refusing to bow to any hand. He knows the world fears his coming and he takes no pleasure in their running, but he won't find any rest until his curse is put to the test.</p>
+        <p class="poem-para">It was over two hundred years ago that the curse was born and allowed to grow, the pain of his loss a dagger through his heart, as from his love he was forever apart. The Silver Beast prowls still, wishing all he sees naught but ill. His love is gone never to be replaced, and for this the world will lay in waste.</p>
+      </div>
+    </div>
+
+    <!-- pp-1 · ii -->
+    <div class="page" id="pp-1">
+      <div class="page-inner">
+        <p class="poem-para">It was a cruel and bitter hag that did bestow the curse upon them as to her they had refused to bow. She wanted him all to herself and not to give him to that damn cursèd elf. In a rage she implored him to follow Nature's law, to no more love the elf and forever close the door. But the elfling's spell was too strong, even though they knew it wrong. Two magical creatures should never join as one, it could mean the whole world be undone. The silver beast ignored her pleas, but whispered to his love upon the breeze.</p>
+        <p class="poem-para">The hag had never before felt such hate, all of it for the beast's elven mate. Without her blessing the beast was trapped, and indeed his new future mapped. No longer would he be allowed across the rainbow river, and as such his heart as a man's would never quiver.</p>
+      </div>
+    </div>
+
+    <!-- pp-2 · iii -->
+    <div class="page" id="pp-2">
+      <div class="page-inner">
+        <p class="poem-para">The Silver Beast howled with fury as the hag revelled in her glory, claiming that she had no choice and summoned the spirits with all her voice. She declared them both be banished, and cared not for what she damaged.</p>
+        <p class="poem-para">The hag spoke into the spirits, whispering her darkest wishes. The beast was to remain feeling pain, trapped in his form staying the same, and for the cursèd elf the loss of all her wealth. She would not return to her kind and remain an outcast for all time, trapped within her own memory of what should have been if the great beast had only been allowed to make her his queen.</p>
+      </div>
+    </div>
+
+    <!-- pp-3 · iv -->
+    <div class="page" id="pp-3">
+      <div class="page-inner">
+        <p class="poem-para">To the north she was sent, entombed by the spirits she went. For years she held back the tears believing her prince would find her yet, that the hag had made a mistake and their fate had not been met. She held her soul quiet deep within, yearning for the life that should have been.</p>
+        <p class="poem-para">To the east went the beast, unable to accept he openly wept until even the moon could not bear his gloom. Sorrow filled all of his heart as from true love he was torn apart. After some years he forgot his tears, instead he soothed himself with roars and destroyed all he could with his claws.</p>
+      </div>
+    </div>
+
+    <!-- pp-4 · v -->
+    <div class="page" id="pp-4">
+      <div class="page-inner">
+        <p class="poem-para">Upon hearing of his tortured distress, the hag went to him with a chance to make his hurt less. She gave herself, in place of his elf, promised she could be as he desired, if only he would do as she required. Of course he refused, his love would not be used, and continued to rage for what seemed like an age.</p>
+        <p class="poem-para">Twice now the hag had been rejected, and she needed to be more respected. In her anger she showed an image of his elf, with another and not himself, grown old and bent, until all her life was spent. She showed him his future foretold, that his elf he would never hold, instead naught but pain and sadness, in his loneliness only madness.</p>
+      </div>
+    </div>
+
+    <!-- pp-5 · vi -->
+    <div class="page" id="pp-5">
+      <div class="page-inner">
+        <p class="poem-para">This was more than his soul could carry, his queen he now would never marry. In one great sweep he found the hag, tossed her away as if she were a rag. Her death came as no release, he wailed and roared needing his pain to cease. He roamed endlessly revelling in his own agony. All saw the warning when the eastern sky was dawning.</p>
+        <p class="poem-para">His fair maiden knew nothing of his pain, who the spirits had imprisoned leaving her lame. Being an elf she would live for years, shedding sad lonely tears. Still she prayed that one day he would come, find her waiting and all harm be undone. Together they would leave behind the pain, to be felt never ever again.</p>
+        <p class="poem-para">It was not until the evil hag's death that the spirits finally went and left, allowing the poor elf to stand by herself. She found a home where she could be alone, soothed by the past, memories of a love that would last, a love he had given her when they were blessed, before the hideous evil hag had messed.</p>
+      </div>
+    </div>
+
+    <!-- pp-6 · vii -->
+    <div class="page" id="pp-6">
+      <div class="page-inner">
+        <p class="poem-para">The memory of his warmth led her to the icy mountains in the north. The frozen air almost leaving her lame, but still she called and cried his name. If she could not ever have him, her life would grow forever dim, the land was as cold as her empty heart. Her life without him would never restart.</p>
+        <p class="poem-para">And it was here, after all those years, that the great Silver Beast came from the east and found his queen, fulfilling his life's one and only dream. The rage began the same as he wept and cried her name, but when the beast arose, he sensed her. But how? No one knows. Was it simply fate, or the world tiring of his hate? The beast had found her, his one true mate.</p>
+      </div>
+    </div>
+
+    <!-- pp-7 · viii -->
+    <div class="page" id="pp-7">
+      <div class="page-inner">
+        <p class="poem-para">Warmth in him began to stir, even though the wind pulled at his fur, the call to him so strong and pure as he recalled her sweet allure. The longing became too much as he craved for her gentle touch. He did not know how it could be, but he knew it was her, and for that he'd crawl on bended knee.</p>
+        <p class="poem-para">Her village was locked deep within the mountains, isolated, barren and frozen, but the place where she waited for her beloved chosen. As the swirling mist parted the beast's heart was restarted. Out of the gloom, released from his doom, a new dawn was approaching, with it change encroaching. And then he climbed down the mountainside, the sun glistening softly upon his hide.</p>
+      </div>
+    </div>
+
+    <!-- pp-8 · ix -->
+    <div class="page" id="pp-8">
+      <div class="page-inner">
+        <p class="poem-para">There she was, waiting for her shining one, no longer wondering where he'd gone or guessing what he'd done. Peace was to descend upon them at last, the wounds it healed had been vast. Her Silver Beast had finally come, the pain within might yet be undone.</p>
+        <p class="poem-para">The elf embraced her beast, not fearing him in the least. She had what she yearned for, what her lonely heart burned for, and cold again is something she would never be. The Silver Beast wept inside for how the old hag had lied, his queen had not died and was now right here by his side. He vowed never to let her go and wanted the whole world to know that rage no more he would, love her forever he could.</p>
+        <p class="poem-para">As they held each other tight the day began to grow light. The ice lay thick around them trying its hardest to ground them. Their motionless bodies locked in their embrace, stayed frozen with such an air of grace. Over time they became legend, a warning to young lovers never to let each other go.</p>
+      </div>
+    </div>
+
+    <!-- pp-9 · x -->
+    <div class="page" id="pp-9">
+      <div class="page-inner">
+        <p class="poem-para">A long one thousand years had passed, but now the chance was theirs at last, a new age was dawning in the land, and evil again revealed its hand. The hag everyone thought had died, the one who cheated, meddled and lied, had somehow managed to preserve her soul, forever determined to reach her goal.</p>
+        <p class="poem-para">For years she waited for a host, drifting as nothing more than a ghost, haunting the woods where the beast had so savagely tossed her, twisting her even more, a cruel heart darker than ever before. She drained the joy from life around her, and vengeance she swore for those who had uncrowned her.</p>
+        <p class="poem-para">Her magic stirred as she fed from those who her spirit had misled. Upon the breeze her lies were spread, promising them good for the days ahead, but instead at her feet they now lay dead. With each soul taken she grew in strength until at last her spell was cast in length.</p>
+      </div>
+    </div>
+
+    <!-- pp-10 · xi -->
+    <div class="page" id="pp-10">
+      <div class="page-inner">
+        <p class="poem-para">For every evil there must be a balance, for every wrong a right waiting for its chance, for nature has a special way of showing what she believes is right and owing. So for every evil there is a good. As the land around burned by night, into being came the right.</p>
+        <p class="poem-para">At first it seemed all would despair, until emerged one with golden hair, glowing softly against the blight. She was the one who could end this fight. The children of a race long since lost had come again, but at what cost?</p>
+        <p class="poem-para">Hope was there to be drawn within, a magic come to clean the sin. The hag would not stop of her own free will, too long had she wished all ill. No longer could the people hide, but rise up and join by the fae's side.</p>
+      </div>
+    </div>
+
+    <!-- pp-11 · xii -->
+    <div class="page" id="pp-11">
+      <div class="page-inner">
+        <p class="poem-para">In another distant time, there were those who were from another line. The beast's fair maiden was not the only elf. A kingdom lived to protect man from itself. The elves were the guardians of nature's laws, protecting all from its flaws. More damage was done when the hag banished the maiden, leaving their hearts so heavily laden. Lost were the elves without their princess, causing the race much sorrow and distress.</p>
+        <p class="poem-para">It was for this reason alone that she saved the lovers from the evil crone. She froze them for a thousand years, not letting them shed further tears. She had seen a time when those who had been lost would return and defy the frost that had held them in their embrace, just in time to save every race.</p>
+        <p class="poem-para">As the warmth spread through their limbs the world was ready to forgive their sins. The elves sensed their princess stirring, and felt the time for them returning. United together they would stand, reaching out across the land, protecting all the mother held dear, and wiping out the people's fear.</p>
+      </div>
+    </div>
+
+    <!-- pp-12 · xiii -->
+    <div class="page" id="pp-12">
+      <div class="page-inner">
+        <p class="poem-para">The beast from the east in his true form was needed, the curse of the hag be undone and go unheeded. The rainbow river they must reach, where all can stand upon the beach, with golden rocks upon the ground, there would all truths be found.</p>
+        <p class="poem-para">Nature's silver hair shimmered in the moonlight, glowing softly within the warm night. The beast cried for all the harm he had done. A gentle smile passed over nature's lips, and she forgave all that had been born of her hips. The mother calmed her silver beast and too the elf maiden's sorrow ceased. It was again time for all to head east, but this time a man would be born of the beast.</p>
+        <p class="poem-para">The beast and his maiden reached the rainbow river, and there the waters did shine and glimmer. Over the middle of the water stretched a bridge, like none seen before over any ridge. There for him waited the glorious fae, welcoming him on this special day. The elves bowed to their soon-to-be queen, their souls from the river now gleaming clean.</p>
+      </div>
+    </div>
+
+    <!-- pp-13 · xiv -->
+    <div class="page" id="pp-13">
+      <div class="page-inner">
+        <p class="poem-para">As they lined the river bank the beast turned to his maiden and gave thanks, for without her love he with certainty knew a future for him would never have come true. Now his time as man had come at last. Be a beast no more, for that was past. With one final blessing the fae did push into the river so alive and lush the silver beast who had come from the east.</p>
+        <p class="poem-para">From within the darkness of the river now came a magical glowing shimmer. The beast was gone now into the deep. Instead from the depths a man did leap. Around his shoulders his hair did lie, a shimmering silver just like the glint in his eye.</p>
+        <p class="poem-para">All were happy except for one, as she felt her curse come undone. Now that it was finally finished, all of her powers were left diminished. A howling storm of those who once were crowded the hag and began to stir. They demanded a price be paid for the evil way in which she had behaved.</p>
+      </div>
+    </div>
+
+    <!-- pp-14 · xv -->
+    <div class="page" id="pp-14">
+      <div class="page-inner">
+        <p class="poem-para">Mother Nature was not cruel, and the world lived for her rule. She would not let the spirits claim the crone before she had a chance to atone. The Mother began to cry silently, and down she went on both knees. For this child had wronged, for the beast her heart had longed.</p>
+        <p class="poem-para">The hag had a smile across her face as she saw Mother Nature knelt in place. She had fooled nature once again, letting her be the one to blame. What the hag had chosen not to see is that alone nature would never be. As the mother began to stand tall, the evil hag down did fall. To the spirits' gaping arms she was left.</p>
+        <p class="poem-para">As she rejoined her children below, she knew her heart would always know that one lost soul still carries a price, even if she had asked it thrice. But no longer could she show sorrow, for now they must all live for tomorrow.</p>
+      </div>
+    </div>
+
+  </div><!-- /poemPages -->
+
+  <div class="book-nav book-nav-col" id="poemNav">
+    <div class="scrubber" id="pScrub">
+      <div class="scrub-track" id="pScrubTrack">
+        <div class="scrub-fill" id="pScrubFill"></div>
+        <div class="scrub-handle" id="pScrubHandle"></div>
+      </div>
+      <div class="scrub-label" id="pScrubLabel"></div>
+    </div>
+    <div class="book-nav-row">
+      <button class="nav-btn" id="poemPrev">← prev</button>
+      <button class="nav-btn nav-contents" id="poemContents" aria-label="Contents"><span class="nav-ic">❦</span> <span id="poemCtr">i</span></button>
+      <button class="nav-btn" id="poemNext">next →</button>
+      <span class="narr-sep">|</span>
+      <button class="narr-btn" id="poemNarr">▶ listen</button>
+    </div>
+  </div>
+
+  <div class="contents-scrim" id="pContentsScrim"></div>
+  <div class="contents-panel" id="pContentsPanel" role="dialog" aria-label="Contents">
+    <div class="contents-head">Beast from the East</div>
+    <div id="pContentsList"></div>
+    <button class="contents-close" id="pContentsClose">close</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     JOURNAL BOOK
+================================================================ -->
+<div class="book" id="journal-book">
+  <div class="book-header">
+    <button class="back-btn" id="journalBack">← The Silver Beast</button>
+  </div>
+
+  <div class="pages-wrap" id="journalPages">
+
+    <!-- jp-0 · Entry One -->
+    <div class="page active" id="jp-0" data-moon="third-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry One</span>
+            <span class="entry-moon-label">Cold Moon · Third Quarter</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>It is with trepidation that I sit here, pen to paper, and embrace this tale. There are reasons not to, but many more to do this thing that has been asked of me.</p>
+          <p>I have spent years running from my memories, so to now embrace them may be more than I can give. Even though I must try. One thing I am sure of. This place has become a sanctuary to me.</p>
+          <p>She was the only living thing that knew the truth of me and all I have done. Never did she accept my shame, always healing me with her unequivocal love and understanding.</p>
+          <p>The moon shines brightly through my window, illuminating the desk as I write. I think of her and all that she gave.</p>
+          <p>For her, I will endure the pain of remembering. For the task she asked of me, for the gift she has given me, I will find a way.</p>
+          <p>There are more reasons to endure now than I have ever had before. For those who protect me within these sacred grounds, I will seek the answers they've asked for. Perhaps they will answer my own.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-1 · Entry Two -->
+    <div class="page" id="jp-1" data-moon="dark-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.03)" stroke="rgba(191,200,214,0.09)" stroke-width="1"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Two</span>
+            <span class="entry-moon-label">Cold Moon · Dark Moon</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>As the darkness approaches, I'm happy to withdraw into my chambers. There is no moon this night. Once that would have held a different meaning, but this night I do not fear.</p>
+          <p>There were whisperings today. Ugly ones that marked the walls of the corridor as they passed. Some were directed at me.</p>
+          <p>I'm unsure if anything from that epoch has survived the passage of time, but I will search the archives for the origins.</p>
+          <p>It is whispers that feed fear. It is fear that feeds the darkness.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-2 · Entry Three (i) -->
+    <div class="page" id="jp-2" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Three</span>
+            <span class="entry-moon-label">Last Quarter</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>My work took me out into the hills today. Around me was an unmistakable buzz of exhilaration as each student revelled in their perceived freedom.</p>
+          <p>There was a growing unease that circled me like the dark clouds gathering overhead. The wind beat at me as I approached the crest, pinching my cheeks as it tried to take my coat with it. One of the students stopped in front of me, stooping to examine a paw print in the muddy track.</p>
+          <p>They overtook me without warning. The memories. Surging up as quickly and fiercely as the growing storm. I was back in the mountains, with frozen ground and snow all around me. My hands were not my own, but my thoughts were. The storm raged with a ferociousness I could feel bubbling within my own chest. My bare feet took me swiftly across the frozen ground, not caring for ice, snow or rocks. Running. From what or to where I can't quite recall. I saw something on those hands. Red.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-3 · Entry Three (ii) -->
+    <div class="page" id="jp-3" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Three</span>
+            <span class="entry-moon-label">Last Quarter</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>It was too easy to stay in that memory, to get lost in that time. I wanted to feel the pain, surrender to the screaming wind as she hit me with her icy shards, over and over again.</p>
+          <p>Even now, I can still feel the lure of the mountains, calling to me, demanding I surrender once more. It is the curse, I know this, but still, it is also my own heart that beats within.</p>
+          <p>I am afraid that one day the call will become too strong to resist. Even as I know that the magic holding me here and now is stronger than any perceived debt, there is still that shadow that awaits me.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-4 · Entry Four (i) -->
+    <div class="page" id="jp-4" data-moon="new-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.02)" stroke="rgba(191,200,214,0.07)" stroke-width="1"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Four</span>
+            <span class="entry-moon-label">New Moon</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>There are times when my melancholy defines me. I am man enough, thankfully, to admit to this flaw. There are times when I brood in my memories, almost like I enjoy the pain and torture.</p>
+          <p>I chose to go back to that hill today. The one that threw me into darkness only a week earlier. Part of me was curious to understand more about myself, but mainly it was my pride. I wanted to make it to the crest without succumbing to my fears.</p>
+          <p>I marched on determined but today was a different day. The wind was a lingering caress as the sun warmed my bones. I took time to notice the ground beneath my boots. The rocks worn smooth over the passing of time and many curious travellers as they too sought the solace of this hillside.</p>
+          <p>The crest of the hill was with me all too soon. No other soul stood with me there. It was mine alone to witness. The world rolling out for miles. Ocean to the left, thick woodland to the right.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-5 · Entry Four (ii) -->
+    <div class="page" id="jp-5" data-moon="new-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.02)" stroke="rgba(191,200,214,0.07)" stroke-width="1"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Four</span>
+            <span class="entry-moon-label">New Moon</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>A small pile of rocks was laid at the very peak of the crag. A tribute left by people to mark their passing, to show their awe of all they beheld.</p>
+          <p>I closed my eyes. My father's hands guiding mine.</p>
+          <p>"Place them one atop another, careful now, don't let them fall." We were building our own cairn, next to the King Stone as he showed me the different places within the valley. "There's the maiden's ring, a sacred place for the women. We don't go there, son. Look, to the east. Do you see the Osprey circling? That's where our land ends, my boy."</p>
+          <p>I asked my dear, patient father when he would teach me how to make the carvings. I wanted to make the stones like him and not just be piling rocks like a small child.</p>
+          <p>I could see those wrinkles around my father's eyes as his smile washed over his face as clearly as though he was stood right before me. "Son, never be in a rush to seek more, for the day will come when there is no more. Hold what you have today close to your heart. Learning to live each day like it is a gift is more valuable than shaping stone with your old pa."</p>
+          <p>My father was wiser than I even knew, but he did teach me to love the land and her gifts long before he ever let me set a tool to stone. That was his gift to me. I could not be the warden he was without seeing the whole.</p>
+          <p>That was why I needed to go back to that hill. Not all memories are dark.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-6 · Entry Five (i) -->
+    <div class="page" id="jp-6" data-moon="full-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.62)" stroke="rgba(229,234,242,0.25)" stroke-width="0.5"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Five</span>
+            <span class="entry-moon-label">Blue Moon · Full Moon</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>Many moons ago, back when I thought I was a man with those fine whiskers upon my chin, but in truth I was barely past being a boy, I truly believed I was immortal.</p>
+          <p>It wasn't just me. All of us felt the same. Foolhardy. Immortal. That was until we were forced to see things differently.</p>
+          <p>It was the end of summer and the rains had been coming thick and fast from the ocean fog that settled in the cooling evenings. We'd spent the long sunny days exploring Eastcrag, our playground. A place to become young men instead of children.</p>
+          <p>There was one incredible night where we scrambled to the summit before the moon rise, determined to pinpoint the exact moment the glyphs on the bridge came alive beneath her rays. We'd laughed so much that night. These were my brothers, three in total, two cousins and all of us great friends that reached beyond any familiar ties.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-7 · Entry Five (ii) -->
+    <div class="page" id="jp-7" data-moon="full-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.62)" stroke="rgba(229,234,242,0.25)" stroke-width="0.5"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Five</span>
+            <span class="entry-moon-label">Blue Moon · Full Moon</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>My youngest brother, Xander, would carve an Osprey in stone and wait for the girls to fight over him for his extraordinary skilled hands. I was laughing so hard at him I nearly fell from the rock I was scrambling over.</p>
+          <p>I remember lying on my back breathless, laughing with relief at the danger I'd just escaped. The stars glistened in the sky, laughing with me.</p>
+          <p>That was when the moon appeared over the crest of Eastcrag. Its bulging cheeks desperately racing to light the night sky. I glanced down to the village below, and the bridge, as one by one the glyphs began to illuminate.</p>
+          <p>I was transfixed. Not by the moon, or the glowing glittering lights, but the girl who stepped on the bridge to enter the market. Even from this distance I knew who she was.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-8 · Entry Five (iii) -->
+    <div class="page" id="jp-8" data-moon="full-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.62)" stroke="rgba(229,234,242,0.25)" stroke-width="0.5"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Five</span>
+            <span class="entry-moon-label">Blue Moon · Full Moon</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>"I will tell her she's my moon in my sky, that each step she takes lights a path for me to follow."</p>
+          <p>Xander gave me a playful punch on the arm. I still remember his words to this day. "What a fine pair you'd make, the King of Stone and the Queen of Water."</p>
+          <p>That was when I first dared to hope that one day I could stand in front of her, look into her eyes and she would know how I felt without the need for clumsy words or blushes.</p>
+          <p>That was the first time in my life I had feared my mortality. I could have been staring up at the moon and my love to be with dying eyes. It wouldn't be the last time I felt the loom calling for my soul.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-9 · Entry Six -->
+    <div class="page" id="jp-9" data-moon="dark-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.03)" stroke="rgba(191,200,214,0.09)" stroke-width="1"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Six</span>
+            <span class="entry-moon-label">Blue Moon · Dark Moon</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>It's not always like this. I don't always wage war with myself. I can find peace and solace.</p>
+          <p>Today is not that day.</p>
+          <p>I padded around the room, noting the pile of papers waiting to be read on my desk. The content of those pages would probably excite anyone other than me. The urgency of the task, digesting the contents on the pages and understanding the implications, should have been enough to lure me to the seat waiting for me at the desk.</p>
+          <p>Not today.</p>
+          <p>I caught a glimpse of myself in the mirror as I paced from the window, the desk, the bed and back again.</p>
+          <p>I am haunted, and I look it.</p>
+          <p>Today is not the day.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-10 · Entry Seven -->
+    <div class="page" id="jp-10" data-moon="waxing-gibbous">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,1 20,37 A8,17 0 0,0 20,3 Z" fill="rgba(229,234,242,0.58)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Seven</span>
+            <span class="entry-moon-label">Harvest Moon · Waxing Gibbous</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>My desk has been my sanctuary today. I awoke with bones weary and stiff, unusual and yet not. The air is cooling, nights are drawing in and the forest is finding its way into a quiet hush, ready to rest for the winter.</p>
+          <p>The grounds beyond my window are a hive of energy. The last fruits are being gathered and a rich aroma of strawberries drifts through the halls. I will listen to my good friend and walk more often. It helps the memories too.</p>
+          <p>The archives have me nestled within their clutches. I lose myself in the words. It's hard to tell if my thoughts are my own memories or if the words influence them.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-11 · Entry Eight -->
+    <div class="page" id="jp-11" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Eight</span>
+            <span class="entry-moon-label">Harvest Moon · Last Quarter</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>Keeping so busy you quieten the noise.<br>
+          Keeping so busy you can't hear your own thoughts.<br>
+          Keeping so busy I can't hear my thoughts.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-12 · Entry Nine -->
+    <div class="page" id="jp-12" data-moon="waning-crescent">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.04)" stroke="rgba(191,200,214,0.11)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 A13,17 0 0,1 20,3 Z" fill="rgba(229,234,242,0.38)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Nine</span>
+            <span class="entry-moon-label">Waning</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>The wind is howling at my window. South Easterly, straight towards me. It knows where I sit and it wants me to hear its call. Angry bursts shaking the leaves on the trees before it reaches me. Carnage in its path.</p>
+          <p>It sounds so familiar to me, and then I stop to think about what it really means. The wind is needed. It's shaking the dead leaves loose from the trees. Casting a blanket of rich warmth on the forest floor so all can rest and sleep well in the coming winter.</p>
+          <p>I watched the tree in the courtyard swaying as it released the debris from its clutches. There were times the branches swayed and resisted, but eventually surrender gave such sweet relief.</p>
+          <p>It's only now, as I observe this dance of fury, life and death, that I understand its balance. To think I have resisted and fought against it all these years.</p>
+          <p>Perhaps I would have found this solace sooner if she were still with me by my side.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-13 · Entry Ten -->
+    <div class="page" id="jp-13" data-moon="waxing-crescent">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.04)" stroke="rgba(191,200,214,0.11)" stroke-width="1"/><path d="M20,3 A17,17 0 0,1 20,37 A13,17 0 0,0 20,3 Z" fill="rgba(229,234,242,0.38)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Ten</span>
+            <span class="entry-moon-label">Waxing</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>Cruel and curious. Or curious and cruel. I don't know what triggers the memories. Or how to control which ones are released.</p>
+          <p>One moment I'm laughing, with sun beaming down on my face, warming every bone and fascia, my love smiling back at me and tugging at my beard playfully as I place a hand delicately on her swollen belly, blessed with the promise of all that will be.</p>
+          <p>The next, I'm blinded by the snow as the wind lashes every pore of my being, shouting its wrath and disappointment in equal measure, as I take one more step closer to the abyss.</p>
+          <p>They are coming faster and clearer now, since I commenced reading from the archives. I am afraid what will present itself. Both in word and mind.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-14 · Entry Eleven (i) -->
+    <div class="page" id="jp-14" data-moon="full-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.62)" stroke="rgba(229,234,242,0.25)" stroke-width="0.5"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Eleven</span>
+            <span class="entry-moon-label">Full Moon</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>It truly seems like only a handful of days have passed since the first touch of Autumn began to weave her spell upon the land. Now, I see she has almost finished her dance. I will miss her, and long for her return once more.</p>
+          <p>A few of the students even braved the chilly waters today, pushing past the lapping shore to immerse themselves in the lake's embrace. I watched from my desk. If you keep moving you stay warm. If you have those piercing blue eyes that are as deep and filled with motion as the river herself, you'll stay warm.</p>
+          <p>The river was my playground through every season as a child, and then into adulthood before she finally became my very salvation. The lapping shore just before the bridge, making the entry and exit from its enticing banks irresistible. The stepping stones paving the way to the tiny sandy island that was blissfully away from sight for moonlit kisses. The time I lay floating on my back downriver as far as she would take me, staring up at the stars, holding hands with the world.</p>
+          <p>We had floated beneath the bridge with the glyphs glowing with their eerie light. The way it reflected in her eyes had captivated me. I'd made her promise we would do this every full moonrise just so I could see the universe unfold all over again.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-15 · Entry Eleven (ii) -->
+    <div class="page" id="jp-15" data-moon="full-moon">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.62)" stroke="rgba(229,234,242,0.25)" stroke-width="0.5"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Eleven</span>
+            <span class="entry-moon-label">Full Moon</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>She had laughed with her whole heart. Breaking free from my embrace to dance a merry jig around me to prove she wasn't cold. Proclaiming to the night that her soul was the river and it would never let her freeze. Her lips were turning blue with cold before my very eyes.</p>
+          <p>I did the only thing I could think of. I picked her dainty form up in my arms and began to jog slowly back to the village, lured by the bridge as it glowed. The market was in full flow. Spiced mead, mulled cider straight from this year's harvest, hot honey bread fresh from the oven, a roaring fire in the pit.</p>
+          <p>The students had given me a gift this day. I hope one day they too look back and remember with joy.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-16 · Entry Twelve (i) -->
+    <div class="page" id="jp-16" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Twelve</span>
+            <span class="entry-moon-label">Last Quarter</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>There was one place that would make me feel the depth of this world and beyond. Standing there at the top of the crag, with the village nestled safely behind me and the ocean stretching forth beyond the horizon. The whole world was beyond that horizon.</p>
+          <p>I remember losing myself to the lull of the waves as they crashed against the rocks before retreating back to rally and try once more. A fool's errand, trying to reach higher onto the rocks, but only making it so far before admitting defeat, regrouping for the next high tide's attack. There were days where I lost hours to the hypnotic ebb and flow.</p>
+          <p>My brothers would join me on our lookout point, but they would quickly move on to other adventures. They were in love with the place we lived, and the land that was our playground for sure, but their path was different to mine. They were not taught the lessons of a Warden. There was no heavy cloak cast about their shoulders.</p>
+          <p>Perhaps that's why I was mesmerised by the ocean. It was free to come and go as it pleased, yet twice a day it crept closer up the rocks to remind me it was still there, waiting for a chance to claim me for its own.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-17 · Entry Twelve (ii) -->
+    <div class="page" id="jp-17" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Twelve</span>
+            <span class="entry-moon-label">Last Quarter</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>In my darker days, I would fancy myself surrendering to her will. The only thing that stopped me was the fear that the open waters would reject me, find me too tainted. They would spew me out and leave me on the ragged shoreline, broken but not freed.</p>
+          <p>Besides, there was always the chance, as small as it seemed all those years ago, that I could find salvation, that my soul could be at peace at last.</p>
+          <p>It was always the Osprey that brought me back from the edge of that cliff, and into myself.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-18 · Entry Twelve (iii) -->
+    <div class="page" id="jp-18" data-moon="last-quarter">
+      <div class="page-inner">
+        <div class="entry-header">
+          <div class="entry-moon-glyph"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.16)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.52)"/></svg></div>
+          <div class="entry-meta">
+            <span class="entry-number">Entry Twelve</span>
+            <span class="entry-moon-label">Last Quarter</span>
+            <span class="entry-continued">continued</span>
+          </div>
+        </div>
+        <div class="entry-prose">
+          <p>After we lost Xander, I looked for ways to be closer to him, so I would never lose the memory of him. In the end, he became the one thing that kept me human, and he was lost to me. I could never tell him how many times he managed to claw me back from the brink of darkness, despite him being gone. The Osprey was his gift to me.</p>
+          <p>Whenever I stepped too close to the edge, on the brink of despair that would drown me quicker than the cold kiss of the ocean's embrace, the shrill call would bring me back. Sometimes a single chirp, warning me I was too close to her nest, others a joyous chorus of celebration as she circled overhead riding the thermals higher into the warm skies.</p>
+          <p>I only ever found her when I was sure my soul was condemned.</p>
+          <p>It near destroys me to remember the grief my family felt over his loss. Xander's tale must wait for another day.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-19 · Archive 1 — village & river -->
+    <div class="page" id="jp-19" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <span class="archive-label">A History of Eastcrag · curated anthology</span>
+          <div class="archive-text">
+            <p>Eastcrag is a bustling village that sits on the left bank of the River Driel. Current population 384, including surrounding hills and vale. The earliest recorded population was 37.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>I find <em>bustling</em> to be a strange term. There were around 70 inhabitants of Eastcrag when I was a boy, only including the residents of the east side. I try to remember the names of the fathers, but they elude me. However, the river was named Rivendreil, not Driel. Clearly that has been lost over time, as surely as the western inhabitants. We were guardians of the land, not busy inhabitants.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-20 · Archive 2 — shipping routes -->
+    <div class="page" id="jp-20" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <div class="archive-text">
+            <p>The Crest hills are directly due east and serve as a physical barrier to the open ocean that connects it to the shipping routes of today.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>There were no shipping routes before the breaking. No one visited our village from the seas. The rocks that led to the shores stopped both ships entering and leaving. As a boy we would build rafts in the hope of wider adventures, but no craft could ever pass the passage beyond the eastern ridge. It seems obvious to me that the breaking changed the seascape as well as the valley.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-21 · Archive 3 — King Stone -->
+    <div class="page" id="jp-21" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <div class="archive-text">
+            <p>The King Stone is believed to be a way marker for travellers, indicating they had reached the Eastern Ocean. The stone circle stands some distance away and is believed to have been the meeting place for the women. Wildflowers grow around the outer edges, and it still holds a feminine energy.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>My father's father carved the glyphs on the King Stone with his own hands. I feel such sorrow for the loss of lineage and passage of time. I think it's important to note that glyphs predated runes. I know the markings on the bridge are glyphs. I saw them.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-22 · Archive 4 — west bank & bridge -->
+    <div class="page" id="jp-22" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <div class="archive-text">
+            <p>There are no dwellings on the west side of the river, and no known sites of any historical interest that would indicate why the passage was required. Each block of stone was handcrafted and marked with a unique rune. The children make a game of stepping over the stone to cross to the lush meadows on the western banks in the summer.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>This is the single most disturbing fact to me. How can there be no archaeological evidence of their village? Eastcrag lay to the left hand side of the valley, and Rivendriel to the west.</p>
+          <p>The bridge is a curiosity. It is a mastery that precedes all knowing.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-23 · Archive 5 — inhabitants -->
+    <div class="page" id="jp-23" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <div class="archive-text">
+            <p>The current inhabitants of the village were engaged with informally to understand the local knowledge to hand. It was determined that there are no families who have lived there for more than three generations. They consider themselves to be a new village, founded by refugees from the great famine.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>My heart is filled with peace to see the new inhabitants still carry the spirit of the valley within them. My heart still yearns for this place even though it is lost to me.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-24 · Archive 6 — Osprey carving -->
+    <div class="page" id="jp-24" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <div class="archive-text">
+            <p>One carving of note is an ingress directly into the cliff front facing the ocean. For all intents and purposes it looks completely impassable, and yet there is the perfect carving of an Osprey inlaid into the cliff face.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>There was only one person obsessed with the Osprey. Xander.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- jp-25 · Archive 7 — burial customs -->
+    <div class="page" id="jp-25" data-moon="waning-crescent" data-archive="true">
+      <div class="page-inner">
+        <div class="archive-header">
+          <span class="archive-section-label">annotated by his hand</span>
+          <span class="archive-section-title">From the Archives of Aetherwood</span>
+        </div>
+        <div class="archive-block">
+          <span class="archive-label">customs of Eastcrag · suggested archive</span>
+          <div class="archive-text">
+            <p>The dead of Eastcrag were traditionally carried upward rather than buried beneath the valley floor. Family cairns lined the upper ridges overlooking the eastern sea, each carefully maintained by surviving kin. The body was washed, wrapped, and returned to stone before the first snowfall whenever possible.</p>
+          </div>
+        </div>
+        <div class="eirik-annotation">
+          <p>Returned to stone.<br>
+          Not hidden beneath it.<br>
+          The cairns were never graves.<br>
+          They were markers.<br>
+          Proof that a soul had lived, loved, and remained part of the valley.</p>
+          <p>Even now I still find myself counting them whenever I climb Eastcrag.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ——— CLOSING: the Everflame call ——— -->
+    <div class="page" id="jp-close" data-moon="dark-moon">
+      <div class="page-inner">
+        <div class="ef-closing-glyph">◈</div>
+        <div class="ef-closing-text">The journal rests here.<br>Return when the next fragment surfaces from the veil.</div>
+
+        <div class="everflame-call">
+          <div class="everflame-call-flame" aria-hidden="true"></div>
+          <p class="everflame-call-line">Or let the Everflame call you<br>when the next chapter is released from the resonance.</p>
+          <form class="everflame-form" id="everflameForm" name="silver-beast-everflame" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="silver-beast-everflame">
+            <p class="ef-hp"><input name="bot-field" tabindex="-1" autocomplete="off"></p>
+            <input type="email" name="email" placeholder="leave your name with the flame" required autocomplete="email" aria-label="your email">
+            <button type="submit">light the way</button>
+          </form>
+          <div class="everflame-thanks" id="everflameThanks">The Everflame holds your name.<br>It will call when the resonance returns.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /journalPages -->
+
+  <div class="book-nav book-nav-col" id="journalNav">
+    <div class="scrubber" id="jScrub">
+      <div class="scrub-track" id="jScrubTrack">
+        <div class="scrub-fill" id="jScrubFill"></div>
+        <div class="scrub-handle" id="jScrubHandle"></div>
+      </div>
+      <div class="scrub-label" id="jScrubLabel"></div>
+    </div>
+    <div class="book-nav-row">
+      <button class="nav-btn" id="journalPrev">← prev</button>
+      <button class="nav-btn nav-contents" id="journalContents" aria-label="Contents"><span class="nav-ic">❦</span> <span id="journalCtr">1</span></button>
+      <button class="nav-btn" id="journalNext">next →</button>
+      <span class="narr-sep">|</span>
+      <button class="narr-btn" id="journalNarr">▶ listen</button>
+    </div>
+  </div>
+
+  <div class="contents-scrim" id="jContentsScrim"></div>
+  <div class="contents-panel" id="jContentsPanel" role="dialog" aria-label="Contents">
+    <div class="contents-head">The Journal of Eirik</div>
+    <div id="jContentsList"></div>
+    <button class="contents-close" id="jContentsClose">close</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     SCRIPTS
+================================================================ -->
+<script>
+/* ——— ROMAN NUMERALS ——— */
+var ROMANS = ['i','ii','iii','iv','v','vi','vii','viii','ix','x',
+              'xi','xii','xiii','xiv','xv','xvi','xvii','xviii','xix','xx'];
+
+/* ——— FADE COVER ——— */
+var cover = document.getElementById('fadeCover');
+requestAnimationFrame(function(){
+  requestAnimationFrame(function(){
+    cover.style.opacity = '0';
+    setTimeout(function(){ cover.style.display = 'none'; }, 2600);
+  });
+});
+function navigateTo(href){
+  cover.style.display = '';
+  cover.style.transition = 'opacity 1.4s ease';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    cover.style.opacity = '1';
+    setTimeout(function(){ window.location.href = href; }, 1500);
+  }); });
+}
+
+/* ——— RETURN TO LIBRARY ——— */
+var returnLibraryEl = document.getElementById('returnLibrary');
+returnLibraryEl.addEventListener('click', function(){ navigateTo('library.html'); });
+returnLibraryEl.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigateTo('library.html'); } });
+returnLibraryEl.addEventListener('touchstart', function(){ returnLibraryEl.classList.add('active'); }, {passive:true});
+returnLibraryEl.addEventListener('touchend', function(){ setTimeout(function(){ returnLibraryEl.classList.remove('active'); }, 800); });
+
+/* ——— EVERFLAME NAV ——— */
+var efMenu      = document.getElementById('efMenu');
+var efScrim     = document.getElementById('efScrim');
+var efTrail     = document.getElementById('efTrail');
+var efTrailList = document.getElementById('efTrailList');
+var efOpen      = false;
+
+var EF_ANCHORS = ['hearthfire.html','whispered-archives.html'];
+function logTrail(name, href){
+  var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+  trail = trail.filter(function(e){ return e.href !== href; });
+  trail.unshift({ name: name, href: href });
+  if (trail.length > 8) trail = trail.slice(0, 8);
+  sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+}
+logTrail('the silver beast', 'silver-beast.html');
+
+function buildTrail(){
+  var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+  trail = trail.filter(function(e){ return e.href !== 'silver-beast.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+  if (trail.length === 0){ efTrail.style.display = 'none'; return; }
+  efTrail.style.display = '';
+  efTrailList.innerHTML = '';
+  trail.slice(0,3).forEach(function(e){
+    var li = document.createElement('li'); li.className = 'ef-item';
+    var btn = document.createElement('button'); btn.className = 'ef-link';
+    btn.textContent = e.name;
+    btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(e.href); });
+    li.appendChild(btn); efTrailList.appendChild(li);
+  });
+}
+function openEfMenu(){ buildTrail(); efMenu.classList.add('open'); efScrim.classList.add('open'); efOpen = true; }
+function closeEfMenu(){ efMenu.classList.remove('open'); efScrim.classList.remove('open'); efOpen = false; }
+
+var ef = document.getElementById('everflame');
+ef.addEventListener('click', function(){ efOpen ? closeEfMenu() : openEfMenu(); });
+ef.addEventListener('keydown', function(e){
+  if (e.key==='Enter'||e.key===' '){ e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+});
+efScrim.addEventListener('click', closeEfMenu);
+document.getElementById('efArchives').addEventListener('click',  function(){ closeEfMenu(); navigateTo('whispered-archives.html'); });
+document.getElementById('efHearthfire').addEventListener('click',function(){ closeEfMenu(); navigateTo('hearthfire.html'); });
+document.getElementById('efLibrary').addEventListener('click',  function(){ closeEfMenu(); navigateTo('library.html'); });
+document.getElementById('efCorridor').addEventListener('click', function(){ closeEfMenu(); navigateTo('vestibule.html'); });
+document.getElementById('efLeave').addEventListener('click',    function(){ closeEfMenu(); navigateTo('index.html'); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeEfMenu(); });
+
+/* ——— MOON DISPLAY ——— */
+var moonSvg   = document.getElementById('moonSvg');
+var activeMoon = '';
+
+var MOON_SVG = {
+  'full-moon':      '<circle cx="20" cy="20" r="17" fill="rgba(229,234,242,0.68)" stroke="rgba(229,234,242,0.2)" stroke-width="0.5"/>',
+  'waxing-gibbous': '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.14)" stroke-width="1"/><path d="M20,3 A17,17 0 0,1 20,37 A8,17 0 0,0 20,3 Z" fill="rgba(229,234,242,0.6)"/>',
+  'first-quarter':  '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.14)" stroke-width="1"/><path d="M20,3 A17,17 0 0,1 20,37 Z" fill="rgba(229,234,242,0.56)"/>',
+  'waxing-crescent':'<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.04)" stroke="rgba(191,200,214,0.1)" stroke-width="1"/><path d="M20,3 A17,17 0 0,1 20,37 A13,17 0 0,0 20,3 Z" fill="rgba(229,234,242,0.4)"/>',
+  'new-moon':       '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.02)" stroke="rgba(191,200,214,0.07)" stroke-width="1"/>',
+  'dark-moon':      '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.02)" stroke="rgba(191,200,214,0.06)" stroke-width="1"/>',
+  'waning-crescent':'<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.04)" stroke="rgba(191,200,214,0.1)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 A13,17 0 0,1 20,3 Z" fill="rgba(229,234,242,0.4)"/>',
+  'last-quarter':   '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.14)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.56)"/>',
+  'third-quarter':  '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.14)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 Z" fill="rgba(229,234,242,0.56)"/>',
+  'waning-gibbous': '<circle cx="20" cy="20" r="17" fill="rgba(191,200,214,0.07)" stroke="rgba(191,200,214,0.14)" stroke-width="1"/><path d="M20,3 A17,17 0 0,0 20,37 A8,17 0 0,1 20,3 Z" fill="rgba(229,234,242,0.6)"/>'
+};
+
+moonSvg.innerHTML = MOON_SVG['full-moon'];
+function setMoon(phase){
+  if (phase === activeMoon || !MOON_SVG[phase]) return;
+  activeMoon = phase;
+  moonSvg.innerHTML = MOON_SVG[phase];
+}
+
+/* ——— BOOK ENGINE ——— */
+var transitioning = false;
+var archiveTimer  = null;
+
+function turnPage(pagesWrap, fromEl, toEl, direction) {
+  if (transitioning) return;
+  transitioning = true;
+
+  /* Phase 1 — pre-hide text on the INCOMING page while it is still invisible.
+     This must happen BEFORE we set display:flex, so there is never a frame
+     where the text is visible before we've hidden it. */
+  var stagedEls = prepareStagger(toEl);
+
+  /* Now make the page display:flex but still fully transparent */
+  toEl.style.cssText = 'display:flex; opacity:0; transform:translateX('+(direction*40)+'px); transition:none; pointer-events:none;';
+
+  requestAnimationFrame(function(){
+    /* Slide out current page */
+    fromEl.style.transition = 'opacity 0.38s ease, transform 0.38s ease';
+    fromEl.style.opacity    = '0';
+    fromEl.style.transform  = 'translateX('+(-direction*40)+'px)';
+
+    /* One more frame so transition:none on toEl has been committed */
+    requestAnimationFrame(function(){
+      toEl.style.transition  = 'opacity 0.52s ease, transform 0.52s ease';
+      toEl.style.opacity     = '1';
+      toEl.style.transform   = 'translateX(0)';
+    });
+  });
+
+  setTimeout(function(){
+    /* Clean up outgoing page */
+    fromEl.classList.remove('active');
+    fromEl.style.cssText = '';
+    fromEl.style.display = 'none';
+
+    /* Settle incoming page — clear its page-level inline styles.
+       Text children retain their opacity:0 from prepareStagger (unaffected). */
+    toEl.style.opacity    = '';
+    toEl.style.transform  = '';
+    toEl.style.transition = '';
+    toEl.style.pointerEvents = '';
+    /* Keep display:flex via the .active class rather than inline */
+    toEl.classList.add('active');
+    transitioning = false;
+
+    /* Phase 2 — reveal text now that page is fully settled */
+    executeStagger(stagedEls);
+    setVibe(PAGE_VIBES[toEl.id] || 'silver');
+  }, 560);
+}
+
+/* ——— POEM BOOK ——— */
+var poemPages  = Array.from(document.getElementById('poemPages').querySelectorAll('.page'));
+var poemIdx    = 0;
+var poemCtr    = document.getElementById('poemCtr');
+var poemPrev   = document.getElementById('poemPrev');
+var poemNext   = document.getElementById('poemNext');
+
+function updatePoemNav(){
+  poemCtr.textContent = ROMANS[poemIdx] || (poemIdx + 1);
+  poemPrev.disabled = (poemIdx === 0);
+  poemNext.disabled = (poemIdx === poemPages.length - 1);
+}
+
+function goPoemPage(delta){
+  var next = poemIdx + delta;
+  if (next < 0 || next >= poemPages.length) return;
+  if (narrPlaying) narrStop();
+  turnPage(null, poemPages[poemIdx], poemPages[next], delta);
+  poemIdx = next;
+  updatePoemNav();
+}
+
+poemPrev.addEventListener('click', function(){ goPoemPage(-1); });
+poemNext.addEventListener('click', function(){ goPoemPage(1); });
+updatePoemNav();
+
+/* ——— POEM: scrubber + contents (jump to any verse) ——— */
+(function(){
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function snippet(i){
+    var para = poemPages[i].querySelector('.poem-para');
+    var txt = para ? para.textContent.trim().replace(/\s+/g, ' ') : ('Verse ' + (i + 1));
+    if (txt.length > 46) txt = txt.slice(0, 46).replace(/[\s,.;:]+\S*$/, '') + '…';
+    return txt;
+  }
+  function romanOf(i){ return (ROMANS[i] || (i + 1)); }
+  function subFor(i){
+    var eb = poemPages[i].querySelector('.poem-eyebrow');
+    return romanOf(i) + (eb ? ' · ' + eb.textContent.trim() : '');
+  }
+
+  window.goPoemTo = function(target){
+    target = Math.max(0, Math.min(poemPages.length - 1, target));
+    if (target === poemIdx) return;
+    if (narrPlaying) narrStop();
+    var delta = target > poemIdx ? 1 : -1;
+    turnPage(null, poemPages[poemIdx], poemPages[target], delta);
+    poemIdx = target;
+    updatePoemNav();
+  };
+
+  var N      = poemPages.length;
+  var track  = document.getElementById('pScrubTrack');
+  var fill   = document.getElementById('pScrubFill');
+  var handle = document.getElementById('pScrubHandle');
+  var label  = document.getElementById('pScrubLabel');
+  var list   = document.getElementById('pContentsList');
+  var scrim  = document.getElementById('pContentsScrim');
+  var panel  = document.getElementById('pContentsPanel');
+
+  for (var t = 0; t < N; t++){
+    var tick = document.createElement('div');
+    tick.className = 'scrub-tick';
+    tick.style.left = (N > 1 ? (t / (N - 1)) * 100 : 0) + '%';
+    track.appendChild(tick);
+  }
+
+  for (var c = 0; c < N; c++){
+    (function(i){
+      var b = document.createElement('button');
+      b.className = 'contents-item';
+      b.innerHTML = esc(snippet(i)) + '<span class="ci-sub">' + esc(subFor(i)) + '</span>';
+      b.addEventListener('click', function(){ closeContents(); goPoemTo(i); });
+      list.appendChild(b);
+    })(c);
+  }
+  var items = list.querySelectorAll('.contents-item');
+
+  function refreshScrubber(){
+    var frac = (N > 1) ? (poemIdx / (N - 1)) : 0;
+    fill.style.width = (frac * 100) + '%';
+    handle.style.left = (frac * 100) + '%';
+    for (var k = 0; k < items.length; k++){ items[k].classList.toggle('current', k === poemIdx); }
+  }
+
+  var _orig = updatePoemNav;
+  updatePoemNav = function(){ _orig(); refreshScrubber(); };
+
+  function fracFrom(clientX){
+    var r = track.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  }
+  function preview(clientX){
+    var f = fracFrom(clientX);
+    var idx = Math.round(f * (N - 1));
+    fill.style.width = (f * 100) + '%';
+    handle.style.left = (f * 100) + '%';
+    label.textContent = romanOf(idx);
+    label.classList.add('show');
+    return idx;
+  }
+  var dragging = false;
+  function endDrag(clientX){
+    dragging = false;
+    var idx = preview(clientX);
+    label.classList.remove('show');
+    goPoemTo(idx);
+    refreshScrubber();
+  }
+  track.addEventListener('mousedown', function(e){ dragging = true; preview(e.clientX); e.preventDefault(); });
+  document.addEventListener('mousemove', function(e){ if (dragging) preview(e.clientX); });
+  document.addEventListener('mouseup', function(e){ if (dragging) endDrag(e.clientX); });
+  track.addEventListener('touchstart', function(e){ dragging = true; preview(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+  track.addEventListener('touchmove', function(e){ if (dragging){ preview(e.touches[0].clientX); e.preventDefault(); } }, {passive:false});
+  track.addEventListener('touchend', function(e){ if (!dragging) return; var cx = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : 0; endDrag(cx); });
+
+  function openContents(){ refreshScrubber(); scrim.classList.add('open'); panel.classList.add('open'); }
+  function closeContents(){ scrim.classList.remove('open'); panel.classList.remove('open'); }
+  document.getElementById('poemContents').addEventListener('click', openContents);
+  document.getElementById('pContentsClose').addEventListener('click', closeContents);
+  scrim.addEventListener('click', closeContents);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeContents(); });
+
+  refreshScrubber();
+})();
+
+/* ——— JOURNAL BOOK ——— */
+var journalPages = Array.from(document.getElementById('journalPages').querySelectorAll('.page'));
+var journalIdx   = 0;
+var journalCtr   = document.getElementById('journalCtr');
+var journalPrev  = document.getElementById('journalPrev');
+var journalNext  = document.getElementById('journalNext');
+
+function revealArchiveAnnotation(page){
+  if (archiveTimer) clearTimeout(archiveTimer);
+  archiveTimer = setTimeout(function(){
+    var ann = page.querySelector('.eirik-annotation');
+    if (ann) {
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ ann.classList.add('appeared'); });
+      });
+    }
+  }, 1800);
+}
+
+function updateJournalNav(){
+  journalCtr.textContent = (journalIdx + 1) + ' / ' + journalPages.length;
+  journalPrev.disabled = (journalIdx === 0);
+  journalNext.disabled = (journalIdx === journalPages.length - 1);
+  /* Moon */
+  var phase = journalPages[journalIdx].getAttribute('data-moon');
+  if (phase) setMoon(phase);
+  /* Archive annotation */
+  if (archiveTimer) clearTimeout(archiveTimer);
+  if (journalPages[journalIdx].getAttribute('data-archive')) {
+    revealArchiveAnnotation(journalPages[journalIdx]);
+  }
+}
+
+function goJournalPage(delta){
+  var next = journalIdx + delta;
+  if (next < 0 || next >= journalPages.length) return;
+  if (narrPlaying) narrStop();
+  /* Reset annotation on old archive page before leaving */
+  if (journalPages[journalIdx].getAttribute('data-archive')) {
+    var oldAnn = journalPages[journalIdx].querySelector('.eirik-annotation');
+    if (oldAnn) oldAnn.classList.remove('appeared');
+  }
+  turnPage(null, journalPages[journalIdx], journalPages[next], delta);
+  journalIdx = next;
+  updateJournalNav();
+}
+
+journalPrev.addEventListener('click', function(){ goJournalPage(-1); });
+journalNext.addEventListener('click', function(){ goJournalPage(1); });
+updateJournalNav();
+
+/* ——— JOURNAL: scrubber + contents (jump to any entry) ——— */
+(function(){
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function labelFor(i){
+    var p = journalPages[i];
+    var en = p.querySelector('.entry-number');
+    if (en) return en.textContent.trim();
+    if (p.id === 'jp-close') return 'The Everflame';
+    var gt = p.querySelector('.glossary-title');
+    if (gt) return gt.textContent.trim();
+    return 'Page ' + (i + 1);
+  }
+  function subFor(i){
+    var ml = journalPages[i].querySelector('.entry-moon-label');
+    return ml ? ml.textContent.trim() : '';
+  }
+
+  /* Jump to any page (used by scrubber + contents) */
+  window.goJournalTo = function(target){
+    target = Math.max(0, Math.min(journalPages.length - 1, target));
+    if (target === journalIdx) return;
+    if (narrPlaying) narrStop();
+    if (journalPages[journalIdx].getAttribute('data-archive')) {
+      var oldAnn = journalPages[journalIdx].querySelector('.eirik-annotation');
+      if (oldAnn) oldAnn.classList.remove('appeared');
+    }
+    var delta = target > journalIdx ? 1 : -1;
+    turnPage(null, journalPages[journalIdx], journalPages[target], delta);
+    journalIdx = target;
+    updateJournalNav();
+  };
+
+  var N       = journalPages.length;
+  var track   = document.getElementById('jScrubTrack');
+  var fill    = document.getElementById('jScrubFill');
+  var handle  = document.getElementById('jScrubHandle');
+  var label   = document.getElementById('jScrubLabel');
+  var jList   = document.getElementById('jContentsList');
+  var scrim   = document.getElementById('jContentsScrim');
+  var panel   = document.getElementById('jContentsPanel');
+
+  /* Ticks, one per page */
+  for (var t = 0; t < N; t++){
+    var tick = document.createElement('div');
+    tick.className = 'scrub-tick';
+    tick.style.left = (N > 1 ? (t / (N - 1)) * 100 : 0) + '%';
+    track.appendChild(tick);
+  }
+
+  /* Contents list */
+  for (var c = 0; c < N; c++){
+    (function(i){
+      var b = document.createElement('button');
+      b.className = 'contents-item';
+      var sub = subFor(i);
+      b.innerHTML = esc(labelFor(i)) + (sub ? '<span class="ci-sub">' + esc(sub) + '</span>' : '');
+      b.addEventListener('click', function(){ closeContents(); goJournalTo(i); });
+      jList.appendChild(b);
+    })(c);
+  }
+  var items = jList.querySelectorAll('.contents-item');
+
+  function refreshScrubber(){
+    var frac = (N > 1) ? (journalIdx / (N - 1)) : 0;
+    fill.style.width = (frac * 100) + '%';
+    handle.style.left = (frac * 100) + '%';
+    for (var k = 0; k < items.length; k++){ items[k].classList.toggle('current', k === journalIdx); }
+  }
+
+  /* Wrap updateJournalNav so page turns also move the scrubber */
+  var _orig = updateJournalNav;
+  updateJournalNav = function(){ _orig(); refreshScrubber(); };
+
+  function fracFrom(clientX){
+    var r = track.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  }
+  function preview(clientX){
+    var f = fracFrom(clientX);
+    var idx = Math.round(f * (N - 1));
+    fill.style.width = (f * 100) + '%';
+    handle.style.left = (f * 100) + '%';
+    label.textContent = labelFor(idx);
+    label.classList.add('show');
+    return idx;
+  }
+  var dragging = false;
+  function endDrag(clientX){
+    dragging = false;
+    var idx = preview(clientX);
+    label.classList.remove('show');
+    goJournalTo(idx);
+    refreshScrubber();
+  }
+  track.addEventListener('mousedown', function(e){ dragging = true; preview(e.clientX); e.preventDefault(); });
+  document.addEventListener('mousemove', function(e){ if (dragging) preview(e.clientX); });
+  document.addEventListener('mouseup', function(e){ if (dragging) endDrag(e.clientX); });
+  track.addEventListener('touchstart', function(e){ dragging = true; preview(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+  track.addEventListener('touchmove', function(e){ if (dragging){ preview(e.touches[0].clientX); e.preventDefault(); } }, {passive:false});
+  track.addEventListener('touchend', function(e){ if (!dragging) return; var cx = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : 0; endDrag(cx); });
+
+  /* Contents overlay */
+  function openContents(){ refreshScrubber(); scrim.classList.add('open'); panel.classList.add('open'); }
+  function closeContents(){ scrim.classList.remove('open'); panel.classList.remove('open'); }
+  document.getElementById('journalContents').addEventListener('click', openContents);
+  document.getElementById('jContentsClose').addEventListener('click', closeContents);
+  scrim.addEventListener('click', closeContents);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeContents(); });
+
+  refreshScrubber();
+})();
+
+/* ——— KEYBOARD NAV ——— */
+document.addEventListener('keydown', function(e){
+  var pBook = document.getElementById('poem-book');
+  var jBook = document.getElementById('journal-book');
+  if (pBook.classList.contains('visible')){
+    if (e.key === 'ArrowRight') goPoemPage(1);
+    if (e.key === 'ArrowLeft')  goPoemPage(-1);
+  }
+  if (jBook.classList.contains('visible')){
+    if (e.key === 'ArrowRight') goJournalPage(1);
+    if (e.key === 'ArrowLeft')  goJournalPage(-1);
+  }
+});
+
+/* ——— LANDING → BOOK TRANSITIONS ——— */
+var landing    = document.getElementById('landing');
+var poemBook   = document.getElementById('poem-book');
+var journalBook= document.getElementById('journal-book');
+
+function openBook(book, moonPhase){
+  /* Pre-hide text on the opening page before the book fades in */
+  var activePage = book.querySelector('.page.active');
+  var stagedEls  = activePage ? prepareStagger(activePage) : [];
+
+  landing.classList.add('hidden');
+  setTimeout(function(){
+    landing.style.display = 'none';
+    if (moonPhase) setMoon(moonPhase);
+    book.classList.add('visible');
+    if (activePage) setVibe(PAGE_VIBES[activePage.id] || 'silver');
+    /* Reveal once the book has faded in (book transition is 0.8s) */
+    setTimeout(function(){ executeStagger(stagedEls); }, 820);
+  }, 800);
+}
+
+function returnToLanding(book){
+  book.classList.remove('visible');
+  setTimeout(function(){
+    landing.style.display = '';
+    landing.classList.remove('hidden');
+    setMoon('full-moon');
+    currentVibe = 'silver'; /* reset silently so next openBook starts clean */
+    moodOverlay.style.background = '';
+    document.body.classList.remove('moon-pulse');
+  }, 300);
+}
+
+document.getElementById('openPoem').addEventListener('click', function(){
+  openBook(poemBook, 'full-moon');
+});
+document.getElementById('openJournal').addEventListener('click', function(){
+  /* Reset journal to first page each time */
+  if (journalIdx !== 0) {
+    journalPages[journalIdx].classList.remove('active');
+    journalPages[journalIdx].style.display = 'none';
+    journalIdx = 0;
+    journalPages[0].classList.add('active');
+    journalPages[0].style.display = '';
+    updateJournalNav();
+  }
+  openBook(journalBook, journalPages[0].getAttribute('data-moon') || 'third-quarter');
+});
+
+document.getElementById('poemBack').addEventListener('click', function(){ returnToLanding(poemBook); });
+document.getElementById('journalBack').addEventListener('click', function(){ returnToLanding(journalBook); });
+
+/* ——— NARRATION ——— */
+var audioEl   = document.getElementById('audioEl');
+var PAGE_CLIPS = {
+  'pp-0':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260226/pp-0-bard_nksmtk.mp3'],
+  'pp-1':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260225/pp-1-bard_oj8kim.mp3'],
+  'pp-2':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260240/pp-2-bard_abw7xi.mp3'],
+  'pp-3':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260242/pp-3-bard_efom2k.mp3'],
+  'pp-4':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260233/pp-4-bard_ximbmy.mp3'],
+  'pp-5':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260234/pp-5-bard_onwjt9.mp3'],
+  'pp-6':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260214/pp-6-bard_jtswza.mp3'],
+  'pp-7':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260214/pp-7-bard_ozqbo2.mp3'],
+  'pp-8':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260236/pp-8-bard_asvsc7.mp3'],
+  'pp-9':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260235/pp-9-bard_iglljn.mp3'],
+  'pp-10': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260223/pp-10-bard_wcum0q.mp3'],
+  'pp-11': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260223/pp-11-bard_cw9t2j.mp3'],
+  'pp-12': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260237/pp-12-bard_gegvcc.mp3'],
+  'pp-13': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260238/pp-13-bard_j2rnkf.mp3'],
+  'pp-14': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260233/pp-14-bard_gnw4or.mp3'],
+  'jp-0':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260233/jp-0-eirik_zo64jm.mp3'],
+  'jp-1':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260244/jp-1-eirik_esy6kv.mp3'],
+  'jp-2':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260218/jp-2-eirik_w3rwjy.mp3'],
+  'jp-3':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260227/jp-3-eirik_fvo9ei.mp3'],
+  'jp-4':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260214/jp-4-eirik_qgxlmd.mp3'],
+  'jp-5':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260226/jp-5-eirik-a_d1uyyz.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260217/jp-5-dad-a_dcuotx.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260221/jp-5-eirik-b_gwthfg.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260215/jp-5-dad-b_fjwdny.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260226/jp-5-eirik-c_phjjvb.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260216/jp-5-dad-c_ujjhsq.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260219/jp-5-eirik-d_t3yebh.mp3'],
+  'jp-6':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260230/jp-6-eirik_cfrqtw.mp3'],
+  'jp-7':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260237/jp-7-eirik_qsqqls.mp3'],
+  'jp-8':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260242/jp-8-eirik-a_fzyyxr.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260241/jp-8-xander_qciydo.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260243/jp-8-eirik-b_z3ko1c.mp3'],
+  'jp-9':  ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260214/jp-9-eirik_k2kmtv.mp3'],
+  'jp-10': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260234/jp-10-eirik_vkkaqb.mp3'],
+  'jp-11': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260229/jp-11-eirik_uiwemg.mp3'],
+  'jp-12': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260221/jp-12-eirik_eme0ix.mp3'],
+  'jp-13': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260215/jp-13-eirik_uc4jvz.mp3'],
+  'jp-14': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260222/jp-14-eirik_lac5xe.mp3'],
+  'jp-15': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260216/jp-15-eirik_tyyui9.mp3'],
+  'jp-16': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260241/jp-16-eirik_ovi31d.mp3'],
+  'jp-17': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260231/jp-17-eirik_grrlg4.mp3'],
+  'jp-18': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260218/jp-18-eirik_k43ztj.mp3'],
+  'jp-19': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260228/jp-19-velin_yc14oi.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260226/jp-19-eirik_sdstri.mp3'],
+  'jp-20': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260239/jp-20-velin_lrrhel.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260217/jp-20-eirik_drintn.mp3'],
+  'jp-21': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260230/jp-21-velin_xrxhc9.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260223/jp-21-eirik_rpiay9.mp3'],
+  'jp-22': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260221/jp-22-velin_jfmqg7.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260231/jp-22-eirik_bv8m5r.mp3'],
+  'jp-23': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260215/jp-23-velin_prajkz.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260240/jp-23-eirik_herjcw.mp3'],
+  'jp-24': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260228/jp-24-velin_voswbt.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260229/jp-24-eirik_jmjw0p.mp3'],
+  'jp-25': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260220/jp-25-velin_ujfz1g.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260235/jp-25-eirik_kvlitx.mp3'],
+  'jp-26': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260240/jp-26-lireal_eql3hd.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260213/jp-26-eirik_hcs6hv.mp3'],
+  'jp-27': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260229/jp-27-lireal_sdtzzc.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260220/jp-27-eirik_n2asuw.mp3'],
+  'jp-28': ['https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260215/jp-28-lireal_wbaqyb.mp3','https://res.cloudinary.com/ds8pkprtb/video/upload/v1782260238/jp-28-eirik_hqfr5w.mp3']
+};
+
+var narrQueue    = [];
+var narrQueueIdx = 0;
+var narrPlaying  = false;
+var narrBtns     = [document.getElementById('poemNarr'), document.getElementById('journalNarr')];
+
+function narrSyncBtn() {
+  narrBtns.forEach(function(b) {
+    if (narrPlaying) {
+      b.textContent = narrQueue.length > 1 ? '■ ' + (narrQueueIdx + 1) + ' / ' + narrQueue.length : '■ stop';
+      b.classList.add('playing');
+    } else {
+      b.textContent = '▶ listen';
+      b.classList.remove('playing');
+    }
+  });
+}
+
+function narrStop() {
+  audioEl.pause();
+  audioEl.removeAttribute('src');
+  narrPlaying  = false;
+  narrQueue    = [];
+  narrQueueIdx = 0;
+  narrSyncBtn();
+  atmosStop();
+}
+
+function narrPlayNext() {
+  if (narrQueueIdx >= narrQueue.length) { narrStop(); return; }
+  audioEl.src = narrQueue[narrQueueIdx];
+  audioEl.load();
+  audioEl.play().catch(function() { narrStop(); });
+  narrPlaying = true;
+  narrSyncBtn();
+}
+
+audioEl.addEventListener('ended', function() {
+  narrQueueIdx++;
+  if (narrQueueIdx < narrQueue.length) {
+    setTimeout(narrPlayNext, 400);
+  } else {
+    narrStop();
+  }
+});
+
+audioEl.addEventListener('error', function() { narrStop(); });
+
+function narrToggle() {
+  if (narrPlaying) { narrStop(); return; }
+  var pageId = null;
+  if (document.getElementById('poem-book').classList.contains('visible'))    pageId = poemPages[poemIdx].id;
+  if (document.getElementById('journal-book').classList.contains('visible')) pageId = journalPages[journalIdx].id;
+  var clips = pageId && PAGE_CLIPS[pageId];
+  if (!clips || !clips.length) return;
+  narrQueue    = clips;
+  narrQueueIdx = 0;
+  atmosStart(pageId);
+  narrPlayNext();
+}
+
+narrBtns.forEach(function(btn) { btn.addEventListener('click', narrToggle); });
+
+/* ——— ATMOSPHERE ——— */
+var atmosEl       = document.getElementById('atmosEl');
+var atmosFadeTimer = null;
+var ATMOS_VOL     = 0.28;
+
+var PAGE_ATMOS = {
+  'pp-0':'open-moorland','pp-1':'open-moorland','pp-2':'open-moorland',
+  'pp-3':'open-moorland','pp-4':'open-moorland','pp-5':'open-moorland',
+  'pp-6':'open-moorland','pp-7':'open-moorland','pp-8':'open-moorland',
+  'pp-9':'open-moorland','pp-10':'open-moorland','pp-11':'open-moorland',
+  'pp-12':'open-moorland','pp-13':'open-moorland','pp-14':'open-moorland',
+  'jp-0':'campfire-memory','jp-1':'campfire-memory','jp-2':'campfire-memory',
+  'jp-3':'campfire-memory','jp-4':'campfire-memory','jp-5':'campfire-memory',
+  'jp-6':'campfire-memory','jp-7':'campfire-memory','jp-8':'campfire-memory',
+  'jp-9':'campfire-memory','jp-10':'campfire-memory','jp-11':'campfire-memory',
+  'jp-12':'campfire-memory','jp-13':'campfire-memory','jp-14':'campfire-memory',
+  'jp-15':'campfire-memory','jp-16':'campfire-memory','jp-17':'campfire-memory',
+  'jp-18':'campfire-memory',
+  'jp-19':'archive-hall','jp-20':'archive-hall','jp-21':'archive-hall',
+  'jp-22':'archive-hall','jp-23':'archive-hall','jp-24':'archive-hall','jp-25':'archive-hall',
+  'jp-26':'ancient-forest','jp-27':'ancient-forest','jp-28':'ancient-forest'
+};
+
+var ATMOS_URLS = {
+  'open-moorland':  'https://res.cloudinary.com/ds8pkprtb/video/upload/v1782263970/open-moorland_yd56sl.mp3',
+  'campfire-memory':'https://res.cloudinary.com/ds8pkprtb/video/upload/v1782263978/campfire-memory_y0pldn.mp3',
+  'archive-hall':   'https://res.cloudinary.com/ds8pkprtb/video/upload/v1782263974/archive-hall_ncee0o.mp3',
+  'ancient-forest': 'https://res.cloudinary.com/ds8pkprtb/video/upload/v1782263972/ancient-forest_lel41x.mp3'
+};
+
+function atmosFade(target, ms, onDone) {
+  if (atmosFadeTimer) { clearInterval(atmosFadeTimer); atmosFadeTimer = null; }
+  var steps = 24;
+  var interval = ms / steps;
+  var start = atmosEl.volume;
+  var step  = 0;
+  atmosFadeTimer = setInterval(function() {
+    step++;
+    atmosEl.volume = Math.max(0, Math.min(1, start + (target - start) * (step / steps)));
+    if (step >= steps) {
+      clearInterval(atmosFadeTimer);
+      atmosFadeTimer = null;
+      if (onDone) onDone();
+    }
+  }, interval);
+}
+
+function atmosStart(pageId) {
+  var key = PAGE_ATMOS[pageId];
+  var url = key && ATMOS_URLS[key];
+  if (!url) return;
+  if (atmosEl.getAttribute('data-key') === key && !atmosEl.paused) {
+    atmosFade(ATMOS_VOL, 1500);
+    return;
+  }
+  atmosEl.setAttribute('data-key', key);
+  atmosEl.volume = 0;
+  atmosEl.src    = url;
+  atmosEl.load();
+  atmosEl.play().catch(function(){});
+  atmosFade(ATMOS_VOL, 2000);
+}
+
+function atmosStop() {
+  if (atmosEl.paused) return;
+  atmosFade(0, 1500, function() {
+    atmosEl.pause();
+    atmosEl.removeAttribute('src');
+    atmosEl.removeAttribute('data-key');
+  });
+}
+
+/* ——— AMBIENT SOUND (wind via Web Audio) ——— */
+var audioCtx  = null;
+var windNodes = null;
+var soundOn   = false;
+
+function createIR(ctx, dur, dec){
+  var rate   = ctx.sampleRate;
+  var length = Math.floor(rate * dur);
+  var buf    = ctx.createBuffer(2, length, rate);
+  for (var ch = 0; ch < 2; ch++){
+    var d = buf.getChannelData(ch);
+    for (var i = 0; i < length; i++){
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, dec);
+    }
+  }
+  return buf;
+}
+
+function startWind(){
+  if (windNodes) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var noise  = audioCtx.createScriptProcessor(4096, 0, 1);
+  noise.onaudioprocess = function(e){
+    var out = e.outputBuffer.getChannelData(0);
+    for (var i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
+  };
+  var filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass'; filter.frequency.value = 320; filter.Q.value = 0.55;
+  var conv   = audioCtx.createConvolver();
+  conv.buffer = createIR(audioCtx, 2.8, 3.2);
+  var gain   = audioCtx.createGain(); gain.gain.value = 0.038;
+  noise.connect(filter); filter.connect(conv); conv.connect(gain); gain.connect(audioCtx.destination);
+  windNodes = { noise: noise, filter: filter, conv: conv, gain: gain };
+}
+function stopWind(){
+  if (!windNodes) return;
+  windNodes.gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+  setTimeout(function(){
+    try { windNodes.noise.disconnect(); } catch(e){}
+    windNodes = null;
+  }, 1200);
+}
+
+var soundBtn = document.getElementById('soundToggle');
+soundBtn.addEventListener('click', function(){
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'silence' : 'sound';
+  if (soundOn) startWind(); else stopWind();
+});
+
+/* ——— VIBE SYSTEM ——— */
+var currentVibe = 'silver';
+
+var VIBE_SETTINGS = {
+  silver:  { spawnRate: 700,  rgb: [191,200,214], starMult: 1.0,  speedY: 1.0  },
+  storm:   { spawnRate: 300,  rgb: [148,160,192], starMult: 2.6,  speedY: 2.0  },
+  still:   { spawnRate: 1600, rgb: [200,210,222], starMult: 0.45, speedY: 0.5  },
+  moonlit: { spawnRate: 450,  rgb: [222,230,244], starMult: 0.75, speedY: 0.85 },
+  dust:    { spawnRate: 550,  rgb: [195,178,132], starMult: 0.4,  speedY: 0.45 },
+  violet:  { spawnRate: 550,  rgb: [168,148,202], starMult: 0.65, speedY: 0.7  },
+  dark:    { spawnRate: 2400, rgb: [100,112,135], starMult: 0.28, speedY: 0.3  }
+};
+
+var VIBE_OVERLAYS = {
+  silver:  '',
+  storm:   'radial-gradient(ellipse at 50% 0%, rgba(16,20,50,0.22) 0%, transparent 72%)',
+  still:   '',
+  moonlit: 'radial-gradient(ellipse at 50% -18%, rgba(229,234,242,0.08) 0%, transparent 58%)',
+  dust:    'radial-gradient(ellipse at 50% 50%, rgba(72,58,34,0.16) 0%, transparent 78%)',
+  violet:  'radial-gradient(ellipse at 50% 115%, rgba(65,40,105,0.14) 0%, transparent 72%)',
+  dark:    'radial-gradient(ellipse at 50% 50%, rgba(0,0,10,0.36) 0%, transparent 82%)'
+};
+
+var PAGE_VIBES = {
+  'pp-0':'silver','pp-1':'silver','pp-2':'storm','pp-3':'storm','pp-4':'storm',
+  'pp-5':'still','pp-6':'still','pp-7':'silver','pp-8':'moonlit','pp-9':'moonlit',
+  'pp-10':'storm','pp-11':'still','pp-12':'silver','pp-13':'moonlit','pp-14':'moonlit',
+  'jp-0':'still','jp-1':'dark','jp-2':'storm','jp-3':'storm',
+  'jp-4':'still','jp-5':'still','jp-6':'moonlit','jp-7':'moonlit','jp-8':'moonlit',
+  'jp-9':'dark','jp-10':'still','jp-11':'still','jp-12':'storm','jp-13':'still',
+  'jp-14':'moonlit','jp-15':'moonlit','jp-16':'still','jp-17':'storm','jp-18':'still',
+  'jp-19':'dust','jp-20':'dust','jp-21':'dust','jp-22':'dust',
+  'jp-23':'dust','jp-24':'dust','jp-25':'dust',
+  'jp-26':'violet','jp-27':'violet','jp-28':'violet','jp-29':'violet'
+};
+
+var moodOverlay = document.getElementById('moodOverlay');
+
+function setVibe(vibe){
+  if (!VIBE_SETTINGS[vibe] || vibe === currentVibe) return;
+  currentVibe = vibe;
+  moodOverlay.style.background = VIBE_OVERLAYS[vibe] || '';
+  if (vibe === 'moonlit'){
+    document.body.classList.add('moon-pulse');
+  } else {
+    document.body.classList.remove('moon-pulse');
+  }
+}
+
+/* ——— TEXT STAGGER (two-phase: hide while invisible, reveal after) ——— */
+function getTextEls(pageEl){
+  return Array.from(pageEl.querySelectorAll(
+    '.poem-para, .entry-header, .entry-prose p, .fragment-header, .fragment-label, ' +
+    '.fragment-prose p, .fragment-rivendriel p, .archive-header, .archive-block, ' +
+    '.glossary-header, .glossary-title, .glossary-term'
+    /* .eirik-annotation excluded — has its own timed reveal */
+  ));
+}
+
+/* Phase 1: hide text while the page is still opacity:0 — called BEFORE display:flex */
+function prepareStagger(pageEl){
+  var els = getTextEls(pageEl);
+  els.forEach(function(el){
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateY(10px)';
+    el.style.transition = 'none';
+  });
+  return els;
+}
+
+/* Phase 2: reveal sequentially once the page has settled — no flash possible */
+function executeStagger(els){
+  els.forEach(function(el, i){
+    setTimeout(function(){
+      el.style.transition = 'opacity 0.75s ease, transform 1.1s ease';
+      el.style.opacity    = '1';
+      el.style.transform  = 'translateY(0)';
+    }, i * 80);
+  });
+}
+
+/* ——— ATMOSPHERIC CANVAS ——— */
+var canvas = document.getElementById('atmoCanvas');
+var ctx2   = canvas.getContext('2d');
+var W, H, stars = [], motes = [];
+
+function resize(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  stars = [];
+  for (var i = 0; i < 130; i++){
+    stars.push({
+      x: Math.random()*W, y: Math.random()*H*0.85,
+      r: Math.random()*1.1+0.2,
+      a: Math.random()*0.5+0.08,
+      tw: Math.random()*Math.PI*2,
+      ts: 0.004 + Math.random()*0.012
+    });
+  }
+}
+resize();
+window.addEventListener('resize', resize);
+
+var lastSpawn = 0;
+function spawnMote(){
+  var v      = VIBE_SETTINGS[currentVibe];
+  var isDust = (currentVibe === 'dust');
+  motes.push({
+    x:    Math.random()*W,
+    y:    isDust ? (Math.random()*H*0.35) : H + 10,
+    vx:   (Math.random()-0.5) * 0.24,
+    vy:   isDust ? (0.09 + Math.random()*0.16) : -(0.28 + Math.random()*0.45) * v.speedY,
+    a:    0, maxA: 0.22 + Math.random()*0.24,
+    r:    Math.random()*0.7 + 0.2,
+    life: 0, maxLife: 230 + Math.random()*280,
+    rgb:  v.rgb
+  });
+}
+
+function tick(now){
+  requestAnimationFrame(tick);
+  ctx2.clearRect(0, 0, W, H);
+
+  /* Stars */
+  var sm = VIBE_SETTINGS[currentVibe].starMult;
+  for (var i = 0; i < stars.length; i++){
+    var s = stars[i];
+    s.tw += s.ts * sm;
+    var a = s.a * (0.6 + 0.4 * Math.sin(s.tw));
+    ctx2.beginPath();
+    ctx2.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx2.fillStyle = 'rgba(210,218,230,'+a+')';
+    ctx2.fill();
+  }
+
+  /* Motes */
+  var spawnRate = VIBE_SETTINGS[currentVibe].spawnRate;
+  if (now - lastSpawn > spawnRate){ spawnMote(); lastSpawn = now; }
+  for (var j = motes.length - 1; j >= 0; j--){
+    var m = motes[j];
+    m.life++;
+    m.x += m.vx; m.y += m.vy;
+    var t = m.life / m.maxLife;
+    m.a = t < 0.2 ? m.maxA*(t/0.2) : t > 0.8 ? m.maxA*((1-t)/0.2) : m.maxA;
+    ctx2.beginPath();
+    ctx2.arc(m.x, m.y, m.r, 0, Math.PI*2);
+    ctx2.fillStyle = 'rgba('+m.rgb[0]+','+m.rgb[1]+','+m.rgb[2]+','+m.a+')';
+    ctx2.fill();
+    if (m.life >= m.maxLife || m.y < -20 || m.y > H+20) motes.splice(j, 1);
+  }
+}
+requestAnimationFrame(tick);
+</script>
+
+<script>
+/* ——— Everflame call-to-action (Closing) — Netlify Forms, mirrors Lost Soul ——— */
+(function(){
+  var efForm = document.getElementById('everflameForm');
+  var efThanks = document.getElementById('everflameThanks');
+  if(!efForm) return;
+  efForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(new FormData(efForm)).toString()
+    }).then(function(){
+      efForm.style.display = 'none';
+      if(efThanks) efThanks.classList.add('show');
+    }).catch(function(){ efForm.submit(); });
+  });
+})();
+</script>
+</body>
+</html>

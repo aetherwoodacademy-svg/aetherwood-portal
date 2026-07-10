@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Aetherwood — The Hearthfire</title>
+  <title>Aetherwood · The Hearthfire</title>
 
   <meta property="og:type"        content="website">
   <meta property="og:url"         content="https://aetherwood.au/hearthfire">
-  <meta property="og:title"       content="Aetherwood — The Hearthfire">
+  <meta property="og:title"       content="Aetherwood · The Hearthfire">
   <meta property="og:description" content="A place to return to. The forest is the room, the fire is always lit.">
   <meta property="og:image"       content="https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/hearthfire.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
 
   <style>
     :root {
@@ -97,21 +99,31 @@
 
     /* Radial amber glow — echoes the lantern light already in the image */
     .hs-glow {
-      position: absolute; inset: -40%;
+      position: absolute; inset: -15%;
       border-radius: 50%;
       background: radial-gradient(ellipse at center,
-        rgba(215, 148, 48, 0.32) 0%,
-        rgba(185, 115, 32, 0.12) 50%,
+        rgba(218, 152, 48, 0.58) 0%,
+        rgba(188, 118, 32, 0.26) 50%,
         transparent 72%);
-      /* idle breath — very faint, slow, matches the living lanterns */
+      /* idle breath — genuinely visible without hover/touch, matches the
+         Whispered Archives jar standard (6 Jul, portal-wide consistency pass).
+         Bloom tightened from -40% to -15% (6 Jul follow-up) — five hotspots
+         at the old radius read as one glowing room, not five distinct spots. */
       animation: glowBreath 6s ease-in-out infinite;
       transition: opacity 0.8s ease, animation 0s;
       pointer-events: none;
     }
     @keyframes glowBreath {
-      0%, 100% { opacity: 0.08; }
-      50%       { opacity: 0.22; }
+      0%, 100% { opacity: 0.42; }
+      50%       { opacity: 0.8; }
     }
+    /* Stagger each hotspot's breath so the five don't bloom in unison —
+       living lanterns, each keeping its own rhythm (6 Jul follow-up). */
+    #hs-fire .hs-glow       { animation-delay: 0s; }
+    #hs-board .hs-glow      { animation-delay: 1.4s; }
+    #hs-stair .hs-glow      { animation-delay: 2.7s; }
+    #hs-memory .hs-glow     { animation-delay: 3.6s; }
+    #hs-apothecary .hs-glow { animation-delay: 4.8s; }
     .hotspot:hover .hs-glow,
     .hotspot.active .hs-glow {
       animation: none;
@@ -136,22 +148,25 @@
     .hotspot:hover .hs-label,
     .hotspot.active  .hs-label { opacity: 1; }
 
-    /* ——— NOTICEBOARD — right side of image ——— */
+    /* ——— NOTICEBOARD — right side of image ———
+       Height brought down from 55vh (logged: "elongated and sit too close
+       together" — one consolidated hotspot pass, 4 Jul). */
     #hs-board {
       right: 2%;
       top: 28%;
       width: 20vw;
-      height: 55vh;
+      height: 34vh;
       min-width: 90px;
       min-height: 140px;
     }
 
-    /* ——— STAIRCASE — right center, leads to Year Wheel ——— */
+    /* ——— STAIRCASE — right center, leads to Year Wheel ———
+       Height brought down from 42vh, same consolidated pass. */
     #hs-stair {
       right: 26%;
       top: 12%;
       width: 16vw;
-      height: 42vh;
+      height: 26vh;
       min-width: 70px;
       min-height: 110px;
     }
@@ -174,6 +189,17 @@
       height: 19vh;
       min-width: 50px;
       min-height: 60px;
+    }
+
+    /* ——— APOTHECARY — passage to the reading nook ——— */
+    #hs-apothecary {
+      left: 50%;
+      top: 58%;
+      transform: translateX(-50%);
+      width: 10vw;
+      height: 22vh;
+      min-width: 60px;
+      min-height: 70px;
     }
 
     /* ——————————————————————————————————————
@@ -209,15 +235,16 @@
     .board-scrim.open { opacity: 1; pointer-events: all; cursor: pointer; }
 
     .board-close {
-      position: absolute; top: max(4vh, 22px); right: 22px;
+      position: absolute; top: max(3vh, 16px); right: 14px;
       background: none; border: none; cursor: pointer;
       font-family: var(--serif);
-      font-size: 18px; line-height: 1;
-      color: rgba(190, 155, 85, 0.4);
-      padding: 8px;
+      font-size: 34px; line-height: 1;
+      color: rgba(215, 180, 100, 0.62);
+      padding: 14px;
       transition: color 0.5s ease;
     }
-    .board-close:hover { color: rgba(220, 185, 110, 0.85); }
+    .board-close:hover,
+    .board-close:active { color: rgba(230, 195, 110, 0.95); }
 
     .board-label {
       font-size: clamp(8px, 0.82vw, 10px);
@@ -254,21 +281,21 @@
 
     .note-body {
       display: block;
-      font-size: clamp(13px, 1.35vw, 16px);
+      font-size: clamp(16px, 1.6vw, 19px);
       font-style: italic;
-      font-weight: 300;
+      font-weight: 400;
       line-height: 1.88;
-      color: rgba(228, 205, 152, 0.84);
+      color: rgba(232, 210, 160, 0.94);
       letter-spacing: 0.02em;
     }
 
     .note-sig {
       display: block;
       margin-top: 9px;
-      font-size: clamp(8px, 0.78vw, 10px);
+      font-size: clamp(10px, 0.9vw, 12px);
       letter-spacing: 0.4em;
       text-transform: uppercase;
-      color: rgba(165, 135, 75, 0.36);
+      color: rgba(190, 155, 90, 0.55);
     }
 
     /* Ghost notes — coming-soon rooms, more spectral */
@@ -298,6 +325,61 @@
       white-space: nowrap;
     }
     .sealed-whisper.show { opacity: 1; }
+
+    /* ——— WHISPERS (visitor half of the noticeboard) ———
+       Same quiet, borderless register as the subscribe form below — no
+       boxed textarea, no "Submit" button, this is a ritual not a form. */
+    .whisper-wrap {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(160, 125, 55, 0.14);
+    }
+    .whisper-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(200, 165, 80, 0.22);
+      padding: 8px 0;
+      font-family: var(--serif);
+      font-size: clamp(13px, 1.3vw, 15px);
+      font-style: italic;
+      color: var(--ink-cream);
+      letter-spacing: 0.04em;
+      outline: none;
+      resize: none;
+      min-height: 3.4em;
+      transition: border-color 0.5s ease;
+    }
+    .whisper-input::placeholder { color: var(--ink-faint); }
+    .whisper-input:focus { border-bottom-color: rgba(220, 175, 80, 0.5); }
+    .whisper-submit {
+      align-self: flex-start;
+      background: transparent;
+      border: 1px solid rgba(200, 160, 65, 0.28);
+      color: rgba(215, 175, 90, 0.65);
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      padding: 9px 20px;
+      margin-top: 12px;
+      cursor: pointer;
+      transition: border-color 0.5s ease, color 0.5s ease;
+    }
+    .whisper-submit:hover {
+      border-color: rgba(215, 175, 85, 0.6);
+      color: rgba(230, 195, 110, 0.9);
+    }
+    .whisper-thanks {
+      display: none;
+      margin-top: 10px;
+      font-size: clamp(12px, 1.2vw, 14px);
+      font-style: italic;
+      color: rgba(215, 185, 115, 0.65);
+      letter-spacing: 0.04em;
+      line-height: 1.8;
+    }
+    .whisper-thanks.show { display: block; }
 
     /* ——— SUBSCRIBE ——— */
     .subscribe-wrap {
@@ -419,6 +501,7 @@
       white-space: nowrap;
     }
     .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-link.ef-current { color: rgba(220, 180, 95, 0.28); cursor: default; }
     .ef-divider {
       width: 28px; border: none;
       border-top: 1px solid rgba(160, 125, 55, 0.2);
@@ -445,17 +528,430 @@
       pointer-events: none;
     }
 
+    /* ——— RETURN TO THE CORRIDOR ———
+       Direct exit, independent of the Everflame (nav standard 0.1).
+       Same quiet register as the wordmark, bottom-left so it never
+       competes with the Everflame (top-left) or the noticeboard (right). */
+    .return-link {
+      position: fixed;
+      bottom: max(2.5vh, 14px);
+      left: max(3vmin, 18px);
+      z-index: 150;
+      background: none; border: none; padding: 6px 2px; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.8vw, 10px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 88, 0.32);
+      white-space: nowrap;
+      transition: color 0.5s ease;
+    }
+    .return-link:hover { color: rgba(220, 185, 110, 0.75); }
+
+    /* ——————————————————————————————————————
+       NEW MOON — THE LOOM'S STAGE
+       Full-screen experience: words rise from the fire,
+       the visitor catches one or speaks their own.
+       No box. No form. The room is the ritual.
+    —————————————————————————————————————— */
+    .moon-scrim {
+      position: fixed; inset: 0; z-index: 55;
+      background: rgba(6,3,9,0.82);
+      opacity: 0; pointer-events: none;
+      transition: opacity 1s ease;
+      backdrop-filter: blur(3px);
+    }
+    .moon-scrim.open { opacity: 1; pointer-events: all; }
+
+    /* Stage fills the screen — no border, no box */
+    .moon-stage {
+      position: fixed; inset: 0; z-index: 60;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.9s ease;
+    }
+    .moon-stage.open { opacity: 1; pointer-events: all; }
+
+    /* Amber fire glow — blooms from the hearth as the Loom stirs */
+    .stage-fire-bg {
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 85vw; height: 62vh;
+      background: radial-gradient(ellipse at 50% 100%,
+        rgba(192, 108, 20, 0.17) 0%,
+        rgba(148, 76, 12, 0.09) 34%,
+        rgba(85, 48, 8, 0.04) 62%,
+        transparent 78%);
+      pointer-events: none; z-index: 0;
+      opacity: 0; transition: opacity 3.2s ease;
+    }
+    .moon-stage.fire-lit .stage-fire-bg {
+      opacity: 1;
+      animation: stageFireBreath 9s ease-in-out infinite;
+    }
+    @keyframes stageFireBreath {
+      0%, 100% { opacity: 0.76; }
+      40%       { opacity: 1.0; }
+      68%       { opacity: 0.60; }
+    }
+
+    .moon-close {
+      position: fixed; top: 22px; right: 26px; z-index: 70;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-size: 20px;
+      color: rgba(190,155,85,0.22); padding: 10px;
+      transition: color 0.4s ease;
+    }
+    .moon-close:hover { color: rgba(220,185,110,0.65); }
+
+    .moon-phase-label {
+      position: fixed; top: max(3.5vh, 20px); left: 50%;
+      transform: translateX(-50%); z-index: 61;
+      font-size: clamp(8px, 0.72vw, 9px);
+      letter-spacing: 0.55em; text-transform: uppercase;
+      color: rgba(175,140,72,0.22); white-space: nowrap; pointer-events: none;
+    }
+
+    /* States fill the stage */
+    .moon-state { position: absolute; inset: 0; }
+    .moon-state.hidden { display: none; }
+
+    /* ——— SET STATE — three lines fall softly in sequence ——— */
+    .moon-line {
+      position: absolute; left: 50%;
+      font-family: var(--serif); font-style: italic; font-weight: 300;
+      text-align: center; white-space: nowrap; pointer-events: none;
+      opacity: 0; transform: translateX(-50%) translateY(-14px);
+    }
+    .moon-line-1 {
+      top: 19%;
+      font-size: clamp(15px, 1.6vw, 21px);
+      color: rgba(215,190,135,0.52);
+      letter-spacing: 0.04em; line-height: 1.85;
+      animation: moonLineFall 2.4s 0.8s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    .moon-line-2 {
+      top: 30%;
+      font-size: clamp(12px, 1.22vw, 16px);
+      color: rgba(200,175,120,0.38);
+      letter-spacing: 0.06em;
+      animation: moonLineFall 2s 4s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    .moon-line-3 {
+      top: 38%;
+      font-size: clamp(9px, 0.95vw, 12px);
+      color: rgba(178,152,98,0.26);
+      letter-spacing: 0.2em; text-transform: uppercase;
+      animation: moonLineFall 2s 6.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    @keyframes moonLineFall {
+      from { opacity: 0; transform: translateX(-50%) translateY(-14px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Returning visitor — their threads shown here */
+    .moon-returning-display {
+      position: absolute; top: 36%; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; pointer-events: none;
+      max-width: 90vw; line-height: 1.6;
+    }
+    .moon-returning-display.hidden { display: none; }
+    .moon-returning-word {
+      display: inline-block; margin: 0 0.5em;
+      font-family: var(--serif); font-size: clamp(24px, 3.2vw, 44px);
+      font-style: italic; font-weight: 300;
+      color: rgba(225,200,148,0.85); letter-spacing: 0.12em;
+      text-shadow: 0 0 55px rgba(210,195,248,0.30), 0 0 100px rgba(185,170,230,0.12);
+    }
+
+    /* Thread choices — appear after Done is clicked */
+    .moon-thread-choice {
+      position: absolute; top: 63%; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity 0.8s ease;
+    }
+    .moon-thread-choice.visible { opacity: 1; pointer-events: all; }
+
+    .moon-choice {
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.42em; text-transform: uppercase;
+      color: rgba(210,175,90,0.52); cursor: pointer; transition: color 0.4s ease;
+    }
+    .moon-choice:hover { color: rgba(238,208,125,0.9); }
+    .moon-choice-private { color: rgba(175,148,80,0.26); }
+    .moon-choice-private:hover { color: rgba(200,172,95,0.62); }
+    .moon-dot { margin: 0 1.1em; color: rgba(170,145,85,0.16); font-size: clamp(8px,0.82vw,10px); }
+
+    /* "I have what I need" — Done button, fixed at bottom, appears after first catch */
+    .moon-done {
+      position: fixed; bottom: 11%; left: 50%; transform: translateX(-50%);
+      font-family: var(--serif);
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(192,165,92,0.30);
+      background: none; border: none; cursor: pointer; white-space: nowrap;
+      z-index: 68; pointer-events: none;
+      opacity: 0; transition: opacity 0.9s ease, color 0.4s ease;
+    }
+    .moon-done.visible { opacity: 1; pointer-events: all; }
+    .moon-done:hover { color: rgba(228,205,138,0.78); }
+    .moon-done.hidden { display: none; }
+
+    /* "Release this thread and begin again" — shown when returning */
+    .moon-release {
+      position: absolute; bottom: 13%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--serif);
+      font-size: clamp(7px, 0.72vw, 9px);
+      letter-spacing: 0.4em; text-transform: uppercase;
+      color: rgba(148,125,70,0.2);
+      background: none; border: none; cursor: pointer; white-space: nowrap;
+      transition: color 0.4s ease;
+    }
+    .moon-release:hover { color: rgba(185,160,90,0.5); }
+    .moon-release.hidden { display: none; }
+
+    /* Faint hint — appears after first catch */
+    .moon-hint {
+      position: absolute; bottom: 6%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(7px, 0.68vw, 9px);
+      font-style: italic; color: rgba(145,122,72,0.16);
+      letter-spacing: 0.05em; white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 1.2s ease;
+    }
+    .moon-hint.visible { opacity: 1; }
+
+    @keyframes moonFadeIn { to { opacity: 1; } }
+
+    /* ——— CONFIRM state ——— */
+    .moon-body {
+      position: absolute; top: 32%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(13px, 1.35vw, 16px);
+      font-style: italic; font-weight: 300;
+      color: rgba(210,185,130,0.52); letter-spacing: 0.03em;
+      line-height: 1.9; text-align: center; white-space: normal; width: min(88vw, 600px); pointer-events: none;
+    }
+    .moon-word {
+      position: absolute; top: 43%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(20px, 2.8vw, 40px);
+      font-style: italic; font-weight: 300;
+      color: rgba(228,205,152,0.85); letter-spacing: 0.1em;
+      text-align: center; pointer-events: none;
+      max-width: 90vw; white-space: normal; line-height: 1.6;
+    }
+    .moon-cta {
+      position: absolute; top: 65%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(11px, 1.08vw, 13px);
+      font-style: italic; color: rgba(185,155,85,0.36);
+      letter-spacing: 0.05em; line-height: 1.9;
+      text-align: center; white-space: normal; width: min(88vw, 600px); pointer-events: none;
+    }
+
+    /* ——— FLOATING LOOM WORDS — rise slowly from the fire ——— */
+    .loom-word {
+      position: fixed;
+      font-family: var(--serif);
+      font-size: clamp(16px, 1.75vw, 23px);
+      font-style: italic; font-weight: 300;
+      letter-spacing: 0.1em;
+      color: rgba(228,200,140,0.84);
+      cursor: pointer; pointer-events: all; user-select: none;
+      z-index: 65; opacity: 0;
+      animation: loomWordDrift var(--wd-dur, 20s) var(--wd-delay, 0s) ease-in-out forwards;
+      transition: color 0.25s ease, text-shadow 0.25s ease;
+    }
+    .loom-word:hover {
+      color: rgba(248,230,170,0.98);
+      text-shadow: 0 0 28px rgba(238,212,148,0.58), 0 0 55px rgba(212,188,122,0.24);
+    }
+    /* Caught: freeze in air, glow silver-gold */
+    .loom-word.caught {
+      color: rgba(246,226,170,0.98) !important;
+      text-shadow: 0 0 30px rgba(220,200,255,0.62), 0 0 65px rgba(180,160,230,0.30) !important;
+      cursor: pointer; animation: none !important;
+    }
+    @keyframes loomWordDrift {
+      0%   { transform: translate(0, 0); opacity: 0; }
+      8%   { opacity: 1; }
+      72%  { transform: translate(var(--wd-tx, 10px), var(--wd-ty, -150px)); opacity: 0.80; }
+      100% { transform: translate(var(--wd-tx2, 15px), var(--wd-ty2, -300px)); opacity: 0; }
+    }
+
+    /* ——— NEW MOON FIRE — calls to visitors ——— */
+    #hs-fire.new-moon .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(210, 200, 240, 0.3) 0%,
+        rgba(185, 155, 80, 0.18) 45%,
+        transparent 72%);
+      animation: glowBreathMoon 4s ease-in-out infinite;
+    }
+    #hs-fire.new-moon:hover .hs-glow,
+    #hs-fire.new-moon.active .hs-glow { animation: none; opacity: 1; }
+
+    @keyframes glowBreathMoon {
+      0%, 100% { opacity: 0.15; }
+      50%       { opacity: 0.5; }
+    }
+
+    /* Label peeks through at New Moon without hover */
+    #hs-fire.new-moon .hs-label { opacity: 0.38; }
+    #hs-fire.new-moon:hover .hs-label,
+    #hs-fire.new-moon.active .hs-label { opacity: 1; }
+
+    /* Ember sparks — rise from the grate at New Moon, like the fire is breathing */
+    .hs-spark {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+    }
+    #hs-fire.new-moon .hs-spark {
+      background: rgba(222, 212, 250, 0.92);
+      box-shadow: 0 0 3px rgba(200,190,242,0.85), 0 0 7px rgba(170,155,220,0.4);
+      animation: sparkRise var(--sdur, 2.8s) var(--sdly, 0s) ease-out infinite;
+    }
+    @keyframes sparkRise {
+      0%   { transform: translate(var(--sx,0px), 0px) scale(1); opacity: 0; }
+      10%  { opacity: 0.85; }
+      55%  { transform: translate(calc(var(--sx,0px) + var(--sdx,3px)), var(--sy,-30px)) scale(0.55);
+             opacity: 0.3; }
+      100% { transform: translate(calc(var(--sx,0px) + var(--sdx2,5px)), var(--sy2,-65px)) scale(0.08);
+             opacity: 0; }
+    }
+
+    /* ——— MOON MOTES — silver particles drifting during confirm state ——— */
+    .moon-mote {
+      position: fixed;
+      width: 2px; height: 2px; border-radius: 50%;
+      background: rgba(220,210,248,0.55);
+      box-shadow: 0 0 4px rgba(200,190,240,0.5);
+      pointer-events: none;
+      animation: moonMoteRise var(--dur) var(--delay) ease-in infinite;
+    }
+    @keyframes moonMoteRise {
+      0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+      8%   { opacity: 0.75; }
+      55%  { transform: translateY(calc(var(--lift)*-0.6)) translateX(var(--drift)) scale(0.7); opacity: 0.4; }
+      100% { transform: translateY(var(--lift)) translateX(calc(var(--drift)*1.4)) scale(0.15); opacity: 0; }
+    }
+
+    /* ——— CONFIRMED WORD — rises with a silver glow ——— */
+    @keyframes moonWordRise {
+      0%   { opacity: 0; transform: translateX(-50%) translateY(18px); filter: blur(4px); text-shadow: none; }
+      45%  { opacity: 1; transform: translateX(-50%) translateY(8px); filter: blur(0);
+             text-shadow: 0 0 40px rgba(210,195,248,0.45), 0 0 80px rgba(185,170,230,0.2); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); filter: blur(0);
+             text-shadow: 0 0 22px rgba(210,195,248,0.22), 0 0 50px rgba(185,170,230,0.1); }
+    }
+    .moon-word-rise { animation: moonWordRise 1.8s cubic-bezier(0.22,0.1,0.18,1) forwards; }
+
     /* ——— MOBILE ——— */
     @media (max-width: 600px) {
-      #hs-board {
-        right: 2%;
-        top: 32%;
-        width: 32vw;
-        height: 28vh;
-      }
       .board-panel { width: 92vw; }
     }
+
+    /* ——————————————————————————————————————
+       PORTRAIT HOTSPOT MAP (0.3 rollout, 4 Jul)
+       Confirmed Blocker: hotspots wrong on mobile, "this was definitely
+       correct before." Room art doesn't need reproducing (Ange: originally
+       generated 9:16) — this is a coordinates-only fix. Values below are a
+       FIRST PASS carried over from the desktop map, not seated against the
+       actual render — fine-seat on your phone via ?calib=1, same tool as
+       Year Wheel. Board/stair keep their already-reduced heights.
+    —————————————————————————————————————— */
+    @media (orientation: portrait) {
+      /* The Everflame is fixed top-left, independent of the board panel,
+         and the panel eats most of the screen width on a phone (min(90vw,
+         380px)). Its left padding alone (32px) isn't enough to clear the
+         flame's footprint (left:3.5vmin, min 90px wide) — confirmed 6 Jul,
+         it was sitting right over the "N" of NOTICES. Push the title clear. */
+      .board-label { margin-left: 64px; }
+
+      /* Circular glow-and-tap hotspots, consistent diameter, vmin-based so
+         they stay round on any phone. Position is the calibrated centre
+         point from ?calib=1 (right/top mark where the CENTRE sits, not a
+         corner). #hs-board locked 6 Jul from a real phone reading; the rest
+         are still the old placeholder rectangles, awaiting their own tap. */
+      #hs-board, #hs-stair, #hs-memory, #hs-fire, #hs-apothecary {
+        border-radius: 50%;
+      }
+      #hs-board     { right: 0%;   top: 52.2%; width: 14vmin; height: 14vmin; }
+      #hs-stair     { left: 60.7%; top: 35.9%; width: 14vmin; height: 14vmin; }
+      #hs-memory    { left: 12.8%; top: 46.2%; width: 14vmin; height: 14vmin; }
+      #hs-fire      { left: 14.2%; top: 68%; width: 14vmin; height: 14vmin; }
+      #hs-apothecary{ left: 50%;  top: 58%; width: 18vw; height: 17vh; }
+    }
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Same pattern as year-wheel.html: shows cursor/touch position as % of
+       viewport so hotspot coordinates can be read straight off the phone. */
+    #calib {
+      position: fixed; top: 8px; right: 8px; z-index: 999;
+      font-family: monospace; font-size: 12px; color: #ffd27a;
+      background: rgba(0,0,0,.6); padding: 4px 8px; border-radius: 4px;
+      display: none; pointer-events: none;
+    }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec. Placed last so it wins over the base rules.
+       Atmospheric-only text (.wordmark, .moon-phase-label, .moon-dot,
+       .moon-hint) is left as mood-dressing, per the standard.
+    —————————————————————————————————————— */
+    /* reading + story */
+    .note-body            { font-size: clamp(17px, 1.6vw, 20px); }
+    .note.ghost .note-body{ font-size: clamp(16px, 1.5vw, 18px); }
+    .moon-line-1          { font-size: clamp(17px, 1.7vw, 21px); }
+    .moon-body            { font-size: clamp(15px, 1.4vw, 17px); }
+    .loom-word            { font-size: clamp(17px, 1.75vw, 23px); }
+    /* prompts / secondary messages */
+    .moon-line-2          { font-size: clamp(15px, 1.4vw, 17px); }
+    .moon-cta             { font-size: clamp(14px, 1.3vw, 16px); }
+    .sealed-whisper       { font-size: clamp(14px, 1.4vw, 16px); }
+    .whisper-thanks       { font-size: clamp(15px, 1.4vw, 17px); }
+    .subscribe-thanks     { font-size: clamp(15px, 1.4vw, 17px); }
+    /* text inputs (16px floor keeps iOS from zooming on focus) */
+    .whisper-input        { font-size: clamp(16px, 1.5vw, 18px); }
+    .subscribe-form input[type="email"] { font-size: clamp(16px, 1.5vw, 18px); }
+    /* ritual buttons + CTAs */
+    .whisper-submit       { font-size: clamp(12px, 1.05vw, 14px); }
+    .subscribe-form button{ font-size: clamp(12px, 1.05vw, 14px); }
+    .moon-choice          { font-size: clamp(12px, 1.05vw, 14px); }
+    .moon-done            { font-size: clamp(12px, 1.05vw, 14px); }
+    .moon-release         { font-size: clamp(12px, 1vw, 13px); }
+    .return-link          { font-size: clamp(12px, 1vw, 13px); }
+    .ef-link              { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
+    /* names, eyebrows, small-caps labels (12–13px floor) */
+    .hs-label             { font-size: clamp(12px, 1vw, 13px); }
+    .board-label          { font-size: clamp(12px, 1vw, 13px); }
+    .note-sig             { font-size: clamp(12px, 1vw, 13px); }
+    .subscribe-label      { font-size: clamp(12px, 1vw, 13px); }
+    .ef-section-label     { font-size: clamp(12px, 1vw, 13px); }
+    .moon-line-3          { font-size: clamp(12px, 1vw, 13px); }
+    /* long letter-spaced action phrases: tighten tracking + allow wrap so the
+       larger sizes never run off-screen (regression fix, 8 Jul) */
+    .moon-thread-choice   { white-space: normal; width: min(92vw, 640px); }
+    .moon-choice          { letter-spacing: 0.2em; }
+    .moon-done            { letter-spacing: 0.22em; }
+    .moon-release         { letter-spacing: 0.2em; white-space: normal; width: min(92vw, 640px); }
+
+    /* Noticeboard orientation block (tutorial link + add-to-home-screen) */
+    .board-orient { margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px solid rgba(160,125,55,0.14); }
+    .orient-link { display: block; width: 100%; text-align: left; background: none; border: none; padding: 6px 0; cursor: pointer;
+      font-family: var(--serif); font-style: italic; font-size: clamp(15px,1.5vw,17px); letter-spacing: 0.02em;
+      color: rgba(220,190,120,0.82); text-decoration: none; transition: color 0.4s ease; }
+    .orient-link:hover { color: rgba(240,212,145,0.98); }
+    .orient-steps { margin-top: 4px; }
+    .orient-steps p { font-size: clamp(14px,1.3vw,15px); line-height: 1.7; color: rgba(210,192,150,0.72); margin: 0.4em 0; }
+    .orient-steps b { color: rgba(228,205,150,0.9); font-weight: 400; }
   </style>
+  <script src="sound-control.js"></script>
 </head>
 <body>
 
@@ -475,6 +971,8 @@
       <hr class="ef-divider">
     </div>
     <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link ef-current" id="efHearthfire" disabled>the hearthfire</button></li>
       <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
       <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
     </ul>
@@ -484,6 +982,14 @@
   <!-- ——— FIREPLACE — the fire itself, lower left ——— -->
   <div class="hotspot" id="hs-fire" role="button" tabindex="0" aria-label="The Hearthfire">
     <div class="hs-glow"></div>
+    <div class="hs-spark" style="left:38%;top:82%;--sdur:2.6s;--sdly:0s;--sx:-1px;--sdx:2px;--sdx2:4px;--sy:-26px;--sy2:-55px"></div>
+    <div class="hs-spark" style="left:53%;top:78%;--sdur:3.2s;--sdly:0.8s;--sx:2px;--sdx:-3px;--sdx2:-5px;--sy:-34px;--sy2:-70px"></div>
+    <div class="hs-spark" style="left:44%;top:86%;--sdur:2.1s;--sdly:1.6s;--sx:0px;--sdx:4px;--sdx2:6px;--sy:-22px;--sy2:-50px"></div>
+    <div class="hs-spark" style="left:62%;top:80%;--sdur:3.9s;--sdly:0.3s;--sx:-2px;--sdx:-1px;--sdx2:-4px;--sy:-38px;--sy2:-78px"></div>
+    <div class="hs-spark" style="left:34%;top:75%;--sdur:2.8s;--sdly:2.2s;--sx:3px;--sdx:5px;--sdx2:7px;--sy:-30px;--sy2:-62px"></div>
+    <div class="hs-spark" style="left:57%;top:88%;--sdur:2.3s;--sdly:3.1s;--sx:-3px;--sdx:2px;--sdx2:-1px;--sy:-20px;--sy2:-46px"></div>
+    <div class="hs-spark" style="left:47%;top:72%;--sdur:3.5s;--sdly:1.2s;--sx:1px;--sdx:-4px;--sdx2:-7px;--sy:-42px;--sy2:-84px"></div>
+    <div class="hs-spark" style="left:41%;top:83%;--sdur:2.7s;--sdly:4.0s;--sx:-1px;--sdx:3px;--sdx2:5px;--sy:-28px;--sy2:-58px"></div>
     <span class="hs-label">the hearthfire</span>
   </div>
 
@@ -505,8 +1011,52 @@
     <span class="hs-label">the noticeboard</span>
   </div>
 
+  <!-- ——— APOTHECARY HOTSPOT ——— -->
+  <div class="hotspot" id="hs-apothecary" role="button" tabindex="0" aria-label="The Apothecary">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the apothecary</span>
+  </div>
+
   <!-- Sealed door whisper -->
   <div class="sealed-whisper" id="sealedWhisper"></div>
+
+  <!-- ——— NEW MOON — THE LOOM'S STAGE ——— -->
+  <div class="moon-scrim" id="moonScrim"></div>
+  <div class="moon-stage" id="moonStage" role="dialog" aria-modal="true" aria-label="The Threadsinger's Circle">
+    <div class="stage-fire-bg" id="stageFireBg"></div>
+    <button class="moon-close" id="moonClose" aria-label="Close">×</button>
+    <span class="moon-phase-label">New Moon · The Threadsinger's Circle</span>
+    <button class="moon-done hidden" id="moonDone">I have what I need</button>
+
+    <!-- State 1: catch intentions from the Loom -->
+    <div class="moon-state" id="moonSetState">
+      <p class="moon-line moon-line-1" id="moonLine1">The Loom is still. She has been waiting for you.</p>
+      <p class="moon-line moon-line-2" id="moonLine2">You will know your intention when you see it.</p>
+      <p class="moon-line moon-line-3" id="moonLine3">It is time to catch it.</p>
+
+      <!-- Returning visitor display — their previous threads -->
+      <div class="moon-returning-display hidden" id="moonReturningDisplay" aria-live="polite"></div>
+
+      <!-- Thread choices — appear after Done is clicked -->
+      <div class="moon-thread-choice" id="moonThreadChoice">
+        <span class="moon-choice" id="moonBtnPublic" role="button" tabindex="0">weave it into the tapestry</span>
+        <span class="moon-dot">·</span>
+        <span class="moon-choice moon-choice-private" id="moonBtnPrivate" role="button" tabindex="0">let the Loom hold it</span>
+      </div>
+
+      <!-- Returning visitors only -->
+      <button class="moon-release hidden" id="moonRelease">release these threads and begin again</button>
+
+      <p class="moon-hint" id="moonHint">tapestry is shared with all who pass through · the Loom holds your threads in silence</p>
+    </div>
+
+    <!-- State 2: confirmed -->
+    <div class="moon-state hidden" id="moonConfirmState">
+      <p class="moon-body" id="moonConfirmMsg"></p>
+      <p class="moon-word" id="moonConfirmWord"></p>
+      <p class="moon-cta">The Loom is listening.<br>Return when the crescent shows her face, the Apothecary will have something waiting.</p>
+    </div>
+  </div>
 
   <!-- ——— NOTICEBOARD PANEL ——— -->
   <div class="board-scrim" id="boardScrim"></div>
@@ -514,43 +1064,29 @@
     <button class="board-close" id="boardClose" aria-label="Close">×</button>
     <span class="board-label">Notices</span>
 
-    <div class="notes">
-
-      <!-- ——— YOUR NOTES GO HERE ———
-           Replace the note-body text with your voice.
-           Copy the <div class="note">…</div> block to add more.
-      -->
-      <div class="note">
-        <span class="note-body">From my heart to yours, stay a while, rest your feet by the fire, give yourself time to see where you wish to travel to next.</span>
-        <span class="note-sig">— the keeper</span>
+    <!-- Orientation — for anyone who arrived by a direct link and missed the corridor -->
+    <div class="board-orient">
+      <a class="orient-link" href="whispered-archives.html?tuition=1">New here? Let Velin show you the way.</a>
+      <button type="button" class="orient-link" id="homeScreenBtn" aria-expanded="false">Keep Aetherwood on your home screen &rsaquo;</button>
+      <div class="orient-steps" id="homeScreenSteps" hidden>
+        <p><b>iPhone or iPad:</b> tap the Share icon in Safari, then choose &ldquo;Add to Home Screen&rdquo;.</p>
+        <p><b>Android:</b> open the browser menu, then choose &ldquo;Add to Home screen&rdquo; or &ldquo;Install&rdquo;.</p>
       </div>
+    </div>
 
-      <div class="note">
-        <span class="note-body">Has anyone seen my grimoire? There's nothing too important that I can't remember, but I need it for submission this week. Contact Lyra, room 5. Reward available. Bribes will not be considered.</span>
-        <span class="note-sig">— Lyra</span>
-      </div>
+    <!-- Faculty notices — fetched from Airtable (Ange edits there directly, no
+         deploy needed); falls back to the three defaults below if Airtable
+         isn't reachable or the table is still empty. -->
+    <div class="notes" id="facultyNotes"></div>
 
-      <div class="note">
-        <span class="note-body">Students, I'd like you all to be gracious in your welcome of an esteemed professor, Dr. Eirik Ward. He will be engaging with the archives for the foreseeable future, but is an expert on folklore and lost languages. If you happen upon Professor Eirik near the hearthfire, be sure to introduce yourself.</span>
-        <span class="note-sig">— Draven</span>
-      </div>
-
-      <!-- Coming-soon rooms — replace or remove as rooms open -->
-      <div class="note ghost">
-        <span class="note-body">The Whispered Archives</span>
-        <span class="note-sig">— coming</span>
-      </div>
-
-      <div class="note ghost">
-        <span class="note-body">The Resonance Chamber</span>
-        <span class="note-sig">— coming</span>
-      </div>
-
-      <div class="note ghost">
-        <span class="note-body">Leave word at the board</span>
-        <span class="note-sig">— coming soon</span>
-      </div>
-
+    <!-- Visitors' whispers -->
+    <div class="whisper-wrap">
+      <span class="subscribe-label">whispers from those who passed through</span>
+      <div class="notes" id="visitorWhispers"></div>
+      <textarea class="whisper-input" id="whisperInput" maxlength="300" placeholder="leave a word for those who pass through"></textarea>
+      <br>
+      <button type="button" class="whisper-submit" id="whisperSubmitBtn">leave this whisper</button>
+      <div class="whisper-thanks" id="whisperThanks">Your whisper joins the board.</div>
     </div>
 
     <!-- SUBSCRIBE -->
@@ -571,14 +1107,25 @@
 
   <div class="wordmark">Aetherwood</div>
 
+  <!-- Direct exit — nav standard 0.1, independent of the Everflame -->
+  <button class="return-link" id="returnLink" aria-label="Return to the corridor">return to the corridor</button>
+
+  <!-- Calibration aid — ?calib=1, mirrors year-wheel.html -->
+  <div id="calib">· move mouse / touch ·</div>
+
   <script>
+    /* ——— LUNAR STATE ——— */
+    var lunarState = LUNAR.getLunarState();
+    var currentIntention = AETHERWOOD.getIntentionForCycle(lunarState.cycleId);
+
     /* ——— ALL ELEMENT REFERENCES ——— */
     var cover        = document.getElementById('fadeCover');
     var bg           = document.getElementById('bg');
-    var hs           = document.getElementById('hs-board');
-    var hsStair      = document.getElementById('hs-stair');
-    var hsMemory     = document.getElementById('hs-memory');
-    var hsFire       = document.getElementById('hs-fire');
+    var hs             = document.getElementById('hs-board');
+    var hsStair        = document.getElementById('hs-stair');
+    var hsMemory       = document.getElementById('hs-memory');
+    var hsFire         = document.getElementById('hs-fire');
+    var hsApothecary   = document.getElementById('hs-apothecary');
     var panel        = document.getElementById('boardPanel');
     var scrim        = document.getElementById('boardScrim');
     var whisper      = document.getElementById('sealedWhisper');
@@ -610,19 +1157,23 @@
     }
 
     /* ——— TRAIL LOGGING ——— */
+    /* Uses sessionStorage — "this visit" only, clears when tab closes */
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html']; /* always in permanent nav, exclude from trail */
     function logTrail(name, href) {
-      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
       trail = trail.filter(function(e){ return e.href !== href; });
       trail.unshift({ name: name, href: href });
-      if (trail.length > 5) trail = trail.slice(0, 5);
-      localStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+      /* TODO: fire-and-forget Airtable visitor_paths log (session ID + room + timestamp) once Airtable is wired */
     }
     logTrail('the hearthfire', 'hearthfire.html');
 
     /* ——— EVERFLAME MENU ——— */
     function buildTrail() {
-      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
-      trail = trail.filter(function(e){ return e.href !== 'hearthfire.html'; });
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      /* exclude current room and permanent anchor destinations from trail */
+      trail = trail.filter(function(e){ return e.href !== 'hearthfire.html' && EF_ANCHORS.indexOf(e.href) === -1; });
       if (trail.length === 0) {
         efTrail.style.display = 'none';
         return;
@@ -659,21 +1210,482 @@
       if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
     });
     efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efArchives').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('whispered-archives.html');
+    });
     document.getElementById('efCorridor').addEventListener('click', function(){
       closeEfMenu(); navigateTo('vestibule.html?walk=1');
     });
     document.getElementById('efLeave').addEventListener('click', function(){
-      closeEfMenu(); navigateTo('threshold.html');
+      closeEfMenu(); navigateTo('index.html');
+    });
+    document.getElementById('returnLink').addEventListener('click', function(){
+      navigateTo('vestibule.html?walk=1');
     });
     document.addEventListener('keydown', function(e){
-      if (e.key === 'Escape'){ closeEfMenu(); closeBoard(); }
+      if (e.key === 'Escape'){ closeEfMenu(); closeBoard(); closeMoonPanel(); }
     });
 
+    /* ——— NEW MOON — THE LOOM'S STAGE ——— */
+    var moonStage            = document.getElementById('moonStage');
+    var moonScrim            = document.getElementById('moonScrim');
+    var moonSetState         = document.getElementById('moonSetState');
+    var moonConfirmState     = document.getElementById('moonConfirmState');
+    var moonConfirmMsg       = document.getElementById('moonConfirmMsg');
+    var moonConfirmWord      = document.getElementById('moonConfirmWord');
+    var moonLine1            = document.getElementById('moonLine1');
+    var moonLine2            = document.getElementById('moonLine2');
+    var moonLine3            = document.getElementById('moonLine3');
+    var moonReturningDisplay = document.getElementById('moonReturningDisplay');
+    var moonThreadChoice     = document.getElementById('moonThreadChoice');
+    var moonRelease          = document.getElementById('moonRelease');
+    var moonHint             = document.getElementById('moonHint');
+    var moonDone             = document.getElementById('moonDone');
+    var moonCaughtWords      = [];
+    var activeLoomWords      = [];
+    var loomCascadeTimer     = null;
+    var moonDoneVisible      = false;
+
+    /* Words the Loom offers — ANGE: please replace with your own */
+    var LOOM_WORDS = [
+      'begin',     'nurture',   'seek',   'searching',
+      'root',      'dream',     'hold',   'open',
+      'still',     'arrive',    'weave',  'breathe',
+      'grow',      'gather',    'become', 'listen',
+      'return',    'trust',     'mend',   'rest',
+      'release',   'remember',  'find',   'turn'
+    ];
+
+    function pickWords(n) {
+      var pool = LOOM_WORDS.slice(), picked = [];
+      while (picked.length < n && pool.length) {
+        picked.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+      }
+      return picked;
+    }
+
+    function spawnLoomBatch() {
+      var fireRect = hsFire.getBoundingClientRect();
+      var ox = fireRect.left + fireRect.width  * 0.5;
+      var oy = fireRect.top  + fireRect.height * 0.72;
+      var cx = window.innerWidth  * 0.5;
+      var ch = window.innerHeight;
+
+      pickWords(6).forEach(function(word, i) {
+        var el = document.createElement('div');
+        el.className = 'loom-word';
+        el.textContent = word;
+        /* Start position: tight cluster near the fire */
+        var sx = ox + (Math.random() - 0.5) * 44;
+        var sy = oy + (Math.random() - 0.5) * 10;
+        el.style.left = sx + 'px';
+        el.style.top  = sy + 'px';
+        /* Drift: fan outward from fire in all directions — some left, some right, some straight */
+        var angle = (Math.random() * Math.PI * 0.9) - (Math.PI * 0.45); /* –81° to +81° from vertical */
+        var dist1 = ch * (0.21 + Math.random() * 0.14);
+        var dist2 = ch * (0.40 + Math.random() * 0.13);
+        var tx  = Math.sin(angle) * dist1;
+        var ty  = -Math.cos(angle) * dist1;
+        var tx2 = Math.sin(angle) * dist2 + (Math.random() - 0.5) * 38;
+        var ty2 = -Math.cos(angle) * dist2;
+        var dur = 18 + Math.random() * 8; /* 18–26s — slow enough to read */
+        var dly = i * 1.0 + Math.random() * 1.6;
+        el.style.setProperty('--wd-dur',   dur + 's');
+        el.style.setProperty('--wd-delay', dly + 's');
+        el.style.setProperty('--wd-tx',   tx  + 'px');
+        el.style.setProperty('--wd-ty',   ty  + 'px');
+        el.style.setProperty('--wd-tx2',  tx2 + 'px');
+        el.style.setProperty('--wd-ty2',  ty2 + 'px');
+
+        (function(w, e) {
+          function handler() { catchLoomWord(w, e); }
+          e.addEventListener('click', handler);
+        })(word, el);
+
+        document.body.appendChild(el);
+        activeLoomWords.push(el);
+
+        /* Auto-remove from DOM when fully faded (never removes caught words) */
+        setTimeout(function() {
+          if (!el.classList.contains('caught') && el.parentNode) {
+            el.parentNode.removeChild(el);
+            var idx = activeLoomWords.indexOf(el);
+            if (idx > -1) activeLoomWords.splice(idx, 1);
+          }
+        }, (dur + dly + 1) * 1000);
+      });
+    }
+
+    function startLoomCascade() {
+      spawnLoomBatch();
+      loomCascadeTimer = setInterval(spawnLoomBatch, 14000);
+    }
+
+    function stopLoomCascade() {
+      if (loomCascadeTimer) { clearInterval(loomCascadeTimer); loomCascadeTimer = null; }
+    }
+
+    /* Fade out free-floating words; keep caught ones in air */
+    function dismissFloatingWords() {
+      stopLoomCascade();
+      activeLoomWords.forEach(function(w) {
+        if (!w.classList.contains('caught')) {
+          w.style.transition = 'opacity 0.55s ease';
+          w.style.opacity = '0';
+          w.style.pointerEvents = 'none';
+          setTimeout(function() { if (w.parentNode) w.parentNode.removeChild(w); }, 600);
+        }
+      });
+      activeLoomWords = activeLoomWords.filter(function(w) { return w.classList.contains('caught'); });
+    }
+
+    /* Remove everything, including caught words */
+    function removeAllLoomWords() {
+      stopLoomCascade();
+      activeLoomWords.forEach(function(w) {
+        if (w.parentNode) w.parentNode.removeChild(w);
+      });
+      activeLoomWords = [];
+    }
+
+    /* Tap a caught word again to release it — undo a mis-tap while chasing */
+    function releaseLoomWord(word, el) {
+      el.classList.remove('caught');
+      var wi = moonCaughtWords.indexOf(word);
+      if (wi > -1) moonCaughtWords.splice(wi, 1);
+      el.style.transition = 'opacity 0.4s ease';
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      setTimeout(function() {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        var ai = activeLoomWords.indexOf(el);
+        if (ai > -1) activeLoomWords.splice(ai, 1);
+      }, 420);
+      /* If nothing is held anymore, tuck the Done button and hint away again */
+      if (moonCaughtWords.length === 0 && moonDoneVisible) {
+        moonDoneVisible = false;
+        moonDone.classList.remove('visible');
+        moonHint.classList.remove('visible');
+        setTimeout(function() { moonDone.classList.add('hidden'); }, 400);
+      }
+    }
+
+    function catchLoomWord(word, el) {
+      if (el.classList.contains('caught')) { releaseLoomWord(word, el); return; }
+      /* Freeze at current visual position */
+      var rect = el.getBoundingClientRect();
+      el.style.animation  = 'none';
+      el.style.left       = rect.left + 'px';
+      el.style.top        = rect.top  + 'px';
+      el.style.transform  = 'none';
+      el.style.opacity    = '1';
+      el.classList.add('caught');
+      moonCaughtWords.push(word);
+
+      /* Show Done button and hint on first catch */
+      if (!moonDoneVisible) {
+        moonDoneVisible = true;
+        moonDone.classList.remove('hidden');
+        setTimeout(function() { moonDone.classList.add('visible'); }, 40);
+        moonHint.classList.add('visible');
+      }
+    }
+
+    /* ——— MOON MOTES — silver particles during confirm state ——— */
+    function spawnMoonMotes() {
+      document.querySelectorAll('.moon-mote').forEach(function(m) { m.remove(); });
+      for (var i = 0; i < 10; i++) {
+        var m = document.createElement('div');
+        m.className = 'moon-mote';
+        m.style.setProperty('--dur',   (7 + Math.random() * 9) + 's');
+        m.style.setProperty('--delay', (Math.random() * 5)     + 's');
+        m.style.setProperty('--lift',  '-' + (100 + Math.random() * 140) + 'px');
+        m.style.setProperty('--drift', ((Math.random() - 0.5) * 30) + 'px');
+        m.style.left = (20 + Math.random() * 60) + 'vw';
+        m.style.top  = (52 + Math.random() * 16) + 'vh';
+        document.body.appendChild(m);
+      }
+    }
+
+    function clearMoonMotes() {
+      document.querySelectorAll('.moon-mote').forEach(function(m) { m.remove(); });
+    }
+
+    /* ——— Cross-room memory: the hearth remembers (device-local only).
+       First visit sets the flag; every visit after, the Loom's opening
+       line acknowledges them. Returning line is Ange's (9 Jul 2026). ——— */
+    var HEARTH_SEEN_KEY = 'aetherwood.hearth_visited';
+    var hearthSeen = false;
+    try {
+      hearthSeen = !!localStorage.getItem(HEARTH_SEEN_KEY);
+      localStorage.setItem(HEARTH_SEEN_KEY, String(Date.now()));
+    } catch (e) {}
+
+    function openMoonPanel() {
+      var intention = AETHERWOOD.getIntentionForCycle(lunarState.cycleId);
+
+      /* Returning visitor: the Loom's first line changes, nothing else */
+      if (hearthSeen && moonLine1) {
+        moonLine1.textContent = 'The Loom holds. She remembers you.';
+      }
+      moonCaughtWords  = [];
+      moonDoneVisible  = false;
+      moonSetState.classList.add('hidden');
+      moonConfirmState.classList.add('hidden');
+      moonDone.classList.add('hidden');
+      moonDone.classList.remove('visible');
+      moonThreadChoice.classList.remove('visible');
+      moonRelease.classList.add('hidden');
+      moonHint.classList.remove('visible');
+      moonReturningDisplay.classList.add('hidden');
+      moonReturningDisplay.innerHTML = '';
+      moonStage.classList.remove('fire-lit');
+
+      /* Restart the falling-line animations */
+      [moonLine1, moonLine2, moonLine3].forEach(function(el) {
+        el.style.transition = '';
+        el.style.opacity    = '';
+        el.style.animation  = 'none';
+        void el.offsetWidth;
+        el.style.animation  = '';
+      });
+
+      moonSetState.classList.remove('hidden');
+
+      if (intention) {
+        /* Returning visitor — show their threads, never locked out */
+        var words = intention.word.split(' · ');
+        words.forEach(function(w) {
+          var t = w.trim();
+          if (t) {
+            moonCaughtWords.push(t);
+            var span = document.createElement('span');
+            span.className = 'moon-returning-word';
+            span.textContent = t;
+            moonReturningDisplay.appendChild(span);
+          }
+        });
+        moonReturningDisplay.classList.remove('hidden');
+        moonDoneVisible = true;
+        moonDone.classList.remove('hidden');
+        moonDone.classList.add('visible');
+        moonRelease.classList.remove('hidden');
+        moonHint.classList.add('visible');
+        moonThreadChoice.classList.add('visible');
+        setTimeout(function() { moonStage.classList.add('fire-lit'); }, 2000);
+      } else {
+        /* Fire warms as line 1 lands; cascade begins after line 3 settles */
+        setTimeout(function() { moonStage.classList.add('fire-lit'); }, 2200);
+        setTimeout(startLoomCascade, 9000);
+      }
+
+      moonStage.classList.add('open');
+      moonScrim.classList.add('open');
+      bg.classList.add('dimmed');
+    }
+
+    function closeMoonPanel() {
+      moonStage.classList.remove('open');
+      moonStage.classList.remove('fire-lit');
+      moonScrim.classList.remove('open');
+      bg.classList.remove('dimmed');
+      removeAllLoomWords();
+      clearMoonMotes();
+    }
+
+    function submitIntention(isPublic) {
+      var word = moonCaughtWords.join(' · ');
+      if (!word) return;
+      AETHERWOOD.setIntention(word, isPublic, lunarState.cycleId);
+      moonSetState.classList.add('hidden');
+      moonDone.classList.add('hidden');
+      removeAllLoomWords();
+      moonConfirmWord.textContent = moonCaughtWords.join('  ·  ');
+      moonConfirmMsg.textContent  = isPublic
+        ? 'Your threads have been woven into the tapestry.'
+        : 'Your threads are held. The Loom knows.';
+      moonConfirmState.classList.remove('hidden');
+      moonConfirmWord.classList.remove('moon-word-rise');
+      void moonConfirmWord.offsetWidth;
+      moonConfirmWord.classList.add('moon-word-rise');
+      spawnMoonMotes();
+      /* Public threads are woven into the shared tapestry through the proxy.
+         Private intentions never leave the device (held in localStorage by
+         AETHERWOOD.setIntention above). Fire-and-forget: PortalData.submit
+         swallows its own errors so a backend hiccup never breaks the ritual. */
+      if (isPublic) {
+        PortalData.submit('intention', {
+          intention: word,
+          cycle_id: lunarState.cycleId
+        });
+      }
+    }
+
+    document.getElementById('moonClose').addEventListener('click', closeMoonPanel);
+    moonScrim.addEventListener('click', closeMoonPanel);
+
+    moonDone.addEventListener('click', function() {
+      dismissFloatingWords();
+      moonDone.classList.remove('visible');
+      setTimeout(function() { moonDone.classList.add('hidden'); }, 750);
+      moonThreadChoice.classList.add('visible');
+      /* Fade instruction lines out as the choice appears */
+      [moonLine1, moonLine2, moonLine3].forEach(function(l) {
+        l.style.transition = 'opacity 1.2s ease';
+        l.style.opacity    = '0';
+      });
+    });
+
+    moonRelease.addEventListener('click', function() {
+      /* Let go of the woven threads for real, so a reload begins fresh, not
+         back in the returning view. The public tapestry record (if any) stays. */
+      try { localStorage.removeItem('aetherwood_intention'); } catch (e) {}
+      moonCaughtWords  = [];
+      moonDoneVisible  = false;
+      moonReturningDisplay.classList.add('hidden');
+      moonReturningDisplay.innerHTML = '';
+      moonDone.classList.remove('visible');
+      moonDone.classList.add('hidden');
+      moonThreadChoice.classList.remove('visible');
+      moonRelease.classList.add('hidden');
+      moonHint.classList.remove('visible');
+      moonStage.classList.remove('fire-lit');
+      /* Replay instruction sequence */
+      [moonLine1, moonLine2, moonLine3].forEach(function(el) {
+        el.style.transition = '';
+        el.style.opacity    = '';
+        el.style.animation  = 'none';
+        void el.offsetWidth;
+        el.style.animation  = '';
+      });
+      setTimeout(function() { moonStage.classList.add('fire-lit'); }, 2200);
+      setTimeout(startLoomCascade, 9000);
+    });
+
+    document.getElementById('moonBtnPublic').addEventListener('click',  function() { submitIntention(true);  });
+    document.getElementById('moonBtnPrivate').addEventListener('click', function() { submitIntention(false); });
+    document.getElementById('moonBtnPublic').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); submitIntention(true); }
+    });
+    document.getElementById('moonBtnPrivate').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); submitIntention(false); }
+    });
+
+    /* ——— SIGNAL NEW MOON ON THE FIRE ——— */
+    if (lunarState.phase.key === 'new-moon') {
+      hsFire.classList.add('new-moon');
+      var fireLabel = hsFire.querySelector('.hs-label');
+      if (fireLabel) fireLabel.textContent = "the threadsinger's circle";
+    }
+
     /* ——— NOTICEBOARD ——— */
+    var facultyNotesEl    = document.getElementById('facultyNotes');
+    var visitorWhispersEl = document.getElementById('visitorWhispers');
+    var whisperInput      = document.getElementById('whisperInput');
+    var whisperSubmitBtn  = document.getElementById('whisperSubmitBtn');
+    var whisperThanks     = document.getElementById('whisperThanks');
+    var noticesLoaded     = false;
+
+    /* Fallback faculty notices — used until the Airtable `faculty_notices`
+       table has real rows, so the board is never empty. Ange: once you've
+       moved these into Airtable, this array only matters as a safety net. */
+    var DEFAULT_NOTICES = [
+      { body: 'From my heart to yours, stay a while, rest your feet by the fire, give yourself time to see where you wish to travel to next.', signature: 'the keeper' },
+      { body: "Has anyone seen my grimoire? There's nothing too important that I can't remember, but I need it for submission this week. Contact Lyra, room 5. Reward available. Bribes will not be considered.", signature: 'Lyra' },
+      { body: 'Students, I\'d like you all to be gracious in your welcome of an esteemed professor, Dr. Eirik Ward. He will be engaging with the archives for the foreseeable future, but is an expert on folklore and lost languages. If you happen upon Professor Eirik near the hearthfire, be sure to introduce yourself.', signature: 'Draven' }
+    ];
+
+    function renderNotes(container, items, emptyText) {
+      container.innerHTML = '';
+      if (!items.length) {
+        if (emptyText) {
+          var empty = document.createElement('div');
+          empty.className = 'note ghost';
+          empty.innerHTML = '<span class="note-body">' + emptyText + '</span>';
+          container.appendChild(empty);
+        }
+        return;
+      }
+      items.forEach(function(n){
+        var div = document.createElement('div');
+        div.className = 'note';
+        var body = document.createElement('span');
+        body.className = 'note-body';
+        body.textContent = n.body || n.message;
+        div.appendChild(body);
+        if (n.signature) {
+          var sig = document.createElement('span');
+          sig.className = 'note-sig';
+          sig.textContent = n.signature;
+          div.appendChild(sig);
+        }
+        container.appendChild(div);
+      });
+    }
+
+    /* Pending whispers — held on-device only, so a visitor sees their own
+       whisper was received while it waits for moderation, without it being
+       visible to anyone else until approved (display flipped true in
+       Supabase). Once a pending whisper shows up in the approved read, it's
+       "graduated" and dropped from local storage so it doesn't render twice. */
+    function getPendingWhispers() {
+      try { return JSON.parse(localStorage.getItem('aetherwood_pending_whispers') || '[]'); }
+      catch (e) { return []; }
+    }
+    function setPendingWhispers(arr) {
+      try { localStorage.setItem('aetherwood_pending_whispers', JSON.stringify(arr)); } catch (e) {}
+    }
+
+    async function loadNoticeboard() {
+      if (noticesLoaded) return;
+      noticesLoaded = true;
+
+      /* Faculty notices — Airtable, falls back to defaults */
+      var faculty = await PortalData.read('faculty_notices');
+      renderNotes(facultyNotesEl, (faculty && faculty.items && faculty.items.length) ? faculty.items : DEFAULT_NOTICES);
+
+      renderWhispers();
+    }
+
+    async function renderWhispers() {
+      var whispers = await PortalData.read('whispers');
+      var approved = (whispers && whispers.items) ? whispers.items : [];
+      var approvedTexts = approved.map(function(w){ return w.message; });
+
+      /* Drop any pending whisper that's now approved, so it stops
+         double-showing (once as pending, once as public). */
+      var pending = getPendingWhispers().filter(function(text){
+        return approvedTexts.indexOf(text) === -1;
+      });
+      setPendingWhispers(pending);
+
+      var pendingItems = pending.map(function(text){
+        return { message: text, signature: "awaiting the keeper's blessing" };
+      });
+
+      renderNotes(visitorWhispersEl, pendingItems.concat(approved),
+        'No whispers yet. Be the first to leave one.');
+    }
+
+    function submitWhisper() {
+      var text = whisperInput.value.trim();
+      if (!text) return;
+      PortalData.submit('visitor_whisper', { message: text });
+      var pending = getPendingWhispers();
+      pending.unshift(text);
+      setPendingWhispers(pending);
+      renderWhispers();
+      whisperInput.value = '';
+      whisperThanks.classList.add('show');
+      setTimeout(function(){ whisperThanks.classList.remove('show'); }, 3200);
+    }
+    whisperSubmitBtn.addEventListener('click', submitWhisper);
+
     function openBoard(){
       bg.classList.add('dimmed');
       panel.classList.add('open');
       scrim.classList.add('open');
+      loadNoticeboard();
     }
     function closeBoard(){
       bg.classList.remove('dimmed');
@@ -696,35 +1708,61 @@
       whisperTimer = setTimeout(function(){ whisper.classList.remove('show'); }, 3500);
     }
 
-    /* ——— YEAR WHEEL (staircase) — sealed ——— */
+    /* ——— YEAR WHEEL (staircase) — open ——— */
     hsStair.addEventListener('click', function(){
-      showWhisper('The Year Wheel turns in its own time. It is not yet open.');
+      navigateTo('year-wheel.html');
     });
     hsStair.addEventListener('keydown', function(e){
       if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsStair.click(); }
     });
 
-    /* ——— MEMORY HALL — sealed ——— */
-    hsMemory.addEventListener('click', function(){
-      showWhisper('The Memory Hall holds what has been. Its door will open when the time is right.');
-    });
+    /* ——— MEMORY HALL — always open (celebrate it specially at Waning Gibbous, see push tracker) ——— */
+    hsMemory.addEventListener('click', function(){ navigateTo('memory-hall.html'); });
     hsMemory.addEventListener('keydown', function(e){
       if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsMemory.click(); }
     });
 
-    /* ——— FIREPLACE — interactive ——— */
+    /* ——— FIREPLACE — New Moon activates the Threadsinger's Circle ——— */
     hsFire.addEventListener('click', function(){
-      showWhisper('The fire is always burning for those who seek its warmth.');
+      if (lunarState.phase.key === 'new-moon') {
+        openMoonPanel();
+      } else {
+        showWhisper('The fire is always burning for those who seek its warmth.');
+      }
     });
     hsFire.addEventListener('keydown', function(e){
       if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); hsFire.click(); }
     });
 
+    /* ——— APOTHECARY — navigates to the reading nook ——— */
+    hsApothecary.addEventListener('click', function(){ navigateTo('apothecary.html'); });
+    hsApothecary.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); navigateTo('apothecary.html'); }
+    });
+
     /* ——— TOUCH FEEDBACK ——— */
-    [hs, hsStair, hsMemory, hsFire].forEach(function(el){
+    [hs, hsStair, hsMemory, hsFire, hsApothecary].forEach(function(el){
       el.addEventListener('touchstart', function(){ el.classList.add('active'); }, {passive:true});
       el.addEventListener('touchend', function(){ setTimeout(function(){ el.classList.remove('active'); }, 800); });
     });
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Move the mouse (or drag a finger on the phone) and read the % position
+       off the corner readout, then set that hotspot's left/top or right/top
+       in the CSS above. Same tool as year-wheel.html. */
+    if (/[?&]calib=1/.test(location.search)) {
+      var calibBox = document.getElementById('calib');
+      calibBox.style.display = 'block';
+      function showCalib(x, y) {
+        var px = (x / window.innerWidth  * 100).toFixed(1);
+        var py = (y / window.innerHeight * 100).toFixed(1);
+        calibBox.textContent = 'x: ' + px + '%  y: ' + py + '%';
+      }
+      document.addEventListener('mousemove', function(e){ showCalib(e.clientX, e.clientY); });
+      document.addEventListener('touchmove', function(e){
+        if (e.touches && e.touches[0]) showCalib(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+    }
 
     /* ——— SUBSCRIBE FORM ——— */
     subForm.addEventListener('submit', function(e){
@@ -738,6 +1776,21 @@
         subThanks.classList.add('show');
       }).catch(function(){ subForm.submit(); });
     });
+  </script>
+
+  <script>
+    /* Noticeboard: reveal the add-to-home-screen steps on tap */
+    (function () {
+      var btn = document.getElementById('homeScreenBtn');
+      var steps = document.getElementById('homeScreenSteps');
+      if (btn && steps) {
+        btn.addEventListener('click', function () {
+          var open = steps.hidden;
+          steps.hidden = !open;
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      }
+    })();
   </script>
 
 </body>

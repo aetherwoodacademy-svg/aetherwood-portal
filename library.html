@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood · Library of Tales</title>
+
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/library">
+  <meta property="og:title"       content="Library of Tales · Aetherwood">
+  <meta property="og:description" content="Three tales. Three glowing books. A tale finds those who seek.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
+
+  <style>
+    :root {
+      --bg-deep:   #060306;
+      --ink-cream: rgba(238, 220, 175, 0.92);
+      --gold:      rgba(195, 155, 72, 0.88);
+      --serif:     "Cormorant Garamond", Georgia, serif;
+      --caps:      "Cinzel", serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— ROOM SCENE ——— */
+    .room {
+      position: fixed; inset: 0;
+      background:
+        url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1781786699/reading-room_hyisvm.png')
+        center 65% / cover no-repeat;
+    }
+
+    /* Atmosphere overlay — deepens without hiding */
+    .room-overlay {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg,
+          rgba(6, 3, 6, 0.45) 0%,
+          rgba(6, 3, 6, 0.08) 40%,
+          rgba(6, 3, 6, 0.12) 70%,
+          rgba(6, 3, 6, 0.5)  100%
+        );
+    }
+
+    /* ——— ROOM TITLE ——— */
+    .room-title {
+      position: absolute;
+      top: clamp(4rem, 8vmin, 6rem);
+      left: 50%; transform: translateX(-50%);
+      text-align: center;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .room-title-main {
+      display: block;
+      font-family: var(--caps);
+      font-size: clamp(0.65rem, 1.4vw, 0.82rem);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(195, 155, 72, 0.55);
+      white-space: nowrap;
+    }
+
+    .room-title-hint {
+      display: block;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(0.75rem, 1.3vw, 0.88rem);
+      color: rgba(195, 155, 72, 0.3);
+      margin-top: 0.35rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ——— RETURN TO THE CORRIDOR — visual doorway, bottom-left ——— */
+    #returnCorridor {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/Library_of_tales1.png') center / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 45;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnCorridor:hover,
+    #returnCorridor.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg')
+                  center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(1.1);
+      z-index: 200; cursor: pointer;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+    @keyframes efLive {
+      0%,100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%     { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      52%     { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      82%     { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+    }
+
+    /* ——— EVERFLAME MENU — floating dropdown below flame ——— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%,
+        rgba(6,3,9,0.82) 0%,
+        rgba(6,3,9,0.5) 45%,
+        transparent 78%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .ef-section-label {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(175, 140, 72, 0.35);
+      margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block;
+      background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(220, 180, 95, 0.72);
+      cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease;
+      white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-link.ef-current { color: rgba(220, 180, 95, 0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160, 125, 55, 0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim {
+      position: fixed; inset: 0;
+      z-index: 199; pointer-events: none;
+    }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——————————————————————————————————————
+       BOOK HOTSPOTS
+       Each hotspot centres on a book in the
+       scene. Resting state: soft pulse. Hover:
+       bloom opens, label rises into view.
+    ————————————————————————————————————————— */
+
+    .book-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      z-index: 50;
+      cursor: pointer;
+    }
+    .book-hotspot.sealed { cursor: default; }
+
+    /* Desktop positions — moved here from inline style so mobile can override
+       them properly (6 Jul 2026, portrait-first pass). Values unchanged. */
+    #hs-lost-soul    { left: 91%; top: 80.9%; }
+    #hs-silver-beast { left: 50%; top: 30%; }
+    #hs-wolfrunner   { left: 77%; top: 50%; }
+    #hs-lunar-gate   { left: 22.6%; top: 59.2%; } /* first pass, desktop not yet seated */
+
+    /* Core — the pinpoint on the book */
+    .book-core {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      z-index: 2;
+    }
+
+    /* Bloom — the atmospheric aura */
+    .book-bloom {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .book-hotspot:not(.sealed):hover .book-bloom {
+      width: 130px;
+      height: 130px;
+    }
+
+    /* Label plate — rises on hover */
+    .book-label {
+      position: absolute;
+      bottom: calc(50% + 46px);
+      left: 50%;
+      white-space: nowrap;
+      text-align: center;
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .book-hotspot:not(.sealed):hover .book-label {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Wolfrunner sealed hint — dimly visible on hover */
+    #hs-wolfrunner:hover .book-label {
+      opacity: 0.55;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .book-sigil {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.2rem;
+    }
+    .book-name {
+      display: block;
+      font-family: var(--caps);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+    .book-status {
+      display: block;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 0.8rem;
+    }
+    .book-enter {
+      display: block;
+      font-family: var(--caps);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+      opacity: 0.65;
+    }
+
+    /* ——— all three books, one orange glow family (6 Jul 2026) ———
+       They read as three different colours/opacities before, which looked like an
+       accident rather than a choice. Lost Soul and Silver Beast are now identical,
+       just staggered so they don't breathe in unison. Wolfrunner keeps the SAME hue
+       but stays deliberately dim and slow, since its label still reads "still being
+       woven" — that's a real signal (not unlocked yet), not leftover inconsistency. */
+    #hs-lost-soul .book-core, #hs-silver-beast .book-core {
+      background: rgba(255, 214, 130, 0.95);
+      box-shadow: 0 0 10px rgba(230,175,75,0.8), 0 0 22px rgba(200,150,60,0.4);
+      animation: corePulseAmber 3.5s ease-in-out infinite;
+    }
+    #hs-lost-soul .book-bloom, #hs-silver-beast .book-bloom {
+      background: radial-gradient(circle,
+        rgba(230,175,75,0.3) 0%,
+        rgba(200,150,60,0.12) 45%,
+        transparent 72%);
+      animation: bloomPulse 3.5s ease-in-out infinite;
+    }
+    #hs-lost-soul .book-label, #hs-silver-beast .book-label { color: rgba(240, 210, 150, 0.95); }
+    #hs-lost-soul .book-sigil, #hs-silver-beast .book-sigil { color: rgba(230, 175, 75, 0.9); }
+
+    /* Lost Soul sits close to the right edge (91% desktop / 92.6% mobile),
+       a centred label runs off-screen there. Anchor it to grow leftward
+       instead of centring (Ange, 7 Jul 2026). */
+    #hs-lost-soul .book-label {
+      left: auto;
+      right: -6px;
+      transform: translateY(10px);
+    }
+    #hs-lost-soul:hover .book-label {
+      transform: translateY(0);
+    }
+
+    /* staggered so the two don't pulse in unison */
+    #hs-lost-soul .book-core, #hs-lost-soul .book-bloom { animation-delay: 0s; }
+    #hs-silver-beast .book-core, #hs-silver-beast .book-bloom { animation-delay: 1.7s; }
+
+    @keyframes corePulseAmber {
+      0%,100% { box-shadow: 0 0 10px rgba(230,175,75,0.8), 0 0 22px rgba(200,150,60,0.4); }
+      50%     { box-shadow: 0 0 16px rgba(250,200,100,1.0), 0 0 36px rgba(230,175,75,0.65); }
+    }
+
+    /* ——— WOLFRUNNER (still being woven — same orange family, deliberately dim/slow) ——— */
+    #hs-wolfrunner .book-core {
+      background: rgba(230, 175, 75, 0.4);
+      box-shadow: 0 0 8px rgba(230,175,75,0.3), 0 0 16px rgba(200,150,60,0.16);
+      animation: corePulseWolf 7s ease-in-out infinite;
+    }
+    #hs-wolfrunner .book-bloom {
+      background: radial-gradient(circle,
+        rgba(230,175,75,0.13) 0%,
+        rgba(200,150,60,0.05) 45%,
+        transparent 72%);
+      animation: bloomPulse 7s ease-in-out infinite;
+    }
+    #hs-wolfrunner .book-label { color: rgba(225, 195, 145, 0.65); }
+    #hs-wolfrunner .book-sigil { color: rgba(225, 195, 145, 0.45); }
+    #hs-wolfrunner .book-enter { display: block; }
+
+    @keyframes corePulseWolf {
+      0%,100% { opacity: 0.32; }
+      50%     { opacity: 0.6; }
+    }
+
+    /* Shared bloom pulse */
+    @keyframes bloomPulse {
+      0%,100% { opacity: 0.55; }
+      50%     { opacity: 1; }
+    }
+
+    /* ——— MAGICAL MOTES ——— (was fire-themed "ember particles" clustered
+       left, but there's no fireplace in this scene, Ange, 7 Jul 2026:
+       "I thought they were magical flecks of amazingness". Rebuilt as
+       generic ambient motes spread through the whole room, same visual
+       language as Memory Hall/Hearthfire's .mote. Positions set by JS. */
+    #motes { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+    .mote {
+      position: absolute;
+      width: 2.5px; height: 2.5px;
+      border-radius: 50%;
+      background: rgba(230, 195, 130, 0.85);
+      box-shadow: 0 0 6px 2px rgba(230, 190, 120, 0.5);
+      pointer-events: none;
+      animation: moteFloat var(--dur, 9s) var(--delay, 0s) ease-in-out infinite;
+    }
+    @keyframes moteFloat {
+      0%   { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+      15%  { opacity: 0.85; }
+      80%  { opacity: 0.5; }
+      100% { transform: translateY(-60vh) translateX(var(--drift, 10px)) scale(1.1); opacity: 0; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE LUNAR GATE — Eirik/Lyra content, ported from antechamber.html
+       (6 Jul 2026, Phase 0.4 merge). Antechamber is retired; this is its
+       new home. Same mechanic, same content, same voice lines — just a
+       hotspot in the Library instead of a chair in its own room. Closing
+       the panel now leaves the visitor in the Library (Ange, 6 Jul 2026),
+       it no longer redirects to the corridor.
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /* Out-of-phase whisper — a CHILD of the hotspot itself (like .book-label), so it
+       always sits correctly above the gate no matter where the gate is positioned or
+       later recalibrated. Short, on purpose (Ange, 6 Jul 2026: "short and sweet"). */
+    #hs-lunar-gate .gate-whisper {
+      position: absolute; bottom: 100%; left: 50%;
+      transform: translateX(-50%); margin-bottom: 10px;
+      white-space: nowrap; text-align: center;
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(17px, 1.7vw, 19px);
+      color: rgba(232, 220, 190, 0.92);
+      text-shadow: 0 1px 4px #000, 0 0 14px #000, 0 0 26px rgba(0,0,0,0.9);
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.6s ease;
+    }
+    #hs-lunar-gate .gate-whisper.show { opacity: 1; }
+
+    /* Gate hotspot — same orange family as the three books, but MUCH more prominent
+       (Ange, 6 Jul 2026: "because we're in the fire we need the hotspot to be really
+       obvious" — it sits right where the ember particles already are, so it needs to
+       read as a distinct, deliberate thing, not blend into the decorative fire). */
+    #hs-lunar-gate .book-core {
+      width: 14px; height: 14px; /* bigger than the books' 8px pinpoint */
+      background: rgba(255, 224, 150, 1);
+      box-shadow: 0 0 16px rgba(240,185,85,0.95), 0 0 34px rgba(230,175,75,0.6);
+      animation: corePulseGate 2.8s ease-in-out infinite;
+      animation-delay: 3.4s;
+    }
+    #hs-lunar-gate .book-bloom {
+      width: 100px; height: 100px; /* bigger idle bloom than the books' 70px */
+      background: radial-gradient(circle,
+        rgba(255,205,110,0.55) 0%,
+        rgba(230,175,75,0.22) 45%,
+        transparent 74%);
+      animation: bloomPulseGate 2.8s ease-in-out infinite;
+      animation-delay: 3.4s;
+    }
+    #hs-lunar-gate:hover .book-bloom { width: 160px; height: 160px; }
+    #hs-lunar-gate .book-label { color: rgba(255, 225, 170, 1); font-size: 1.05em; }
+    #hs-lunar-gate .book-sigil { color: rgba(255, 205, 110, 1); font-size: 1.3rem; }
+
+    @keyframes corePulseGate {
+      0%,100% { box-shadow: 0 0 16px rgba(240,185,85,0.95), 0 0 34px rgba(230,175,75,0.6); }
+      50%     { box-shadow: 0 0 24px rgba(255,210,120,1), 0 0 52px rgba(240,185,85,0.8); }
+    }
+    @keyframes bloomPulseGate {
+      0%,100% { opacity: 0.7; }
+      50%     { opacity: 1; }
+    }
+
+
+    /* Arrival — a brief phase announcement before the panel takes over, so the jump
+       from "tap a hotspot" to "full-screen story" doesn't feel instant/clunky (Ange,
+       6 Jul 2026: "its slow and clunky to open, can we add a transition message"). */
+    #gateArrival {
+      position: fixed; inset: 0; z-index: 395;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; text-align: center;
+      background: rgba(2, 3, 12, 0.55);
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.1s ease;
+    }
+    #gateArrival.show { opacity: 1; }
+    #gateArrival .arrival-phase {
+      font-family: var(--caps);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: rgba(230, 175, 75, 0.75);
+      margin-bottom: 0.9em;
+    }
+    #gateArrival .arrival-line {
+      font-size: clamp(20px, 2.2vw, 30px);
+      font-weight: 300; font-style: italic;
+      color: rgba(232, 220, 190, 0.95);
+      letter-spacing: 0.04em;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.7);
+    }
+
+    /* Character panel — full-screen overlay */
+    #charPanel {
+      position: fixed; inset: 0; z-index: 400;
+      display: flex;
+      background: rgba(2, 3, 12, 0.97);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.9s ease;
+    }
+    #charPanel.open { opacity: 1; pointer-events: all; }
+
+    /* Return to Library of Tales — visual doorway, bottom-left, same pattern as the
+       rest of the portal (Ange, 6 Jul 2026). Sits above the panel's own content. */
+    #returnLibrary {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      /* clip-path restricts the actual clickable area to the visible circle —
+         without it, the square corners around the circle (invisible but still
+         part of the div's box) can silently swallow taps meant for whatever
+         sits behind them, which is what was blocking the text inputs (Ange,
+         6 Jul 2026: "I broke the text box and can't type in it"). */
+      clip-path: circle(50%);
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1781786699/reading-room_hyisvm.png') center 65% / cover no-repeat;
+      opacity: 0; pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 410;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #charPanel.open #returnLibrary { opacity: 0.6; pointer-events: all; }
+    #returnLibrary:hover, #returnLibrary.active {
+      opacity: 1 !important;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+
+    #panelPortrait {
+      flex: 0 0 36%; max-width: 36%; height: 100%;
+      background-size: cover; background-position: center top; background-repeat: no-repeat;
+      position: relative; opacity: 0;
+      transition: opacity 1.4s ease 0.2s;
+    }
+    #charPanel.open #panelPortrait { opacity: 1; }
+    #panelPortrait::before {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      animation: portraitBreath 5s ease-in-out infinite;
+    }
+    @keyframes portraitBreath {
+      0%, 100% { box-shadow: inset 0 0 40px rgba(240, 165, 60, 0.06); }
+      50%       { box-shadow: inset 0 0 70px rgba(240, 165, 60, 0.18); }
+    }
+    #panelPortrait::after {
+      content: ''; position: absolute; inset: 0; z-index: 2;
+      background: linear-gradient(to right, transparent 55%, rgba(2, 3, 12, 0.97) 100%);
+    }
+
+    #panelContent {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      /* bottom padding reserves a safe zone so scrolling content (Back/Continue row,
+         the word offering, Eirik's response + Loom line) never renders under the
+         fixed return-to-Library circle bottom-left (Ange, 6 Jul 2026) */
+      padding: clamp(24px, 4vw, 60px) clamp(28px, 5vw, 80px) max(170px, 22vh) clamp(16px, 2vw, 28px);
+      overflow-y: auto; scrollbar-width: none;
+      opacity: 0; transition: opacity 1s ease 1.2s;
+    }
+    #charPanel.open #panelContent { opacity: 1; }
+    #panelContent::-webkit-scrollbar { display: none; }
+
+    #panelClose {
+      position: absolute; top: clamp(16px, 2.5vmin, 28px); right: clamp(20px, 3vmin, 36px);
+      background: none; border: none;
+      color: rgba(195, 212, 235, 0.28);
+      font-size: clamp(16px, 1.6vw, 22px);
+      cursor: pointer; z-index: 410;
+      font-family: var(--caps); letter-spacing: 0.1em;
+      transition: color 0.3s ease;
+    }
+    #panelClose:hover { color: rgba(195, 212, 235, 0.72); }
+
+    .char-label {
+      font-family: var(--caps); font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(200, 185, 140, 0.48); margin-bottom: 0.45em;
+    }
+    .char-title {
+      font-size: clamp(22px, 2.4vw, 34px); font-weight: 300; font-style: italic;
+      color: rgba(232, 220, 190, 0.95); letter-spacing: 0.04em; line-height: 1.3;
+      margin-bottom: 2.2em;
+    }
+
+    #fqChallenge, #wgStages { display: none; }
+
+    .challenge-text { margin-bottom: 2.2em; }
+    .challenge-text p {
+      font-size: clamp(17px, 1.7vw, 19px); font-weight: 300; font-style: italic;
+      color: rgba(220, 210, 185, 0.88); letter-spacing: 0.03em; line-height: 1.8;
+      margin-bottom: 1.1em; text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .challenge-text p.visible { opacity: 1; transform: translateY(0); }
+
+    .choice-wrap { display: flex; flex-direction: column; gap: 0.85em; margin-bottom: 2em; }
+    .choice-btn {
+      padding: 0.88em 1.4em; background: rgba(4, 8, 22, 0.55);
+      border: 1px solid rgba(200, 185, 140, 0.20); color: rgba(220, 205, 165, 0.78);
+      font-family: var(--serif); font-size: clamp(17px, 1.5vw, 18px);
+      font-style: italic; font-weight: 300; letter-spacing: 0.03em; line-height: 1.5;
+      cursor: pointer; text-align: left; transition: all 0.4s ease;
+    }
+    .choice-btn:hover {
+      background: rgba(200, 185, 140, 0.08); border-color: rgba(200, 185, 140, 0.40);
+      color: rgba(238, 224, 182, 0.95);
+      box-shadow: 0 0 18px rgba(240, 165, 60, 0.12), inset 0 0 12px rgba(240, 165, 60, 0.06);
+    }
+    .choice-btn.chosen {
+      border-color: rgba(200, 185, 140, 0.52); background: rgba(200, 185, 140, 0.10);
+      color: rgba(238, 224, 182, 1);
+    }
+    .choice-btn:disabled { cursor: default; }
+
+    #loomConsiders {
+      display: none; font-size: clamp(12px, 1vw, 15px); font-style: italic;
+      color: rgba(215, 180, 72, 0.52); letter-spacing: 0.06em;
+      margin-bottom: 1.4em; opacity: 0; transition: opacity 0.8s ease;
+    }
+    #loomConsiders.visible { opacity: 1; }
+
+    #charResponse {
+      font-family: var(--serif); font-style: italic; font-size: 1.08em;
+      color: rgba(240, 210, 160, 0.88); line-height: 1.7; margin-bottom: 1.6em;
+      opacity: 0; transition: opacity 1.2s ease; min-height: 1em;
+    }
+
+    #fqResponse { display: none; opacity: 0; transition: opacity 1.2s ease; }
+    #fqResponse.visible { opacity: 1; }
+
+    .voice-player {
+      display: flex; align-items: center; gap: 0.9em; margin-bottom: 1.8em;
+      opacity: 0.42; transition: opacity 0.4s ease;
+    }
+    .voice-player:hover { opacity: 1; }
+    .voice-btn {
+      background: none; border: none; padding: 0; color: rgba(200, 185, 140, 0.65);
+      cursor: pointer; display: flex; align-items: center; gap: 0.5em;
+      font-family: var(--serif); font-size: clamp(12px, 1.05vw, 14px);
+      font-style: italic; letter-spacing: 0.06em; transition: color 0.3s ease;
+    }
+    .voice-btn:hover { color: rgba(220, 185, 80, 1); }
+    .voice-btn.playing { color: rgba(220, 185, 80, 1); animation: voicePulse 2.2s ease-in-out infinite; }
+    .voice-sigil { font-size: clamp(12px, 1vw, 13px); }
+    .voice-track {
+      flex: 1; max-width: 120px; height: 1px;
+      background: rgba(200, 185, 140, 0.12); position: relative; overflow: hidden;
+    }
+    .voice-fill {
+      position: absolute; top: 0; left: 0; height: 100%; width: 0%;
+      background: linear-gradient(to right, rgba(200, 185, 140, 0.22), rgba(220, 180, 80, 0.60));
+      transition: width 0.6s linear;
+    }
+    @keyframes voicePulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    .tally-heading {
+      font-family: var(--caps); font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(165, 185, 220, 0.32); margin-bottom: 1em;
+    }
+    .tally-row { display: flex; align-items: center; gap: 1em; margin-bottom: 0.65em; }
+    .tally-bar-wrap {
+      flex: 1; height: 1px; background: rgba(200, 185, 140, 0.10);
+      border-radius: 1px; overflow: hidden;
+    }
+    .tally-bar {
+      height: 100%; background: rgba(200, 185, 140, 0.42); border-radius: 1px;
+      transition: width 1.6s ease; width: 0%;
+    }
+    .tally-pct {
+      font-family: var(--caps); font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.28em; color: rgba(200, 185, 140, 0.48);
+      min-width: 3em; text-align: right;
+    }
+
+    .leave-line-label {
+      display: block; font-size: clamp(12px, 1vw, 15px); font-style: italic;
+      color: rgba(195, 212, 235, 0.38); margin: 1.6em 0 0.6em;
+    }
+    .leave-line-input {
+      width: 100%; background: rgba(4, 8, 22, 0.55);
+      border: 1px solid rgba(200, 185, 140, 0.14); border-radius: 1px;
+      padding: 0.72em 0.9em; color: rgba(232, 220, 190, 0.85);
+      font-family: var(--serif); font-size: clamp(16px, 1.5vw, 18px);
+      font-style: italic; font-weight: 300; resize: none; outline: none;
+      transition: border-color 0.4s ease; margin-bottom: 1.6em;
+    }
+    .leave-line-input::placeholder { color: rgba(200, 185, 140, 0.20); font-style: italic; }
+    .leave-line-input:focus { border-color: rgba(200, 185, 140, 0.30); }
+
+    .stage-counter {
+      font-family: var(--caps); font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(165, 185, 220, 0.28); margin-bottom: 0.6em;
+    }
+    .stage-name {
+      font-size: clamp(18px, 1.8vw, 26px); font-weight: 300; font-style: italic;
+      color: rgba(215, 180, 72, 0.82); letter-spacing: 0.06em; margin-bottom: 1.4em;
+    }
+    .stage-text {
+      font-size: clamp(17px, 1.7vw, 19px); font-weight: 300; font-style: italic;
+      color: rgba(220, 210, 185, 0.88); letter-spacing: 0.03em; line-height: 1.8;
+      margin-bottom: 2.4em; text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+    .intention-echo { color: rgba(215, 180, 72, 0.82); font-style: normal; }
+
+    .stage-nav { display: flex; align-items: center; gap: 1.6em; margin-bottom: 1em; }
+    .stage-dots { display: flex; gap: 7px; align-items: center; }
+    .stage-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(200, 185, 140, 0.18); transition: background 0.5s ease;
+    }
+    .stage-dot.active { background: rgba(200, 185, 140, 0.65); }
+    .stage-dot.done   { background: rgba(200, 185, 140, 0.35); }
+
+    #wgWordWrap { display: none; margin-top: 2em; }
+    .word-prompt {
+      display: block; font-size: clamp(12px, 1vw, 15px); font-style: italic;
+      color: rgba(195, 212, 235, 0.40); margin-bottom: 0.7em;
+    }
+    .word-input {
+      background: none; border: none; border-bottom: 1px solid rgba(200, 185, 140, 0.20);
+      padding: 0.45em 0; color: rgba(232, 220, 190, 0.90);
+      font-family: var(--serif); font-size: clamp(16px, 1.5vw, 22px);
+      font-style: italic; font-weight: 300; letter-spacing: 0.06em;
+      outline: none; width: 100%; max-width: 240px;
+      transition: border-color 0.4s ease; margin-bottom: 1.8em;
+    }
+    .word-input::placeholder { color: rgba(200, 185, 140, 0.18); }
+    .word-input:focus { border-color: rgba(200, 185, 140, 0.40); }
+
+    .cta-text {
+      font-size: clamp(12px, 1vw, 15px); font-style: italic;
+      color: rgba(195, 212, 235, 0.38); line-height: 1.7; margin-bottom: 1.4em;
+    }
+    .panel-cta {
+      display: inline-block; padding: 0.68em 2.4em; background: none;
+      border: 1px solid rgba(200, 185, 140, 0.22); color: rgba(220, 205, 165, 0.72);
+      font-family: var(--caps); font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer;
+      transition: all 0.4s ease;
+    }
+    .panel-cta:hover {
+      background: rgba(200, 185, 140, 0.08); border-color: rgba(200, 185, 140, 0.44);
+      color: rgba(238, 224, 182, 0.95);
+    }
+
+    @media (max-aspect-ratio: 3/4) {
+      #charPanel { flex-direction: column; }
+      #panelPortrait { flex: 0 0 40%; max-width: 100%; width: 100%; background-position: center 15%; }
+      #panelPortrait::after { background: linear-gradient(to bottom, transparent 55%, rgba(2, 3, 12, 0.97) 100%); }
+      #panelContent { flex: 1; padding: clamp(16px, 4vw, 28px); padding-bottom: max(150px, 20vh); justify-content: flex-start; }
+    }
+
+    /* ——— MOBILE ——— */
+    /* Portrait crop, not runtime math over the desktop image (Phase 0.3, 6 Jul 2026).
+       Hotspot positions below are a FIRST PASS, carried over from desktop — fine-seat
+       on your phone via ?calib=1, same tool as Hearthfire/Apothecary/Year Wheel. */
+    @media (max-width: 600px) {
+      .room {
+        background-image: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1783511518/portrait_library_of_tales.png');
+        background-position: center;
+      }
+      #hs-lost-soul    { left: 92.6%; top: 63.3%; }
+      #hs-silver-beast { left: 53.5%; top: 47%; }
+      #hs-wolfrunner   { left: 77.7%; top: 54.9%; }
+      #hs-lunar-gate   { left: 22.6%; top: 59.2%; } /* Ange, 6 Jul 2026 */
+    }
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Same tool as year-wheel.html/hearthfire.html: shows cursor/touch position
+       as % of viewport so hotspot coordinates can be read straight off the phone. */
+    #calib {
+      position: fixed; top: 8px; right: 8px; z-index: 999;
+      font-family: monospace; font-size: 12px; color: #ffd27a;
+      background: rgba(0,0,0,.6); padding: 4px 8px; border-radius: 4px;
+      display: none; pointer-events: none;
+    }
+    /* ——— MOBILE TEXT — portal size standard, placed LAST so it wins over the
+       base sizes defined earlier in this stylesheet ——— */
+    @media (max-width: 600px) {
+      .stage-text       { font-size: clamp(17px, 4.3vw, 19px); }
+      .stage-name       { font-size: clamp(19px, 5vw, 24px); }
+      .leave-line-label, .word-prompt, .cta-text { font-size: clamp(14px, 3.7vw, 16px); }
+      .leave-line-input { font-size: 16px; }
+      .word-input       { font-size: 18px; }
+      .book-name        { font-size: 0.86rem; }
+      .book-status      { font-size: 0.94rem; }
+      .book-enter       { font-size: 0.75rem; }
+    }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <!-- Calibration aid — ?calib=1, mirrors hearthfire.html/year-wheel.html -->
+  <div id="calib">· move mouse / touch ·</div>
+
+  <div id="fadeCover"></div>
+
+  <div class="room">
+    <div class="room-overlay"></div>
+
+    <!-- Room title -->
+    <div class="room-title" aria-hidden="true">
+      <span class="room-title-main">Library of Tales</span>
+      <span class="room-title-hint">a tale finds those who seek</span>
+    </div>
+
+    <!-- Everflame -->
+    <!-- Return to the corridor — visual doorway, bottom-left -->
+    <div id="returnCorridor" role="button" tabindex="0" aria-label="Return to the corridor"></div>
+
+    <div id="everflame" role="button" tabindex="0" aria-label="Portal navigation"></div>
+    <nav id="efMenu" aria-label="The Everflame">
+      <div id="efTrail">
+        <span class="ef-section-label">where you've walked</span>
+        <ul class="ef-links" id="efTrailList"></ul>
+        <hr class="ef-divider">
+      </div>
+      <ul class="ef-links">
+        <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+        <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+        <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+        <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+      </ul>
+    </nav>
+    <div id="efScrim"></div>
+
+    <!-- ————————————————————————————
+         THREE BOOK HOTSPOTS
+         Positions tuned to the image:
+         • Lost Soul   — open book, lower-right, candlelight
+         • Silver Beast — window books, cold moonlight, centre-back
+         • Wolfrunner  — right shelves, deep shadow
+    ———————————————————————————————— -->
+
+    <div class="book-hotspot" id="hs-lost-soul"
+         onclick="navigateTo('lost-soul.html')"
+         role="button" tabindex="0"
+         aria-label="Enter The Lost Soul">
+      <div class="book-core"></div>
+      <div class="book-bloom"></div>
+      <div class="book-label">
+        <span class="book-sigil">◈</span>
+        <span class="book-name">The Lost Soul</span>
+        <span class="book-status">reading now</span>
+      </div>
+    </div>
+
+    <div class="book-hotspot" id="hs-silver-beast"
+         onclick="navigateTo('silver-beast.html')"
+         role="button" tabindex="0"
+         aria-label="Enter The Silver Beast">
+      <div class="book-core"></div>
+      <div class="book-bloom"></div>
+      <div class="book-label">
+        <span class="book-sigil">◎</span>
+        <span class="book-name">The Silver Beast</span>
+        <span class="book-status">reading now</span>
+      </div>
+    </div>
+
+    <div class="book-hotspot" id="hs-wolfrunner"
+         role="button" tabindex="0"
+         onclick="navigateTo('wolfrunner.html')"
+         aria-label="Wolfrunner, still being woven">
+      <div class="book-core"></div>
+      <div class="book-bloom"></div>
+      <div class="book-label">
+        <span class="book-sigil">⋈</span>
+        <span class="book-name">Wolfrunner</span>
+        <span class="book-status">still being woven</span>
+      </div>
+    </div>
+
+    <!-- ————————————————————————————
+         THE LUNAR GATE — 4th hotspot, ported from antechamber.html (Phase 0.4 merge)
+         Eirik (First Quarter) / Lyra (Waxing Gibbous) rotation. Same orange glow as
+         the books; label/behaviour differs by lunar phase, handled in JS.
+    ———————————————————————————————— -->
+    <div class="book-hotspot" id="hs-lunar-gate"
+         role="button" tabindex="0"
+         aria-label="The lunar gate">
+      <div class="book-core"></div>
+      <div class="book-bloom"></div>
+      <div class="book-label">
+        <span class="book-sigil">☽</span>
+        <span class="book-name" id="gateLabel">the lunar gate</span>
+      </div>
+      <span class="gate-whisper" id="gateWhisper">the gate is quiet</span>
+    </div>
+
+    <!-- Phase arrival — brief bridge before the panel opens -->
+    <div id="gateArrival">
+      <span class="arrival-phase" id="gateArrivalPhase"></span>
+      <span class="arrival-line" id="gateArrivalLine"></span>
+    </div>
+
+    <!-- Character panel — Eirik / Lyra, ported from antechamber.html -->
+    <div id="charPanel" aria-modal="true" role="dialog">
+      <!-- Return to Library of Tales — visual doorway, bottom-left -->
+      <div id="returnLibrary" role="button" tabindex="0" aria-label="Return to Library of Tales"></div>
+
+      <div id="panelPortrait"></div>
+
+      <div id="panelContent">
+        <button id="panelClose" aria-label="Close">✕</button>
+
+        <p class="char-label" id="charLabel"></p>
+        <p class="char-title" id="charTitle"></p>
+
+        <!-- ——— FIRST QUARTER: Eirik ——— -->
+        <div id="fqChallenge">
+          <div class="voice-player" id="fqVoicePlayer">
+            <audio id="fqAudio" src="" crossorigin="anonymous" preload="none"></audio>
+            <button class="voice-btn" id="fqVoiceBtn" aria-label="Listen">
+              <span class="voice-sigil">◈</span>
+              <span class="voice-text" id="fqVoiceText">listen</span>
+            </button>
+            <div class="voice-track"><div class="voice-fill" id="fqVoiceFill"></div></div>
+          </div>
+
+          <div class="challenge-text" id="challengeText"></div>
+          <div class="choice-wrap" id="choiceWrap">
+            <button class="choice-btn" id="choiceA"></button>
+            <button class="choice-btn" id="choiceB"></button>
+          </div>
+
+          <div id="loomConsiders">The Loom considers…</div>
+
+          <div id="fqResponse">
+            <p id="charResponse" class="char-response"></p>
+            <p class="tally-heading">how aetherwood answered</p>
+            <div class="tally-row">
+              <div class="tally-bar-wrap"><div class="tally-bar" id="barA"></div></div>
+              <span class="tally-pct" id="pctA">·</span>
+            </div>
+            <div class="tally-row">
+              <div class="tally-bar-wrap"><div class="tally-bar" id="barB"></div></div>
+              <span class="tally-pct" id="pctB">·</span>
+            </div>
+            <span class="leave-line-label">Leave a line for the Loom, if you wish.</span>
+            <textarea class="leave-line-input" id="fqLine" rows="2" maxlength="200"
+              placeholder="Say what moved you to choose…"></textarea>
+            <button class="panel-cta" id="loomLineBtn" style="margin-bottom:1.8em;">Leave it with the Loom</button>
+            <p class="cta-text" id="loomLineCta">You've spoken. The Loom heard you.<br>Return when the gibbous moon swells and Lyra waits.</p>
+          </div>
+        </div>
+
+        <!-- ——— WAXING GIBBOUS: Lyra ——— -->
+        <div id="wgStages">
+          <div class="voice-player" id="wgVoicePlayer">
+            <audio id="wgAudio" src="" crossorigin="anonymous" preload="none"></audio>
+            <button class="voice-btn" id="wgVoiceBtn" aria-label="Listen">
+              <span class="voice-sigil">◈</span>
+              <span class="voice-text" id="wgVoiceText">listen</span>
+            </button>
+            <div class="voice-track"><div class="voice-fill" id="wgVoiceFill"></div></div>
+          </div>
+
+          <p class="stage-counter" id="stageCounter"></p>
+          <p class="stage-name"    id="stageName"></p>
+          <p class="stage-text"    id="stageText"></p>
+
+          <div class="stage-nav">
+            <button class="panel-cta" id="stageBack" style="display:none;">Back</button>
+            <div class="stage-dots" id="stageDots"></div>
+            <button class="panel-cta" id="stageNext">Continue</button>
+          </div>
+
+          <div id="wgWordWrap">
+            <span class="word-prompt">What did your thread reveal?</span>
+            <input class="word-input" id="wgWord" type="text" maxlength="40" placeholder="one word…">
+            <p class="cta-text">Your thread holds.<br>The full moon rises. When Maureen's door opens, go.</p>
+            <button class="panel-cta" id="leaveLyraBtn">Leave Lyra</button>
+          </div>
+        </div>
+      </div><!-- /panelContent -->
+    </div><!-- /charPanel -->
+
+    <!-- Magical motes — generic ambient sparkle, spread through the whole
+         room via JS (Ange, 7 Jul 2026), not tied to any fireplace. -->
+    <div id="motes"></div>
+  </div>
+
+  <script>
+    /* ——— MAGICAL MOTES — spread through the whole room, JS-placed ——— */
+    (function buildMotes() {
+      var wrap = document.getElementById('motes');
+      for (var i = 0; i < 20; i++) {
+        var m = document.createElement('div');
+        m.className = 'mote';
+        m.style.left = (5 + Math.random() * 90) + '%';
+        m.style.top  = (10 + Math.random() * 85) + '%';
+        m.style.setProperty('--dur',   (7 + Math.random() * 6) + 's');
+        m.style.setProperty('--delay', (Math.random() * 8) + 's');
+        m.style.setProperty('--drift', (Math.random() * 30 - 15) + 'px');
+        wrap.appendChild(m);
+      }
+    })();
+
+    /* ——— FADE IN ——— */
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('fadeCover').style.opacity = '0';
+      }, 80);
+    });
+
+    /* ——— NAVIGATION ——— */
+    function navigateTo(url) {
+      var cover = document.getElementById('fadeCover');
+      cover.style.transition = 'opacity 0.9s ease';
+      cover.style.opacity = '1';
+      setTimeout(function() { window.location.href = url; }, 950);
+    }
+
+    /* ——— EVERFLAME — trail + floating menu ——— */
+    var efMenu      = document.getElementById('efMenu');
+    var efScrim     = document.getElementById('efScrim');
+    var efTrail     = document.getElementById('efTrail');
+    var efTrailList = document.getElementById('efTrailList');
+
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    function logTrail(name, href) {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the library of tales', 'library.html');
+
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'library.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (trail.length === 0) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(entry) {
+        var li  = document.createElement('li');
+        li.className = 'ef-item';
+        var btn = document.createElement('button');
+        btn.className = 'ef-link';
+        btn.textContent = entry.name;
+        btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(entry.href); });
+        li.appendChild(btn);
+        efTrailList.appendChild(li);
+      });
+    }
+
+    function openEfMenu()  {
+      buildTrail();
+      efMenu.classList.add('open');
+      efScrim.classList.add('open');
+    }
+    function closeEfMenu() {
+      efMenu.classList.remove('open');
+      efScrim.classList.remove('open');
+    }
+
+    document.getElementById('everflame').addEventListener('click', function() {
+      efMenu.classList.contains('open') ? closeEfMenu() : openEfMenu();
+    });
+    document.getElementById('everflame').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        efMenu.classList.contains('open') ? closeEfMenu() : openEfMenu();
+      }
+    });
+    efScrim.addEventListener('click', closeEfMenu);
+
+    document.getElementById('efArchives').addEventListener('click', function(){ closeEfMenu(); navigateTo('whispered-archives.html'); });
+    document.getElementById('efHearthfire').addEventListener('click', function(){ closeEfMenu(); navigateTo('hearthfire.html'); });
+    document.getElementById('efCorridor').addEventListener('click', function(){ closeEfMenu(); navigateTo('vestibule.html'); });
+
+    /* Return to the corridor — visual doorway, bottom-left */
+    var returnCorridorEl = document.getElementById('returnCorridor');
+    returnCorridorEl.addEventListener('click', function(){ navigateTo('vestibule.html'); });
+    returnCorridorEl.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); navigateTo('vestibule.html'); }
+    });
+    returnCorridorEl.addEventListener('touchstart', function(){ returnCorridorEl.classList.add('active'); }, {passive:true});
+    returnCorridorEl.addEventListener('touchend', function(){ setTimeout(function(){ returnCorridorEl.classList.remove('active'); }, 800); });
+    document.getElementById('efLeave').addEventListener('click', function(){ closeEfMenu(); navigateTo('index.html'); });
+
+    /* ——— KEYBOARD FOR HOTSPOTS ——— */
+    document.querySelectorAll('.book-hotspot:not(.sealed)').forEach(function(hs) {
+      hs.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hs.click(); }
+      });
+    });
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Move the mouse (or drag a finger on the phone) and read the % position
+       off the corner readout, then set that hotspot's left/top in the CSS above. */
+    if (/[?&]calib=1/.test(location.search)) {
+      var calibBox = document.getElementById('calib');
+      calibBox.style.display = 'block';
+      function showCalib(x, y) {
+        var px = (x / window.innerWidth  * 100).toFixed(1);
+        var py = (y / window.innerHeight * 100).toFixed(1);
+        calibBox.textContent = 'x: ' + px + '%  y: ' + py + '%';
+      }
+      document.addEventListener('mousemove', function(e){ showCalib(e.clientX, e.clientY); });
+      document.addEventListener('touchmove', function(e){
+        if (e.touches && e.touches[0]) showCalib(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE LUNAR GATE — ported from antechamber.html (Phase 0.4 merge, 6 Jul 2026)
+       Same content, same mechanic. Differences from the original:
+       - Triggered by a hotspot in this room, not a chair in its own room.
+       - Closing the panel leaves the visitor in the Library (no redirect).
+       - "showChairWhisper" renamed "showGateWhisper", wording is Ange's own.
+       ══════════════════════════════════════════════════════════════════════ */
+    var CHALLENGES = {
+
+      '2026-07': {
+        charId:    'eirik-2026-07',
+        charLabel: 'Eirik',
+        charTitle: 'Warden of the Stone Circles',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782023882/Eirik_lnf5s7.png',
+        text: 'A young woman came to me at midnight. She carried a name she should not have. The true name of a Watcher. She wanted to use it to save someone she loves.\n\nI could have stopped her. I have the authority. I have seen what happens when those doors are opened.\n\nI have also seen what happens when love is refused its chance.\n\nI am not asking what I should have done. I am asking what you would have done. Knowing what I know. Carrying what I carry.',
+        choiceA:    'Tell her to put the name away. Some doors should remain closed.',
+        choiceB:    'Look the other way. Love is worth the cost of an open door.',
+        responseA:  'Some doors should remain closed. You say it like it is simple. I have stood at those doors. Nothing about them is simple.',
+        responseB:  'Look the other way. I wondered if anyone would say that without flinching. You did not flinch.',
+        audioDilemma:   'audio/antechamber/eirik_july_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/eirik_july_response_a.mp3',
+        audioResponseB: 'audio/antechamber/eirik_july_response_b.mp3',
+        tallyA: 54, tallyB: 46
+      },
+
+      '2026-08': {
+        charId:    'lyra-2026-08',
+        charLabel: 'Lyra',
+        charTitle: 'She walks the Loom',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782021804/Lyra_lfvti1.png',
+        text: 'I made a promise to a thread three nights ago. Not a small one. The kind the Loom records.\n\nLast night I learned that keeping it will loosen two others. People I did not choose, people who did nothing wrong. The weave does not care about innocence. It only tracks what holds and what releases.\n\nI am still going to keep the promise. I decided that before I came here.\n\nBut I want to know if you would have done the same. Because the First Quarter asks this of all of us, in one form or another. You set something in motion at the new moon. Now the path is asking what you are willing to release to keep moving.\n\nWhat do you say?',
+        choiceA:    'Keep the promise. You chose it for a reason and that reason still stands.',
+        choiceB:    'Release it. A promise that costs innocents was never yours to keep.',
+        responseA:  'I knew you would say that. Or I hoped you would. It helps, more than it should, to hear it from someone outside the Loom.',
+        responseB:  'You might be right. I have thought about that. I still cannot do it. But I will carry your answer with me into the threads.',
+        audioDilemma:   'audio/antechamber/lyra_august_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/lyra_august_response_a.mp3',
+        audioResponseB: 'audio/antechamber/lyra_august_response_b.mp3',
+        tallyA: 50, tallyB: 50
+      },
+
+      '2026-09': {
+        charId:    'eirik-2026-09',
+        charLabel: 'Eirik',
+        charTitle: 'Warden of the Stone Circles',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782023882/Eirik_lnf5s7.png',
+        text: 'A student came to me last week. Brilliant. The kind you remember.\n\nShe had taken something from the restricted archive without permission. Not a relic. Knowledge. Sealed records about her own lineage. She was not trying to cause harm. She was trying to understand something about herself that no one had seen fit to tell her.\n\nI have reported smaller violations. I have upheld the seal in circumstances that cost more than this.\n\nBut I have been sitting with this one. Something in it does not sit the same.\n\nWhat would you do?',
+        choiceA:    'Report it. The seal exists for a reason, and reasons do not bend for circumstances.',
+        choiceB:    'Let it pass. Some rules were written for everyone except the person they were written about.',
+        responseA:  'Rules are the walls of the place you are protecting. I have said that. I have believed it. I am still not certain I believe it here.',
+        responseB:  'I keep returning to that. And to a question I cannot answer. Whether the reason I am letting it pass is the one I am telling myself, or another one entirely.',
+        audioDilemma:   'audio/antechamber/eirik_september_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/eirik_september_response_a.mp3',
+        audioResponseB: 'audio/antechamber/eirik_september_response_b.mp3',
+        tallyA: 48, tallyB: 52
+      },
+
+      '2026-10': {
+        charId:    'lyra-2026-10',
+        charLabel: 'Lyra',
+        charTitle: 'She walks the Loom',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782021804/Lyra_lfvti1.png',
+        text: 'I was walking a thread last night. Not mine. I do not always choose which ones I follow.\n\nI came to a place in the weave where two threads had chosen to sever themselves from one another. Not cut by a Watcher. Not broken. Chosen. A pact between two people to release their bond.\n\nI stood there for a long time. I have the ability to intervene. I did not know if what I was watching was grief or relief. I still do not.\n\nI let it go. I walked back the way I came.\n\nAnd now I am here, asking you something I cannot ask the Loom. Was silence the right witness to give them?',
+        choiceA:    'Yes. That was their choice. The Loom does not give you the right to hold what people release.',
+        choiceB:    'No. Witnessing and silence can look the same from the outside, but they are not the same inside the thread.',
+        responseA:  'That is what I told myself after. I am still telling myself that. I am not sure why I need to keep repeating it if it was the right thing.',
+        responseB:  'I know. What I said to myself in the thread and what I carry now are not the same thing.',
+        audioDilemma:   'audio/antechamber/lyra_october_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/lyra_october_response_a.mp3',
+        audioResponseB: 'audio/antechamber/lyra_october_response_b.mp3',
+        tallyA: 61, tallyB: 39
+      },
+
+      '2026-11': {
+        charId:    'eirik-2026-11',
+        charLabel: 'Eirik',
+        charTitle: 'Warden of the Stone Circles',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782023882/Eirik_lnf5s7.png',
+        text: 'A colleague is dying. We have worked alongside each other for longer than I care to count.\n\nHe asked me to burn his letters. His unpublished work. Records of forty years in the stone circles. He does not want them found after he is gone.\n\nI have not burned them.\n\nI have read some of it. It answers questions the academy has been asking for decades. It answers some questions I have been carrying alone for longer than that.\n\nHe trusted me with his last wish. The work belongs to more than one life. I have been holding both of those things for three days and I cannot make them sit beside one another.\n\nWhat do you do with a trust that costs the world something to keep?',
+        choiceA:    'Burn it. A dying person\'s trust is not yours to weigh against anything else.',
+        choiceB:    'Keep it. They leave. The work stays. The dead cannot hold us to every wish.',
+        responseA:  'I have held the fire twice now. Both times I put it down. I do not know yet what that means.',
+        responseB:  'I have thought the same. I do not know if it is wisdom or cowardice wearing wisdom\'s coat.',
+        audioDilemma:   'audio/antechamber/eirik_november_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/eirik_november_response_a.mp3',
+        audioResponseB: 'audio/antechamber/eirik_november_response_b.mp3',
+        tallyA: 43, tallyB: 57
+      },
+
+      '2026-12': {
+        charId:    'lyra-2026-12',
+        charLabel: 'Lyra',
+        charTitle: 'She walks the Loom',
+        portrait:  'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782021804/Lyra_lfvti1.png',
+        text: 'I found a thread in the Loom three nights ago. Not mine. Someone I know.\n\nIt is fraying in a way I recognise. I watched something close to this happen to my own thread once, before I understood what I could do. I know what that fraying means. I know what comes after if it is not caught.\n\nHelping means going into the place where the Watchers watch. Deeply in. The kind of in that leaves traces.\n\nThe wolves have been quiet about it. They are not usually quiet.\n\nI have not decided yet. But I came here first. Because the First Quarter asks us to hold the question before we answer it.\n\nWhat do you say?',
+        choiceA:    'Go in. What you know is worth the risk, and they need it more than you need to be safe.',
+        choiceB:    'Stay back. You cannot help anyone if the Watchers find you there. Some fights ask you to survive them first.',
+        responseA:  'That is the answer I have been waiting to hear said as though it were simple. You said it as though it were simple. I am going to try to hold onto that.',
+        responseB:  'The wolves said the same thing. I am still learning that staying back is not the same as turning away.',
+        audioDilemma:   'audio/antechamber/lyra_december_dilemma.mp3',
+        audioResponseA: 'audio/antechamber/lyra_december_response_a.mp3',
+        audioResponseB: 'audio/antechamber/lyra_december_response_b.mp3',
+        tallyA: 67, tallyB: 33
+      }
+
+    };
+
+    var sessionChoice = null;
+
+    var gateNow      = new Date();
+    var gateMonthKey = gateNow.getFullYear() + '-' + String(gateNow.getMonth() + 1).padStart(2, '0');
+    var urlChallenge  = new URLSearchParams(window.location.search).get('challenge');
+    if (urlChallenge) gateMonthKey = urlChallenge;
+    var CHALLENGE = CHALLENGES[gateMonthKey] || CHALLENGES[Object.keys(CHALLENGES)[0]];
+
+    var STAGES = [
+      { name: 'The Summoning', text: 'The Loom called you here. Not by chance. Your thread moved, reached toward something, and the weave noticed. You are not a visitor tonight. You are expected.', audio: 'audio/lyra_loom_walk/01_summoning.mp3' },
+      { name: 'The Thread Revealed', text: null, audio: 'audio/lyra_loom_walk/02_thread_revealed.mp3' },
+      { name: 'The Weak Point', text: 'Every thread has one. The place where it nearly came loose. Where you almost let go. The Loom does not judge this. It simply shows you where the work was being done.', audio: 'audio/lyra_loom_walk/03_weak_point.mp3' },
+      { name: 'The Interference', text: 'Something ran across your thread this half moon. A person, a fear, a doubt that moved through. You felt it as friction. As resistance. It was real. The Loom felt it too.', audio: 'audio/lyra_loom_walk/04_interference.mp3' },
+      { name: 'The Adjustment', text: 'The Loom adjusted around it. As it always does. As you did, even when you did not notice. The thread held. That is not a small thing.', audio: 'audio/lyra_loom_walk/05_adjustment.mp3' },
+      { name: 'The Strengthening', text: 'Here is what strengthened. The place in you that chose to continue. Your thread has more depth now than it did at the new moon. This is what the work looks like from inside the weave.', audio: 'audio/lyra_loom_walk/06_strengthening.mp3' },
+      { name: 'The Alignment', text: 'Your thread is in alignment. Not perfect, the Loom never asks for that. But true. Honest. Pointed toward what you set out to tend. The full moon is rising. You are ready.', audio: 'audio/lyra_loom_walk/07_alignment.mp3?v=3' }
+    ];
+
+    /* Phase detection — same URL override convention as the rest of the portal */
+    var gatePhase = 'other';
+    var urlPhase = new URLSearchParams(window.location.search).get('phase');
+    if (urlPhase) { gatePhase = urlPhase; }
+    else if (typeof LUNAR !== 'undefined') {
+      try { var gls = LUNAR.getLunarState(); if (gls && gls.phase) gatePhase = gls.phase; } catch (e) {}
+    }
+    var IS_FQ = (gatePhase === 'first-quarter');
+    var IS_WG = (gatePhase === 'waxing-gibbous');
+
+    function getIntention() {
+      if (typeof AETHERWOOD !== 'undefined' && AETHERWOOD.getIntentionForCycle) {
+        try { return AETHERWOOD.getIntentionForCycle(); } catch (e) {}
+      }
+      return localStorage.getItem('aetherwood_intention') || null;
+    }
+
+    var currentStage = 0;
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    var GATE_ARRIVAL = {
+      'first-quarter':  { phase: 'First Quarter',  line: 'Someone is waiting.' },
+      'waxing-gibbous': { phase: 'Waxing Gibbous', line: 'The threads are visible tonight.' }
+    };
+
+    function openGatePanel() {
+      if (IS_FQ) { showGateArrival('first-quarter', openEirik); return; }
+      if (IS_WG) { showGateArrival('waxing-gibbous', openLyra); return; }
+      showGateWhisper();
+    }
+
+    /* Short whisper, anchored to the hotspot itself so it can't drift off
+       position again (Ange, 6 Jul 2026: "short and sweet"). */
+    var gateWhisperTimeout = null;
+    function showGateWhisper() {
+      var el = document.getElementById('gateWhisper');
+      if (gateWhisperTimeout) clearTimeout(gateWhisperTimeout);
+      el.classList.add('show');
+      gateWhisperTimeout = setTimeout(function () { el.classList.remove('show'); }, 3200);
+    }
+
+    function showGateArrival(key, cb) {
+      var a = GATE_ARRIVAL[key];
+      var el = document.getElementById('gateArrival');
+      document.getElementById('gateArrivalPhase').textContent = a.phase;
+      document.getElementById('gateArrivalLine').textContent = a.line;
+      el.classList.add('show');
+      setTimeout(function () {
+        el.classList.remove('show');
+        setTimeout(function () {
+          document.getElementById('charPanel').classList.add('open');
+          cb();
+        }, 500);
+      }, 1900);
+    }
+    function closeGatePanel() {
+      saveLoomLine();
+      document.getElementById('charPanel').classList.remove('open');
+    }
+
+    function saveLoomLine() {
+      var lineEl = document.getElementById('fqLine');
+      if (!lineEl) return;
+      var line = (lineEl.value || '').trim();
+      if (!line) return;
+      localStorage.setItem('fq_line_' + CHALLENGE.charId, line);
+      var cta = document.getElementById('loomLineCta');
+      if (cta) {
+        var prev = cta.innerHTML;
+        cta.style.color = 'rgba(215, 180, 72, 0.65)';
+        cta.innerHTML   = 'The Loom has it.';
+        setTimeout(function () { cta.style.color = ''; cta.innerHTML = prev; }, 2400);
+      }
+    }
+
+
+    /* ——— FIRST QUARTER: Eirik ——— */
+    function openEirik() {
+      document.getElementById('panelPortrait').style.backgroundImage = 'url(' + CHALLENGE.portrait + ')';
+      document.getElementById('charLabel').textContent = CHALLENGE.charLabel;
+      document.getElementById('charTitle').textContent = CHALLENGE.charTitle;
+      document.getElementById('fqChallenge').style.display = 'block';
+      document.getElementById('wgStages').style.display = 'none';
+
+      sessionChoice = null;
+      var btnA = document.getElementById('choiceA');
+      var btnB = document.getElementById('choiceB');
+      btnA.disabled = false; btnB.disabled = false;
+      btnA.classList.remove('chosen'); btnB.classList.remove('chosen');
+      var resp = document.getElementById('fqResponse');
+      resp.style.display = 'none'; resp.style.opacity = '0'; resp.classList.remove('visible');
+      var charResp = document.getElementById('charResponse');
+      charResp.style.opacity = '0'; charResp.textContent = '';
+      var cons = document.getElementById('loomConsiders');
+      cons.style.display = 'none'; cons.classList.remove('visible');
+      document.getElementById('fqLine').value = '';
+      document.getElementById('loomLineCta').style.color = '';
+
+      btnA.textContent = CHALLENGE.choiceA;
+      btnB.textContent = CHALLENGE.choiceB;
+      btnA.onclick = function () { makeChoice('A'); };
+      btnB.onclick = function () { makeChoice('B'); };
+
+      document.getElementById('loomLineBtn').onclick     = function () { saveLoomLine(); };
+      document.getElementById('fqVoiceBtn').onclick      = function () { toggleVoice('fq'); };
+      document.getElementById('fqVoiceText').textContent = CHALLENGE.charLabel.toLowerCase() + ' speaks';
+
+      var fqAudio = document.getElementById('fqAudio');
+      if (voicePlaying) {
+        fqAudio.pause(); fqAudio.currentTime = 0;
+        document.getElementById('fqVoiceBtn').classList.remove('playing');
+        clearInterval(voiceInterval);
+        document.getElementById('fqVoiceFill').style.width = '0%';
+        voicePlaying = false;
+      }
+      fqAudio.src = CHALLENGE.audioDilemma ? 'https://res.cloudinary.com/ds8pkprtb/video/upload/'+CHALLENGE.audioDilemma.split('/').pop() : '';
+
+      var textWrap = document.getElementById('challengeText');
+      textWrap.innerHTML = '';
+      CHALLENGE.text.split('\n\n').filter(Boolean).forEach(function (line, i) {
+        var p = document.createElement('p');
+        p.textContent = line;
+        textWrap.appendChild(p);
+        setTimeout(function () { requestAnimationFrame(function () { p.classList.add('visible'); }); }, 1400 + (i * 420));
+      });
+    }
+
+    function disableChoices(chosen) {
+      var btnA = document.getElementById('choiceA');
+      var btnB = document.getElementById('choiceB');
+      btnA.disabled = true; btnB.disabled = true;
+      btnA.classList.toggle('chosen', chosen === 'A');
+      btnB.classList.toggle('chosen', chosen === 'B');
+    }
+
+    function makeChoice(letter) {
+      sessionChoice = letter;
+      disableChoices(letter);
+      try {
+        var lsVote = LUNAR.getLunarState();
+        PortalData.submit('first_quarter', { challenge_id: CHALLENGE.charId, cycle_id: lsVote.cycleId, choice: String(letter).toLowerCase() });
+      } catch (e) {}
+      var considers = document.getElementById('loomConsiders');
+      considers.style.display = 'block';
+      requestAnimationFrame(function () { requestAnimationFrame(function () { considers.classList.add('visible'); }); });
+      setTimeout(showResponse, 2200);
+    }
+
+    function showResponse() {
+      var considers = document.getElementById('loomConsiders');
+      considers.classList.remove('visible');
+      setTimeout(function () { considers.style.display = 'none'; }, 800);
+
+      var wrap = document.getElementById('fqResponse');
+      wrap.style.display = 'block';
+      requestAnimationFrame(function () { requestAnimationFrame(function () { wrap.style.opacity = '1'; }); });
+
+      var charResp = document.getElementById('charResponse');
+      var reply = sessionChoice === 'A' ? CHALLENGE.responseA : CHALLENGE.responseB;
+      if (reply) {
+        charResp.textContent = reply;
+        setTimeout(function () { charResp.style.opacity = '1'; }, 400);
+      }
+
+      var responseAudio = sessionChoice === 'A' ? CHALLENGE.audioResponseA : CHALLENGE.audioResponseB;
+      if (responseAudio) {
+        var fqAudio = document.getElementById('fqAudio');
+        if (voicePlaying) {
+          fqAudio.pause(); fqAudio.currentTime = 0;
+          document.getElementById('fqVoiceBtn').classList.remove('playing');
+          clearInterval(voiceInterval);
+          document.getElementById('fqVoiceFill').style.width = '0%';
+          voicePlaying = false;
+        }
+        fqAudio.src = responseAudio ? 'https://res.cloudinary.com/ds8pkprtb/video/upload/'+responseAudio.split('/').pop() : '';
+        document.getElementById('fqVoiceText').textContent = CHALLENGE.charLabel.toLowerCase() + ' speaks';
+      }
+
+      setTimeout(function () {
+        function paint(a, b) {
+          document.getElementById('barA').style.width = a + '%';
+          document.getElementById('barB').style.width = b + '%';
+          document.getElementById('pctA').textContent = a + '%';
+          document.getElementById('pctB').textContent = b + '%';
+        }
+        paint(CHALLENGE.tallyA, CHALLENGE.tallyB);
+        try {
+          var lsTally = LUNAR.getLunarState();
+          PortalData.read('first_quarter_tally', { cycle_id: lsTally.cycleId }).then(function (data) {
+            if (!data || !data.tally) return;
+            var t = data.tally;
+            var votes = (t.a || 0) + (t.b || 0);
+            if (votes >= 5) { var a = Math.round((t.a / votes) * 100); paint(a, 100 - a); }
+          });
+        } catch (e) {}
+      }, 1800);
+
+      setTimeout(function () { wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 500);
+    }
+
+    /* ——— WAXING GIBBOUS: Lyra ——— */
+    function openLyra() {
+      document.getElementById('panelPortrait').style.backgroundImage = 'url(https://res.cloudinary.com/ds8pkprtb/image/upload/v1782021804/Lyra_lfvti1.png)';
+      document.getElementById('charLabel').textContent = 'Lyra';
+      document.getElementById('charTitle').textContent = 'She walks the Loom';
+      document.getElementById('fqChallenge').style.display = 'none';
+      document.getElementById('wgStages').style.display = 'block';
+
+      document.getElementById('stageNext').onclick    = function () { nextStage(); };
+      document.getElementById('stageBack').onclick    = function () { previousStage(); };
+      document.getElementById('leaveLyraBtn').onclick = function () { completeAlignment(); };
+      document.getElementById('wgVoiceBtn').onclick   = function () { toggleVoice('wg'); };
+
+      buildStageDots();
+      renderStage(0);
+    }
+
+    /* Fluid navigation — dots are clickable so any stage can be revisited,
+       not just travelled forward once (Ange, 6 Jul 2026). */
+    function buildStageDots() {
+      var wrap = document.getElementById('stageDots');
+      wrap.innerHTML = '';
+      STAGES.forEach(function (_, i) {
+        var d = document.createElement('div');
+        d.className = 'stage-dot'; d.id = 'dot' + i;
+        d.style.cursor = 'pointer';
+        d.addEventListener('click', function () { renderStage(i); document.getElementById('panelContent').scrollTop = 0; });
+        wrap.appendChild(d);
+      });
+    }
+
+    function renderStage(idx) {
+      currentStage = idx;
+      var stage = STAGES[idx];
+      var intention = getIntention();
+
+      document.getElementById('stageCounter').textContent = (idx + 1) + ' of ' + STAGES.length;
+      document.getElementById('stageName').textContent = stage.name;
+
+      var textEl = document.getElementById('stageText');
+      var hasIntentionEcho = false;
+      if (idx === 1) {
+        if (intention) {
+          textEl.innerHTML = 'The intention you set at the new moon, <span class="intention-echo">' + escHtml(intention) +
+            '</span>, has left a mark in the weave. The colour of it. The weight of it. Look at what it has drawn toward you this half moon. Look at what it has asked of you. The thread knows what you meant, even when you did not.';
+          hasIntentionEcho = true; // the recorded audio is the no-intention line only, don't play it against different text
+        } else {
+          textEl.textContent = 'Your thread has left a mark in the weave. The colour of it. The weight of it. Look at what it has drawn toward you this half moon. Look at what it has asked of you. The thread knows what you meant, even when you did not.';
+        }
+      } else {
+        textEl.textContent = stage.text;
+      }
+
+      /* voice: stop anything mid-play from the last stage, then load this one's
+         clip (or none, if this is the personalised Thread Revealed variant) */
+      var wgAudio = document.getElementById('wgAudio');
+      if (voicePlaying) {
+        wgAudio.pause(); wgAudio.currentTime = 0;
+        document.getElementById('wgVoiceBtn').classList.remove('playing');
+        document.getElementById('wgVoiceText').textContent = 'lyra speaks';
+        clearInterval(voiceInterval);
+        document.getElementById('wgVoiceFill').style.width = '0%';
+        voicePlaying = false;
+      }
+      wgAudio.src = (hasIntentionEcho || !stage.audio) ? '' : 'https://res.cloudinary.com/ds8pkprtb/video/upload/'+stage.audio.split('/').pop();
+
+      STAGES.forEach(function (_, i) {
+        var d = document.getElementById('dot' + i);
+        if (!d) return;
+        d.className = 'stage-dot' + (i === idx ? ' active' : (i < idx ? ' done' : ''));
+      });
+
+      document.getElementById('stageBack').style.display = idx > 0 ? '' : 'none';
+
+      if (idx === STAGES.length - 1) {
+        document.getElementById('stageNext').style.display = 'none';
+        document.getElementById('wgWordWrap').style.display = 'block';
+      } else {
+        document.getElementById('stageNext').style.display = '';
+        document.getElementById('wgWordWrap').style.display = 'none';
+      }
+    }
+
+    function nextStage() {
+      if (currentStage < STAGES.length - 1) {
+        renderStage(currentStage + 1);
+        document.getElementById('panelContent').scrollTop = 0;
+      }
+    }
+
+    function previousStage() {
+      if (currentStage > 0) {
+        renderStage(currentStage - 1);
+        document.getElementById('panelContent').scrollTop = 0;
+      }
+    }
+
+    function completeAlignment() {
+      var word = (document.getElementById('wgWord').value || '').trim();
+      if (word) {
+        var month = new Date().getMonth();
+        localStorage.setItem('aetherwood_wg_word_' + month, word);
+        try {
+          var lsWg = LUNAR.getLunarState();
+          PortalData.submit('gibbous_word', { word: word, cycle_id: lsWg.cycleId });
+        } catch (e) {}
+      }
+      closeGatePanel();
+    }
+
+    /* ——— VOICE PLAYER ——— */
+    var voicePlaying = false;
+    var voiceInterval = null;
+    function toggleVoice(prefix) {
+      var audio = document.getElementById(prefix + 'Audio');
+      var btn   = document.getElementById(prefix + 'VoiceBtn');
+      var label = document.getElementById(prefix + 'VoiceText');
+      var fill  = document.getElementById(prefix + 'VoiceFill');
+      var origLabel = IS_WG ? 'lyra speaks' : CHALLENGE.charLabel.toLowerCase() + ' speaks';
+
+      if (!audio.src || audio.src === window.location.href) {
+        var prev = label.textContent;
+        label.textContent = 'voice coming soon';
+        setTimeout(function () { label.textContent = prev; }, 2200);
+        return;
+      }
+      if (voicePlaying) {
+        audio.pause(); audio.currentTime = 0;
+        btn.classList.remove('playing'); label.textContent = origLabel; fill.style.width = '0%';
+        clearInterval(voiceInterval); voicePlaying = false;
+        return;
+      }
+      audio.play();
+      btn.classList.add('playing'); label.textContent = 'listening…'; voicePlaying = true;
+      voiceInterval = setInterval(function () {
+        if (!audio.duration) return;
+        fill.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+        if (audio.ended) {
+          clearInterval(voiceInterval);
+          btn.classList.remove('playing'); label.textContent = origLabel; fill.style.width = '0%';
+          voicePlaying = false;
+        }
+      }, 600);
+    }
+
+    /* ——— WIRING ——— */
+    var gateHotspot = document.getElementById('hs-lunar-gate');
+    gateHotspot.addEventListener('click', function (e) { e.stopPropagation(); openGatePanel(); });
+    document.getElementById('panelClose').addEventListener('click', closeGatePanel);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeGatePanel();
+    });
+
+    var returnLibraryEl = document.getElementById('returnLibrary');
+    returnLibraryEl.addEventListener('click', closeGatePanel);
+    returnLibraryEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeGatePanel(); }
+    });
+    returnLibraryEl.addEventListener('touchstart', function(){ returnLibraryEl.classList.add('active'); }, {passive:true});
+    returnLibraryEl.addEventListener('touchend', function(){ setTimeout(function(){ returnLibraryEl.classList.remove('active'); }, 800); });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Year Wheel · Aetherwood</title>
+<script src="lunar.js"></script>
+<script src="portal-data.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--serif:'Cormorant Garamond',Georgia,serif;--caps:'Cinzel',serif;--bg-deep:#04060e;
+        --amber:rgba(240,196,120,.95);--amber-soft:rgba(240,196,120,.5);--violet:rgba(150,150,210,.6)}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-deep);font-family:var(--serif)}
+
+  /* 16:9 stage so the eight stay locked to the wheel at any screen size */
+  #stage{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(100vw,177.78vh);height:min(56.25vw,100vh);overflow:hidden;
+    background:#04060e url('https://res.cloudinary.com/ds8pkprtb/image/upload/Season_wheel.png') center/cover no-repeat;
+    animation:sceneBreathe 22s ease-in-out infinite;}
+  @keyframes sceneBreathe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.03)}}
+  /* blurred forest fills the letterbox (esp. portrait mobile) so there are no dead black bars */
+  #backdrop{position:fixed;inset:0;z-index:0;background:#04060e url('https://res.cloudinary.com/ds8pkprtb/image/upload/Season_wheel.png') center/cover no-repeat;
+    filter:blur(30px) brightness(.42) saturate(.9);transform:scale(1.15);}
+  #stage{z-index:1;}
+  /* on tall/portrait screens, let the wheel breathe a little larger */
+  @media (max-aspect-ratio: 3/4){
+    #stage{width:100vw;height:100vh;background-image:url('https://res.cloudinary.com/ds8pkprtb/image/upload/season_wheel_portrait.png');
+      background-position:50% 40%;animation:sceneBreatheP 22s ease-in-out infinite;}
+    #backdrop{background-image:url('https://res.cloudinary.com/ds8pkprtb/image/upload/season_wheel_portrait.png');}
+    #stage #heartSpin{left:29.5%!important;top:71.6%!important;width:5.5%!important;}
+    #stage #heartCore{left:29.5%!important;top:71.6%!important;width:2.4%!important;}
+    .station .name{font-size:12px;} .station .pron{font-size:10px;}
+  }
+  /* portrait zoom — steps the visitor closer to the set-back wheel */
+  @keyframes sceneBreatheP{0%,100%{transform:translate(-50%,-50%) scale(1.4)}50%{transform:translate(-50%,-50%) scale(1.44)}}
+  #vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 45%,transparent 46%,rgba(3,5,12,.35) 78%,rgba(3,5,12,.72) 100%);}
+  #fadeCover{position:fixed;inset:0;z-index:900;background:var(--bg-deep);pointer-events:none;transition:opacity 2s ease;}
+  #seasonWash{position:absolute;inset:0;pointer-events:none;z-index:3;
+    background:linear-gradient(100deg, rgba(150,180,215,.16) 0%, transparent 42%, transparent 62%, rgba(230,165,90,.16) 100%);
+    mix-blend-mode:soft-light;transition:background 1.8s ease;}
+
+  /* stations */
+  .station{position:absolute;transform:translate(-50%,-50%);z-index:8;cursor:pointer;width:54px;height:54px;
+    display:flex;align-items:center;justify-content:center;}
+  /* dormant — a faint point catching cold light, blended into the stone */
+  .station .dot{position:relative;width:14px;height:14px;border-radius:50%;transition:.6s;mix-blend-mode:screen;filter:blur(.5px);opacity:.68;
+    background:radial-gradient(circle at 46% 42%, rgba(190,200,235,.55), rgba(120,130,185,.26) 55%, transparent 76%);}
+  .station:hover .dot{opacity:1;transform:scale(1.18);}
+  /* current — a soft ember of real light: additive bloom, no hard disc */
+  .station.current .dot{width:18px;height:18px;mix-blend-mode:screen;filter:blur(.7px);opacity:1;
+    background:radial-gradient(circle at 48% 44%, rgba(255,247,216,.95), rgba(255,188,98,.68) 40%, rgba(240,120,40,.22) 70%, transparent 84%);
+    animation:emberFlicker 5.5s ease-in-out infinite;}
+  .station.current .dot::before{content:'';position:absolute;left:50%;top:50%;width:130px;height:130px;transform:translate(-50%,-50%);
+    border-radius:50%;mix-blend-mode:screen;filter:blur(9px);pointer-events:none;
+    background:radial-gradient(circle, rgba(255,172,84,.48) 0%, rgba(255,138,58,.20) 34%, transparent 68%);
+    animation:haloPulse 5.5s ease-in-out infinite;}
+  @keyframes emberFlicker{0%{opacity:.9;transform:scale(1)}28%{opacity:1;transform:scale(1.06)}52%{opacity:.82;transform:scale(.97)}74%{opacity:1;transform:scale(1.04)}100%{opacity:.9;transform:scale(1)}}
+  @keyframes haloPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.14)}}
+  .station .label{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:7px;text-align:center;white-space:nowrap;
+    opacity:0;transition:opacity .5s;pointer-events:none;}
+  .station:hover .label,.station.current .label{opacity:1;}
+  .station .name{display:block;font-family:var(--caps);font-size:clamp(9px,1.1vw,14px);letter-spacing:.18em;color:rgba(210,222,244,.6);text-shadow:0 1px 8px #000;}
+  .station.current .name{color:var(--amber);text-shadow:0 0 14px rgba(240,196,120,.5),0 1px 8px #000;}
+  .station .pron{display:block;font-family:var(--serif);font-style:italic;font-size:clamp(8px,.92vw,11px);letter-spacing:.04em;color:rgba(200,212,236,.5);text-shadow:0 1px 6px #000;margin-top:1px;}
+  /* reveal-all mode (?all=1) — see every station at once to check symmetry */
+  #stations.reveal .station .dot{opacity:1;}
+  #stations.reveal .station .label{opacity:1;}
+  #stations.reveal .station:not(.current) .dot{outline:1px solid rgba(255,210,140,.6);outline-offset:4px;border-radius:50%;}
+  /* the spinning heart — a churn of light over the carved spiral (position = est, nudge like a station) */
+  #heartSpin{position:absolute;left:49.5%;top:51%;transform:translate(-50%,-50%);width:6%;aspect-ratio:1;border-radius:50%;
+    pointer-events:none;z-index:5;mix-blend-mode:screen;filter:blur(1.5px);
+    background:conic-gradient(from 0deg,
+      rgba(255,196,104,0) 0deg, rgba(255,206,120,.26) 46deg, rgba(255,170,70,0) 100deg,
+      rgba(255,200,110,0) 180deg, rgba(255,206,120,.2) 224deg, rgba(255,170,70,0) 284deg,
+      rgba(255,196,104,0) 360deg);
+    animation:heartSpin 17s linear infinite;}
+  @keyframes heartSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  #heartCore{position:absolute;left:49.5%;top:51%;transform:translate(-50%,-50%);width:2.4%;aspect-ratio:1;border-radius:50%;
+    pointer-events:none;z-index:5;mix-blend-mode:screen;filter:blur(1px);
+    background:radial-gradient(circle, rgba(255,242,206,.45), rgba(255,182,92,.16) 52%, transparent 76%);
+    animation:heartPulse 5s ease-in-out infinite;}
+  @keyframes heartPulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}
+
+  /* dormant whisper */
+  #whisper{position:absolute;z-index:12;transform:translate(-50%,-140%);pointer-events:none;
+    font-family:var(--serif);font-style:italic;font-size:clamp(13px,1.3vw,17px);color:rgba(210,222,244,.82);
+    text-shadow:0 0 3px #000,0 1px 8px #000;opacity:0;transition:opacity .6s;text-align:center;width:240px;}
+  #whisper.show{opacity:1;}
+
+  /* everflame nav */
+  #everflame{position:fixed;top:3.5vmin;left:3.5vmin;width:12vmin;height:12vmin;min-width:82px;min-height:82px;
+    background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom/contain no-repeat;
+    mix-blend-mode:screen;filter:brightness(.9);z-index:200;cursor:pointer;animation:efLive 8s ease-in-out infinite;}
+  #everflame:hover{filter:brightness(1.6) saturate(1.1);}
+  @keyframes efLive{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}100%{transform:translateY(0) rotate(-1deg)}}
+  #efMenu{position:fixed;top:calc(3.5vmin + 12vmin + 16px);left:3vmin;z-index:201;pointer-events:none;opacity:0;transform:translateY(8px);transition:.7s;}
+  #efMenu.open{opacity:1;pointer-events:all;transform:translateY(0);}
+  #efMenu::before{content:'';position:absolute;top:-70px;left:-40px;right:-50px;bottom:-30px;
+    background:radial-gradient(ellipse at 22% 0%,rgba(4,6,18,.85),rgba(4,6,18,.5) 45%,transparent 78%);z-index:-1;}
+  .ef-section-label{display:block;font-family:var(--serif);font-size:clamp(12px,1vw,13px);letter-spacing:.3em;text-transform:uppercase;color:rgba(165,185,220,.32);margin-bottom:.85em;}
+  .ef-links{list-style:none;margin-bottom:1.5em;}.ef-item{margin-bottom:.35em;}
+  .ef-link{display:block;background:none;border:none;padding:0;font-family:var(--serif);font-size:clamp(12px,1.05vw,13px);letter-spacing:.3em;text-transform:uppercase;color:rgba(195,212,235,.68);cursor:pointer;text-shadow:0 1px 8px rgba(0,0,0,.95);transition:color .4s;white-space:nowrap;}
+  .ef-link:hover{color:rgba(220,232,248,.96);}
+  .ef-divider{width:28px;border:none;border-top:1px solid rgba(140,165,210,.18);margin:0 0 1.4em;}
+  #efScrim{position:fixed;inset:0;z-index:199;pointer-events:none;}#efScrim.open{pointer-events:all;}
+
+  #roomLabel{position:fixed;bottom:3vmin;left:50%;transform:translateX(-50%);font-size:clamp(8px,.68vw,10px);letter-spacing:.58em;text-transform:uppercase;color:rgba(165,185,220,.3);z-index:10;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.95);font-family:var(--caps);}
+
+  #arrivalLine{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;text-align:center;pointer-events:none;opacity:0;transition:opacity 2s ease;width:90vw;}
+  #arrivalLine span{font-size:clamp(20px,2.3vw,32px);font-weight:300;font-style:italic;color:rgba(215,222,244,.94);letter-spacing:.06em;text-shadow:0 0 2px #000,0 1px 6px #000,0 0 40px rgba(0,0,0,.85);}
+
+  /* step-through overlay (placeholder until seasonal worlds are rendered) */
+  #through{position:fixed;inset:0;z-index:800;pointer-events:none;opacity:0;transition:opacity 1.4s ease;
+    display:flex;align-items:center;justify-content:center;text-align:center;}
+  #through.show{opacity:1;pointer-events:all;}
+  #through .msg{max-width:600px;padding:0 6vw;}
+  #through .season{font-family:var(--caps);font-size:clamp(26px,4vw,46px);letter-spacing:.06em;color:var(--amber);text-shadow:0 0 30px rgba(240,196,120,.4);}
+  #through .sub{font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.5vw,20px);color:rgba(215,222,244,.8);margin-top:1em;line-height:1.6;}
+  #through .back{margin-top:2em;font-family:var(--caps);font-size:clamp(8px,.7vw,10px);letter-spacing:.5em;text-transform:uppercase;color:rgba(200,205,230,.5);cursor:pointer;pointer-events:all;background:none;border:none;}
+  #through .back:hover{color:rgba(240,196,120,.9);}
+
+  /* ——— the seasonal WORLD beyond the portal ——— */
+  #world{position:fixed;inset:0;z-index:820;opacity:0;pointer-events:none;transition:opacity 1.6s ease;overflow:hidden;}
+  #world.show{opacity:1;pointer-events:all;}
+  #world .w-bg{position:absolute;inset:0;background:#04060e center/cover no-repeat;transform:scale(1.04);}
+  #world .w-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 40%,rgba(3,5,12,.5) 80%,rgba(3,5,12,.9) 100%);}
+  /* bright daylight scenes (Ostara) wash out the standard shadow strength — a touch more
+     centre darkening plus a heavier text-shadow, glow-only, no scrim */
+  #world.bright .w-vig{background:radial-gradient(ellipse at 50% 42%,rgba(3,5,12,.18) 30%,rgba(3,5,12,.6) 80%,rgba(3,5,12,.92) 100%);}
+  #world.bright .w-hot .lab{text-shadow:0 1px 3px #000,0 0 10px #000,0 0 18px rgba(0,0,0,.9);}
+  #world.bright #wReveal .r-title{text-shadow:0 1px 3px #000,0 0 12px #000;}
+  #world.bright #wReveal .r-text{text-shadow:0 1px 4px #000,0 0 14px #000,0 0 6px #000;}
+  #world .w-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  /* fire flickering quietly in the scene */
+  #world .w-flame{position:absolute;transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
+    aspect-ratio:1;border-radius:50%;filter:blur(6px);
+    background:radial-gradient(circle, rgba(255,190,90,.55), rgba(255,140,50,.24) 42%, transparent 70%);
+    animation:flameFlicker 2.6s ease-in-out infinite;}
+  @keyframes flameFlicker{0%{opacity:.68;transform:translate(-50%,-50%) scale(1)}25%{opacity:1;transform:translate(-50%,-51%) scale(1.06)}50%{opacity:.58;transform:translate(-50%,-49%) scale(.97)}75%{opacity:.9;transform:translate(-50%,-50.5%) scale(1.04)}100%{opacity:.68;transform:translate(-50%,-50%) scale(1)}}
+  /* hotspots woven into the scene */
+  #world .w-hot{position:absolute;transform:translate(-50%,-50%);cursor:pointer;width:64px;height:64px;display:flex;align-items:center;justify-content:center;}
+  #world .w-hot .pt{position:relative;width:13px;height:13px;border-radius:50%;mix-blend-mode:screen;filter:blur(.5px);
+    background:radial-gradient(circle,rgba(255,242,206,.95),rgba(255,196,110,.55) 45%,transparent 74%);
+    animation:hotBreath 3.4s ease-in-out infinite;animation-delay:var(--hd,0s);}
+  #world .w-hot:hover .pt{transform:scale(1.3);}
+  /* the bloom — a soft halo behind the dot, same fix as Memory Hall (6 Jul 2026): the dot alone
+     was too small/subtle to be alluring, staggered per-hotspot via --hd set in buildHotspots() */
+  #world .w-hot .pt::after{content:'';position:absolute;inset:-70%;border-radius:50%;z-index:-1;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,214,140,.62) 0%,rgba(230,175,90,.3) 45%,transparent 74%);
+    filter:blur(1px);animation:hotGlowBreath 3.4s ease-in-out infinite;animation-delay:var(--hd,0s);}
+  @keyframes hotBreath{0%,100%{opacity:.68;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+  @keyframes hotGlowBreath{0%,100%{opacity:.4}50%{opacity:.9}}
+  #world .w-hot .lab{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;
+    font-family:var(--serif);font-style:italic;font-size:clamp(14px,1.5vw,17px);color:rgba(248,240,220,.96);
+    text-shadow:0 1px 3px #000,0 0 8px #000,0 0 16px rgba(0,0,0,.9);opacity:0;transition:opacity .5s;pointer-events:none;}
+  /* discovery, not clutter — the pulse (.pt) is the whole idle scene; the name only
+     surfaces on hover, or the touch-equivalent .active flash (Ange, 6 Jul 2026: "hotspots
+     that pulse and attract and then reveal what they are is more magical") */
+  #world .w-hot:hover .lab,#world .w-hot.active .lab{opacity:1;}
+  /* while reading one hotspot's reveal, every other hotspot fades and stops
+     taking taps — one thing to focus on, not six competing at once (6 Jul) */
+  #world.reading .w-hot{opacity:0;pointer-events:none;transition:opacity .4s ease;}
+  /* the reveal — floating words on a soft dark scrim, always legible */
+  #wReveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+    opacity:0;pointer-events:none;transition:opacity .8s ease;background:none;}
+  #wReveal.show{opacity:1;pointer-events:all;}
+  #wReveal .r-inner{width:min(90vw,620px);padding:0 5vw;position:relative;}
+  /* a soft LOCAL glow behind the words only — legible, but the world stays visible (no veil) */
+  #wReveal .r-inner::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:150%;height:190%;border-radius:50%;pointer-events:none;z-index:-1;filter:blur(16px);
+    background:radial-gradient(ellipse at center, rgba(6,8,16,.72), rgba(6,8,16,.32) 48%, transparent 74%);}
+  #wReveal .r-title{font-family:var(--caps);font-size:clamp(9px,.8vw,11px);letter-spacing:.44em;text-transform:uppercase;color:rgba(240,196,120,.82);margin-bottom:1em;text-shadow:0 1px 8px #000;}
+  #wReveal .r-text{font-family:var(--serif);font-style:italic;font-size:clamp(17px,1.7vw,24px);line-height:1.7;color:rgba(240,238,250,.97);text-shadow:0 1px 10px #000,0 0 5px #000;}
+  #wReveal .r-text.placeholder{color:rgba(212,216,236,.52);}
+  #wReveal .r-field{margin-top:1.2em;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,214,150,.42);outline:none;text-align:center;padding:.3em .2em .5em;
+    font-family:var(--serif);font-style:italic;font-size:clamp(17px,1.6vw,23px);color:rgba(255,240,204,.98);
+    text-shadow:0 0 14px rgba(255,204,120,.55),0 1px 8px #000;caret-color:rgba(255,220,150,.9);}
+  #wReveal .r-field::placeholder{color:rgba(242,224,184,.62);}
+  #wReveal .r-field:focus{border-bottom-color:rgba(255,226,172,.8);}
+  #wReveal .r-done{font-family:var(--serif);font-style:italic;font-size:clamp(14px,1.2vw,17px);color:rgba(232,228,246,.85);opacity:0;transition:opacity 1.2s ease;text-shadow:0 1px 10px #000;margin-top:.6em;min-height:1.3em;}
+  #wReveal .r-done.show{opacity:1;}
+  #wReveal .r-close{margin-top:1.8em;font-family:var(--caps);font-size:clamp(8px,.7vw,10px);letter-spacing:.5em;text-transform:uppercase;color:rgba(202,206,230,.55);background:none;border:none;cursor:pointer;text-shadow:0 1px 8px #000;}
+  #wReveal .r-pause{display:block;margin:1.4em auto 0;background:none;border:none;cursor:pointer;
+    font-family:var(--serif);font-style:italic;font-size:clamp(16px,1.45vw,21px);color:rgba(246,232,204,.95);
+    text-shadow:0 0 12px rgba(255,210,140,.4),0 1px 8px #000;transition:color .4s;
+    text-decoration:underline;text-underline-offset:.4em;text-decoration-thickness:1px;text-decoration-color:rgba(255,212,150,.45);}
+  #wReveal .r-pause:hover{color:rgba(255,236,196,1);}
+  #wReveal .r-close:hover{color:var(--amber);}
+  #wReveal .r-choice{margin-top:1.3em;display:flex;gap:2em;justify-content:center;flex-wrap:wrap;}
+  #wReveal .r-opt{background:none;border:none;cursor:pointer;font-family:var(--serif);font-style:italic;
+    font-size:clamp(15px,1.4vw,20px);color:rgba(240,228,200,.9);text-shadow:0 0 10px rgba(255,210,140,.3),0 1px 8px #000;transition:color .4s;}
+  #wReveal .r-opt:hover{color:rgba(255,238,198,1);}
+  #wReveal .r-grown{font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.4vw,20px);color:rgba(228,240,220,.95);
+    line-height:1.65;text-shadow:0 1px 10px #000,0 0 5px #000;}
+  .field-light{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(188,255,196,.85);
+    box-shadow:0 0 8px 2px rgba(150,240,168,.5);mix-blend-mode:screen;pointer-events:none;z-index:2;animation:fieldGlow 4.5s ease-in-out infinite;}
+  @keyframes fieldGlow{0%,100%{opacity:.28}50%{opacity:.9}}
+  #wHush{position:absolute;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity 2.6s ease;
+    background:radial-gradient(ellipse at 50% 50%, transparent 26%, rgba(3,5,12,.55) 100%);}
+  #wHush.show{opacity:1;}
+  #wHushLine{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;text-align:center;
+    font-family:var(--serif);font-style:italic;font-size:clamp(18px,1.8vw,26px);color:rgba(242,240,252,.94);
+    text-shadow:0 1px 12px #000,0 0 6px #000;opacity:0;transition:opacity 2.6s ease;}
+  #wHushLine.show{opacity:1;}
+  #world.stilled .w-flame{animation-duration:7s;}
+  /* return-to-wheel doorway, bottom-left — replaces the old text button,
+     same visual pattern as the rest of the portal (Hearthfire/Apothecary/
+     Oracle/Memory Hall), shared by all eight seasons since #world is reused. */
+  #world .w-back{position:absolute;left:5%;bottom:5%;width:12vmin;height:12vmin;min-width:64px;min-height:64px;
+    border-radius:50%;overflow:hidden;background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/Season_wheel.png') center/cover no-repeat;
+    border:none;font-size:0;color:transparent;text-indent:-9999px;
+    opacity:.6;box-shadow:0 0 0 1px rgba(200,160,80,.25),0 0 18px rgba(200,150,70,.25);cursor:pointer;z-index:2;transition:opacity .6s ease,box-shadow .6s ease;}
+  #world .w-back:hover,#world .w-back.active{opacity:1;box-shadow:0 0 0 2px rgba(220,180,100,.55),0 0 26px rgba(220,170,90,.45);}
+  .shooting-star{position:fixed;width:220px;height:3px;pointer-events:none;z-index:830;transform-origin:left center;
+    background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,248,226,1));filter:blur(.4px);opacity:0;
+    box-shadow:0 0 14px 3px rgba(255,240,200,.8);}
+  @keyframes shoot{0%{opacity:0;transform:translate(0,0) rotate(22deg) scaleX(.25)}10%{opacity:1}84%{opacity:1}100%{opacity:0;transform:translate(56vw,30vh) rotate(22deg) scaleX(1)}}
+  /* words the visitor inscribed, drifting into the world — flown to the season's own anchor
+     (stars, flame, veil, earth), not a generic up/down. --tx/--ty set by JS per destination (6 Jul 2026) */
+  .drift-word{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:860;max-width:70vw;text-align:center;
+    font-family:var(--serif);font-style:italic;font-size:clamp(18px,1.8vw,24px);color:rgba(255,244,220,.97);
+    text-shadow:0 0 14px rgba(255,210,140,.5),0 1px 10px #000,0 0 5px #000;opacity:0;
+    transition:opacity .7s ease, transform 3.2s ease-in-out;will-change:transform,opacity;}
+  /* litha's inversion — the wish is CARRIED, not relinquished: the words come toward the visitor and go with them */
+  .drift-word.carry{animation:driftCarry 3.4s ease-in-out forwards;}
+  @keyframes driftCarry{0%{opacity:0;transform:translate(-50%,-50%) scale(1)}16%{opacity:1}
+    70%{opacity:1;transform:translate(-50%,-42%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-34%) scale(1.9);filter:blur(2px)}}
+  /* THE ANSWER — one engine, every spoke (6 Jul 2026). When the words arrive, the world
+     answers with a white-core burst and a scene-scale swell from the same point. The burst
+     has NO blend mode, so no render, however bright, can swallow it. Config supplies only
+     coordinates; tint classes (veil/seed) recolour, nothing else changes. */
+  .answer-burst{position:absolute;width:60vmin;height:60vmin;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:7;opacity:0;filter:blur(2px);
+    background:radial-gradient(circle, rgba(255,255,255,.95), rgba(255,232,180,.72) 22%, rgba(255,200,130,.3) 48%, transparent 70%);}
+  .answer-burst.veil{background:radial-gradient(circle, rgba(255,255,255,.95), rgba(226,206,255,.72) 22%, rgba(168,150,245,.3) 48%, transparent 70%);}
+  .answer-burst.seed{background:radial-gradient(circle, rgba(255,255,255,.95), rgba(208,255,214,.72) 22%, rgba(150,240,172,.3) 48%, transparent 70%);}
+  .answer-burst.go{animation:answerBurst 4.2s ease-out forwards;}
+  @keyframes answerBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}10%{opacity:1;transform:translate(-50%,-50%) scale(.85)}
+    30%{opacity:.8;transform:translate(-50%,-50%) scale(1)}46%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+  .answer-swell{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;mix-blend-mode:screen;
+    background:radial-gradient(ellipse at var(--ax,50%) var(--ay,30%), rgba(255,226,164,.55), rgba(255,206,132,.22) 38%, transparent 72%);}
+  .answer-swell.veil{background:radial-gradient(ellipse at var(--ax,50%) var(--ay,30%), rgba(210,192,255,.55), rgba(160,145,240,.22) 38%, transparent 72%);}
+  .answer-swell.seed{background:radial-gradient(ellipse at var(--ax,50%) var(--ay,85%), rgba(214,255,220,.5), rgba(160,240,180,.2) 38%, transparent 72%);}
+  .answer-swell.go{animation:answerSwell 4.6s ease-in-out forwards;}
+  @keyframes answerSwell{0%{opacity:0}30%{opacity:1}62%{opacity:.75}100%{opacity:0}}
+  /* every wish releases a rising mote-column from the arrival point (Phase 0: rising motes for wish/release).
+     No blend mode — visible over any sky. */
+  .answer-mote{position:absolute;width:7px;height:7px;border-radius:50%;background:rgba(255,244,214,.98);
+    box-shadow:0 0 14px 5px rgba(255,222,150,.7);pointer-events:none;z-index:7;opacity:0;
+    animation:answerMoteRise var(--amd,3.2s) ease-out forwards;}
+  .answer-mote.veil{background:rgba(238,228,255,.98);box-shadow:0 0 14px 5px rgba(186,168,250,.7);}
+  @keyframes answerMoteRise{0%{opacity:0;transform:translateY(0) translateX(0) scale(.6)}12%{opacity:1;transform:translateY(-14px) scale(1)}
+    100%{opacity:0;transform:translateY(-42vh) translateX(var(--amx,0px)) scale(.7)}}
+  /* the season's answer, spoken low in the scene once the reaction has played — not inside the panel.
+     Its own soft halo (glow-only, no scrim) so it reads over any render. */
+  #wDoneLine{position:absolute;left:50%;bottom:12vh;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;max-width:84vw;
+    font-family:var(--serif);font-style:italic;font-size:clamp(19px,1.8vw,26px);color:rgba(244,240,252,.97);
+    text-shadow:0 1px 12px #000,0 0 6px #000;opacity:0;transition:opacity 1.4s ease;}
+  #wDoneLine::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150%;height:280%;border-radius:50%;z-index:-1;filter:blur(14px);
+    background:radial-gradient(ellipse at center, rgba(6,8,16,.7), rgba(6,8,16,.3) 50%, transparent 75%);}
+  #wDoneLine.show{opacity:1;}
+  /* TEMPORARY diagnostic stamp — proves which build the phone is receiving. REMOVE before deploy. */
+  #buildStamp{position:fixed;right:2vmin;bottom:2vmin;z-index:950;pointer-events:none;
+    font-family:var(--caps);font-size:9px;letter-spacing:.2em;color:rgba(180,190,220,.55);text-shadow:0 1px 6px #000;}
+  #wWarm{position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;opacity:0;
+    background:radial-gradient(ellipse at 50% 80%, rgba(255,182,92,.5), rgba(255,150,70,.18) 45%, transparent 72%);}
+  #wWarm.go{animation:warmFlarePulse 2.6s ease-out;}
+  @keyframes warmFlarePulse{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
+  /* the fire moment — words rise in the firelight, no veil over the world */
+  #world .w-flame.flare{animation:flameSwell 2.8s ease-out !important;}
+  @keyframes flameSwell{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}28%{transform:translate(-50%,-53%) scale(1.6);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:.7}}
+  #wStrength{position:absolute;left:50%;top:55%;transform:translateX(-50%);width:min(82vw,560px);text-align:center;z-index:6;pointer-events:none;opacity:0;transition:opacity 1.4s ease;}
+  #wStrength.show{opacity:1;}
+  #wStrength::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150%;height:220%;border-radius:50%;pointer-events:none;z-index:-1;filter:blur(14px);
+    background:radial-gradient(ellipse at center, rgba(50,26,8,.55), rgba(28,14,6,.24) 46%, transparent 72%);}
+  #wStrength .s-words{font-family:var(--serif);font-style:italic;font-size:clamp(17px,1.7vw,24px);line-height:1.7;color:rgba(255,244,220,.98);
+    text-shadow:0 0 16px rgba(255,180,90,.6),0 1px 10px #000,0 0 5px #000;transform:translateY(26px);transition:transform 2.2s ease;}
+  #wStrength.show .s-words{transform:translateY(0);}
+  #wStrength .s-close{display:block;margin:1.5em auto 0;font-family:var(--caps);font-size:clamp(8px,.7vw,10px);letter-spacing:.5em;text-transform:uppercase;
+    color:rgba(240,210,160,.62);background:none;border:none;cursor:pointer;text-shadow:0 1px 8px #000;pointer-events:auto;opacity:0;transition:opacity 1s ease .9s;}
+  #wStrength.show .s-close{opacity:1;}
+  .fire-ember{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,202,124,.95);box-shadow:0 0 10px 3px rgba(255,150,60,.6);
+    mix-blend-mode:screen;pointer-events:none;z-index:5;animation:fireRise var(--fd,3s) ease-out forwards;opacity:0;}
+  @keyframes fireRise{0%{opacity:0;transform:translateY(0) translateX(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-170px) translateX(var(--fx,0))}}
+  /* meaning — the returning light swells up through the dark */
+  #wGlow{position:absolute;inset:0;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen;
+    background:radial-gradient(ellipse at 50% 96%, rgba(255,226,164,.5), rgba(255,206,132,.2) 42%, transparent 74%);}
+  #wGlow.go{animation:glowSwell 5s ease-in-out;}
+  @keyframes glowSwell{0%{opacity:0}32%{opacity:1}100%{opacity:0}}
+  /* lore — gathering-lights kindle among the trees */
+  .gather-light{position:absolute;width:9px;height:9px;border-radius:50%;background:rgba(255,216,152,.95);
+    box-shadow:0 0 16px 5px rgba(255,182,92,.55);mix-blend-mode:screen;pointer-events:none;z-index:4;opacity:0;animation:gatherKindle 6.2s ease-in-out forwards;}
+  @keyframes gatherKindle{0%{opacity:0;transform:scale(.4)}20%{opacity:.95;transform:scale(1)}80%{opacity:.7}100%{opacity:0}}
+  /* offering — the buried seed glowing under the snow */
+  .seed-light{position:absolute;width:12px;height:12px;border-radius:50%;background:rgba(194,255,204,.95);
+    box-shadow:0 0 22px 7px rgba(150,240,172,.6);mix-blend-mode:screen;pointer-events:none;z-index:4;animation:seedPulse 6.3s ease-in-out forwards;}
+  @keyframes seedPulse{0%{opacity:0;transform:scale(.3)}12%{opacity:1;transform:scale(1)}30%{opacity:.55;transform:scale(.8)}
+    46%{opacity:1;transform:scale(1.15)}62%{opacity:.55;transform:scale(.85)}78%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(.9)}}
+  .snowflake{position:absolute;top:-3%;border-radius:50%;background:rgba(255,255,255,.9);pointer-events:none;animation:snowFall var(--sf,10s) linear forwards;}
+  @keyframes snowFall{0%{opacity:0;transform:translateY(0) translateX(0)}10%{opacity:.9}100%{opacity:.2;transform:translateY(106vh) translateX(var(--sx,20px))}}
+  /* the tale — a cold silver memory sweeping through the scene when the tale-stone wakes */
+  .tale-sweep{position:absolute;top:0;bottom:0;width:46vw;pointer-events:none;z-index:4;mix-blend-mode:screen;
+    background:linear-gradient(100deg, transparent, rgba(175,200,240,.13) 35%, rgba(200,220,250,.2) 50%, rgba(175,200,240,.13) 65%, transparent);
+    filter:blur(10px);animation:taleSweep 4.2s ease-in-out forwards;}
+  @keyframes taleSweep{0%{left:-50vw;opacity:0}18%{opacity:1}82%{opacity:1}100%{left:105vw;opacity:0}}
+  .tale-past{opacity:.55;font-size:.9em;}
+  #rChoiceLine{font-family:var(--serif);font-style:italic;font-size:clamp(14px,1.3vw,18px);line-height:1.6;color:rgba(235,240,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.8);margin-bottom:.9em;display:none;}
+  /* the fragment — a recovered archive unearthed in-scene (Ostara's Eostre discovery).
+     Crude page-turn, not the full Lost Soul engine: a cover "page" (image+head+note)
+     then short text pages, turned with arrows. No scrollbar anywhere (6 Jul 2026). */
+  #wFragment{position:absolute;inset:0;z-index:7;display:none;overflow:hidden;padding:6vh 6vw;}
+  #wFragment.show{display:block;}
+  #wFragment .f-inner{max-width:620px;margin:0 auto;text-align:center;position:relative;height:100%;box-sizing:border-box;
+    display:flex;flex-direction:column;justify-content:center;padding:2em 1.4em;}
+  #wFragment .f-inner::before{content:'';position:absolute;inset:-6%;border-radius:26px;z-index:-1;filter:blur(8px);
+    background:radial-gradient(ellipse at 50% 30%, rgba(4,7,16,.72), rgba(4,7,16,.5) 60%, transparent);}
+  #wFragment .f-head{font-family:var(--caps);font-size:clamp(9px,.8vw,11px);letter-spacing:.42em;text-transform:uppercase;color:rgba(228,200,150,.85);line-height:2;margin-bottom:1.2em;}
+  #wFragment .f-img{width:min(74%,320px);max-height:32vh;object-fit:contain;border-radius:6px;box-shadow:0 18px 60px rgba(0,0,0,.6);opacity:0;transform:translateY(12px);transition:opacity 2.2s ease .4s,transform 2.2s ease .4s;margin:0 auto;}
+  #wFragment.show .f-img{opacity:1;transform:none;}
+  #wFragment .f-note{font-family:var(--serif);font-style:italic;font-size:clamp(11px,1vw,13px);color:rgba(220,228,248,.72);margin:.8em 0 0;}
+  #wFragment .f-page-text{box-sizing:border-box;height:38vh;min-height:200px;overflow:hidden;position:relative;padding:0 .2em;
+    font-family:var(--serif);font-size:clamp(15px,1.35vw,19px);line-height:1.85;color:rgba(238,242,252,.95);text-shadow:0 1px 10px rgba(0,0,0,.85);text-align:center;}
+  #wFragment .f-page-text p{margin:0 0 1.1em;}
+  #wFragment .f-nav{display:flex;align-items:center;justify-content:center;gap:1.6em;margin-top:.8em;}
+  #wFragment .f-arrow{font-family:var(--serif);font-size:clamp(22px,2.4vw,30px);color:rgba(228,200,150,.8);cursor:pointer;line-height:1;padding:.2em .5em;transition:color .3s;}
+  #wFragment .f-arrow:hover{color:var(--amber);}
+  #wFragment .f-arrow.hidden{visibility:hidden;pointer-events:none;}
+  #wFragment .f-count{font-family:var(--caps);font-size:clamp(8px,.7vw,10px);letter-spacing:.3em;color:rgba(210,220,240,.55);}
+  #wFragment .f-close{display:inline-block;margin:1.2em auto 0;font-family:var(--caps);font-size:clamp(8px,.7vw,10px);letter-spacing:.5em;text-transform:uppercase;color:rgba(210,220,240,.65);cursor:pointer;}
+  @keyframes deepBreath{0%{transform:scale(1.04)}45%{transform:scale(1.085)}100%{transform:scale(1.04)}}
+  #world.breathing .w-bg{animation:deepBreath 7s ease-in-out 1;}
+  /* leaf — Mabon's air: russet flakes that sway as they fall */
+  .leaffall{position:absolute;top:-3%;border-radius:60% 40% 55% 45%;pointer-events:none;
+    background:rgba(196,120,54,.85);box-shadow:0 0 4px rgba(160,90,40,.4);
+    animation:leafFall var(--lf,13s) linear forwards;}
+  @keyframes leafFall{0%{opacity:0;transform:translateY(0) translateX(0) rotate(0deg)}8%{opacity:.9}
+    50%{transform:translateY(52vh) translateX(var(--lx1,30px)) rotate(200deg)}
+    100%{opacity:.15;transform:translateY(106vh) translateX(var(--lx2,-20px)) rotate(420deg)}}
+  /* frost — southern midwinter air: slow silver glints that twinkle as they drift */
+  .frostglint{position:absolute;top:-3%;border-radius:50%;background:rgba(222,236,255,.9);box-shadow:0 0 6px 1px rgba(190,215,255,.5);mix-blend-mode:screen;pointer-events:none;animation:frostDrift var(--ff,16s) linear forwards;opacity:0;}
+  @keyframes frostDrift{0%{opacity:0;transform:translateY(0) translateX(0)}12%{opacity:.8}46%{opacity:.25}68%{opacity:.75}100%{opacity:0;transform:translateY(104vh) translateX(var(--fxs,14px))}}
+  .warmmote{position:absolute;bottom:-3%;width:3px;height:3px;border-radius:50%;background:rgba(255,220,150,.9);box-shadow:0 0 7px 2px rgba(255,190,90,.45);mix-blend-mode:screen;pointer-events:none;animation:warmRise var(--wr,11s) linear forwards;opacity:0;}
+  @keyframes warmRise{0%{opacity:0;transform:translateY(0)}14%{opacity:.85}100%{opacity:0;transform:translateY(-106vh) translateX(var(--wx,30px))}}
+
+  .mote{position:fixed;width:3px;height:3px;border-radius:50%;background:rgba(255,210,150,.85);box-shadow:0 0 7px 2px rgba(255,170,80,.45);pointer-events:none;z-index:9;mix-blend-mode:screen;animation:moteRise var(--md,8s) linear infinite;opacity:0;}
+  @keyframes moteRise{0%{opacity:0;transform:translateY(0)}14%{opacity:.9}100%{opacity:0;transform:translateY(-64px) translateX(var(--mx,10px))}}
+  /* embers riding the wind across the whole clearing */
+  .wind-ember{position:fixed;width:2.5px;height:2.5px;border-radius:50%;background:rgba(255,204,140,.8);
+    box-shadow:0 0 6px 1px rgba(255,170,80,.4);pointer-events:none;z-index:7;mix-blend-mode:screen;
+    animation:windDrift var(--wd,12s) linear forwards;opacity:0;}
+  @keyframes windDrift{0%{opacity:0;transform:translate(0,0)}14%{opacity:.85}80%{opacity:.55}100%{opacity:0;transform:translate(var(--wdx,120px),var(--wdy,-90px))}}
+
+  /* hemisphere toggle */
+  #hemi{position:fixed;bottom:3vmin;right:3.4vmin;z-index:30;font-family:var(--caps);font-size:clamp(7px,.66vw,9px);letter-spacing:.32em;text-transform:uppercase;color:rgba(170,186,214,.4);display:flex;gap:.5em;}
+  #hemi button{background:none;border:none;color:rgba(170,186,214,.4);font-family:var(--caps);font-size:inherit;letter-spacing:inherit;cursor:pointer;padding:.2em;}
+  #hemi button.on{color:var(--amber);}#hemi button:hover{color:rgba(220,205,165,.85);}
+
+  /* calibration aid: open with ?calib=1, move mouse, read the % to tell me */
+  #calib{position:fixed;top:8px;right:8px;z-index:999;font-family:monospace;font-size:12px;color:#ffd27a;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:4px;display:none;}
+  #calibCross{position:absolute;z-index:998;width:14px;height:14px;border:1px solid #ffd27a;border-radius:50%;transform:translate(-50%,-50%);display:none;pointer-events:none;}
+  /* ——— LEGIBLE-TEXT STANDARD (locked 8 Jul 2026) — floors lifted, placed last. #roomLabel left atmospheric. ——— */
+  /* reading */
+  #whisper{font-size:clamp(17px,1.3vw,19px);}
+  #wFragment .f-page-text{font-size:clamp(17px,1.35vw,20px);}
+  /* secondary reading / messages */
+  #through .sub{font-size:clamp(16px,1.5vw,20px);}
+  #wReveal .r-done{font-size:clamp(16px,1.2vw,18px);}
+  #wReveal .r-grown{font-size:clamp(16px,1.4vw,20px);}
+  #rChoiceLine{font-size:clamp(16px,1.3vw,18px);}
+  #wFragment .f-note{font-size:clamp(14px,1.1vw,16px);}
+  /* names, eyebrows, small-caps labels (12–13px floor) */
+  .station .name{font-size:clamp(12px,1.1vw,14px);}
+  .station .pron{font-size:clamp(12px,1vw,13px);}
+  #wReveal .r-title{font-size:clamp(12px,1vw,13px);}
+  #wFragment .f-head{font-size:clamp(12px,1vw,13px);}
+  #wFragment .f-count{font-size:clamp(12px,1vw,13px);}
+  #hemi{font-size:clamp(12px,1vw,13px);}
+  /* buttons / CTAs (12–13px) */
+  #through .back{font-size:clamp(12px,1vw,13px);}
+  #wReveal .r-close{font-size:clamp(12px,1vw,13px);}
+  #wStrength .s-close{font-size:clamp(12px,1vw,13px);}
+  #wFragment .f-close{font-size:clamp(12px,1vw,13px);}
+</style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+  <div id="backdrop"></div>
+  <div id="stage">
+    <div id="seasonWash"></div>
+    <div id="vignette"></div>
+    <div id="heartSpin"></div>
+    <div id="heartCore"></div>
+    <div id="stations"></div>
+    <div id="whisper"></div>
+    <div id="calibCross"></div>
+  </div>
+  <div id="fadeCover"></div>
+  <div id="calib">· move mouse ·</div>
+
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame"></div>
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail"><span class="ef-section-label">where you've walked</span><ul class="ef-links" id="efTrailList"></ul><hr class="ef-divider"></div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <div id="roomLabel">The Year Wheel</div>
+  <div id="arrivalLine"><span>The moon keeps the month. The Wheel keeps the year.</span></div>
+
+  <div id="hemi"><button id="hSouth" data-h="south">South</button><span>·</span><button id="hNorth" data-h="north">North</button></div>
+
+  <div id="through"><div class="msg">
+    <div class="season" id="throughName">·</div>
+    <div class="sub" id="throughSub">This season's world is still being woven.</div>
+    <button class="back" id="throughBack">return to the wheel</button>
+  </div></div>
+
+  <div id="world">
+    <div class="w-bg" id="wBg"></div>
+    <div class="w-vig"></div>
+    <div id="wWarm"></div>
+    <div id="wGlow"></div>
+    <div class="w-flame" id="wFlame" style="display:none"></div>
+    <div class="w-particles" id="wParticles"></div>
+    <div id="wFieldLights"></div>
+    <div id="wHotspots"></div>
+    <div id="wHush"></div>
+    <div id="wHushLine"></div>
+    <div id="wDoneLine"></div>
+    <!-- TEMPORARY build stamp for tonight's phone testing — REMOVE before deploy -->
+    <div id="buildStamp">v3 · waiting</div>
+    <div id="wFragment"><div class="f-inner">
+      <div id="fCoverPage">
+        <div class="f-head" id="fHead"></div>
+        <img class="f-img" id="fImg" alt="a recovered document">
+        <div class="f-note" id="fNote"></div>
+      </div>
+      <div class="f-page-text" id="fTextPage" style="display:none"></div>
+      <div class="f-nav">
+        <span class="f-arrow" id="fPrev">‹</span>
+        <span class="f-count" id="fCount"></span>
+        <span class="f-arrow" id="fNext">›</span>
+      </div>
+      <span class="f-close" id="fClose">return it to the earth</span>
+    </div></div>
+    <div id="wReveal"><div class="r-inner">
+      <div class="r-title" id="rTitle"></div>
+      <div class="r-text" id="rText"></div>
+      <input class="r-field" id="rField" maxlength="200" placeholder="…" autocomplete="off" spellcheck="false" style="display:none">
+      <!-- the tap-release — on phones the keyboard's return key is unreliable and un-ritual;
+           appears once words exist. Wording is a placeholder, Ange's to replace. (6 Jul 2026) -->
+      <button class="r-pause" id="rRelease" style="display:none">release your words</button>
+      <div class="r-choice" id="rChoice" style="display:none">
+        <div id="rChoiceLine"></div>
+        <button class="r-opt" id="rOptPublic">let it join the field</button>
+        <button class="r-opt" id="rOptPrivate">keep it yours</button>
+      </div>
+      <div class="r-grown" id="rGrown" style="display:none"></div>
+      <div class="r-done" id="rDone"></div>
+      <button class="r-pause" id="rPause" style="display:none">be still</button>
+      <button class="r-close" id="rClose">let it settle</button>
+    </div></div>
+    <div id="wStrength">
+      <div class="s-words" id="sWords"></div>
+      <button class="s-close" id="sClose">carry it with you</button>
+    </div>
+    <button class="w-back" id="wBack" aria-label="return to the wheel">return to the wheel</button>
+  </div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* The eight turns — fixed seasonal order, Yule at the crown. s/n = [month,day]. */
+  var WHEEL=[
+    {key:'yule',name:'Yule',pron:'yool',n:[12,21],s:[6,21]},
+    {key:'imbolc',name:'Imbolc',pron:'IM-olk',n:[2,1],s:[8,1]},
+    {key:'ostara',name:'Ostara',pron:'oh-STAR-ah',n:[3,20],s:[9,22]},
+    {key:'beltane',name:'Beltane',pron:'BELL-tane',n:[5,1],s:[11,1]},
+    {key:'litha',name:'Litha',pron:'LITH-ah',n:[6,21],s:[12,21]},
+    {key:'lughnasadh',name:'Lughnasadh',pron:'LOO-nah-sah',n:[8,1],s:[2,1]},
+    {key:'mabon',name:'Mabon',pron:'MAY-bon',n:[9,22],s:[3,20]},
+    {key:'samhain',name:'Samhain',pron:'SOW-in',n:[10,31],s:[5,1]}
+  ];
+
+  /* STATION POSITIONS — % of the 16:9 stage. FIRST ESTIMATE — we calibrate together.
+     Order matches WHEEL (Yule first, then clockwise). */
+  var POS=[
+    {x:50.3,y:11.0},  // Yule  (the well in the peak of the crown)
+    {x:64.0,y:24.0},  // Imbolc
+    {x:69.0,y:45.0},  // Ostara
+    {x:66.5,y:69.0},  // Beltane (nudged SE, embedded on the wheel body)
+    {x:50.0,y:78.0},  // Litha (bottom)
+    {x:34.5,y:67.5},  // Lughnasadh (small touch SW)
+    {x:31.0,y:45.0},  // Mabon
+    {x:37.0,y:24.0}   // Samhain (smidge E)
+  ];
+
+  /* portrait / mobile station positions (season_wheel_portrait.png) — FIRST ESTIMATE, calibrate on phone */
+  var POS_P=[
+    {x:50.6,y:41.5},  // Yule
+    {x:62.5,y:44.5},  // Imbolc
+    {x:72.9,y:53.4},  // Ostara
+    {x:66.4,y:59.7},  // Beltane
+    {x:50.3,y:63.8},  // Litha
+    {x:34.2,y:59.7},  // Lughnasadh
+    {x:30.1,y:53.4},  // Mabon
+    {x:37.7,y:45.0}   // Samhain
+  ];
+  var portraitMQ = window.matchMedia('(max-aspect-ratio: 3/4)');
+  function activePOS(){ return portraitMQ.matches ? POS_P : POS; }
+
+  /* the threshold takes on the crowned season's colour — same wheel, only the light changes */
+  var SEASON_TINT={
+    yule:'radial-gradient(ellipse at 50% 42%, rgba(150,190,235,.16), transparent 70%), linear-gradient(rgba(120,150,210,.12), rgba(80,110,170,.18))',
+    imbolc:'linear-gradient(rgba(185,205,230,.14), rgba(150,175,208,.15))',
+    ostara:'linear-gradient(rgba(175,212,150,.14), rgba(212,202,120,.14))',
+    beltane:'radial-gradient(ellipse at 50% 55%, rgba(225,160,150,.12), transparent 72%), linear-gradient(rgba(205,180,130,.14), rgba(200,150,150,.12))',
+    litha:'radial-gradient(ellipse at 50% 45%, rgba(255,200,110,.20), transparent 72%), linear-gradient(rgba(230,170,80,.15), rgba(210,150,70,.16))',
+    lughnasadh:'linear-gradient(rgba(232,186,96,.17), rgba(205,150,70,.16))',
+    mabon:'linear-gradient(rgba(212,150,82,.16), rgba(168,100,60,.16))',
+    samhain:'radial-gradient(ellipse at 50% 45%, rgba(160,130,160,.12), transparent 72%), linear-gradient(rgba(150,120,150,.14), rgba(108,100,150,.16))'
+  };
+
+  /* Hemisphere */
+  var HKEY='aetherwood_hemisphere';
+  function detectHemi(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    if(/^(Australia|Antarctica|Pacific\/(Auckland|Fiji|Noumea|Guadalcanal|Tongatapu|Port_Moresby)|America\/(Argentina|Sao_Paulo|Santiago|La_Paz|Lima|Asuncion|Montevideo)|Africa\/(Johannesburg|Windhoek|Maputo|Harare|Lusaka))/.test(tz))return 'south';}catch(e){}return 'north';}
+  function getHemi(){var s=null;try{s=localStorage.getItem(HKEY);}catch(e){}return s||detectHemi();}
+  function setHemi(h){try{localStorage.setItem(HKEY,h);}catch(e){}}
+
+  function festDate(f,h,y){var md=h==='south'?f.s:f.n;return new Date(y,md[0]-1,md[1]);}
+  function currentIndex(h,now){var y=now.getFullYear(),best=0,bm=-Infinity;
+    for(var i=0;i<8;i++){[festDate(WHEEL[i],h,y-1),festDate(WHEEL[i],h,y)].forEach(function(d){
+      if(d.getTime()<=now.getTime()&&d.getTime()>bm){bm=d.getTime();best=i;}});}return best;}
+  function fmtDate(d){return d.toLocaleDateString(undefined,{day:'numeric',month:'long'});}
+
+  var state={hemi:getHemi(),now:new Date(),cur:0};
+
+  var stationsEl=document.getElementById('stations');
+  var whisperEl=document.getElementById('whisper');
+
+  function render(){
+    state.cur=currentIndex(state.hemi,state.now);
+    // preview any season crowned: ?season=imbolc (yule/imbolc/ostara/beltane/litha/lughnasadh/mabon/samhain)
+    try{
+      var sp=new URLSearchParams(location.search).get('season');
+      if(sp){var oi=-1;for(var k=0;k<8;k++){if(WHEEL[k].key===sp)oi=k;}if(oi>=0)state.cur=oi;}
+    }catch(e){}
+    var tint=SEASON_TINT[WHEEL[state.cur].key];
+    var sw=document.getElementById('seasonWash'); if(sw&&tint) sw.style.background=tint;
+    stationsEl.innerHTML='';
+    for(var j=0;j<8;j++){
+      (function(j){
+        // fixed points (slots), seasons rotate THROUGH them: the current season
+        // always sits at slot 0 (the crown / peak well), the rest follow in order.
+        var fi=(state.cur + j) % 8;
+        var f=WHEEL[fi],p=activePOS()[j];
+        var st=document.createElement('div');
+        st.className='station'+(j===0?' current':'');
+        st.style.left=p.x+'%';st.style.top=p.y+'%';
+        st.innerHTML='<div class="dot"></div><div class="label"><span class="name">'+f.name+'</span><span class="pron">'+f.pron+'</span></div>';
+        st.addEventListener('click',function(e){e.stopPropagation();
+          if(j===0) stepThrough(fi); else whisperDormant(fi,p);});
+        stationsEl.appendChild(st);
+      })(j);
+    }
+    document.getElementById('hSouth').classList.toggle('on',state.hemi==='south');
+    document.getElementById('hNorth').classList.toggle('on',state.hemi==='north');
+    seedMotes();
+  }
+
+  function whisperDormant(i,p){
+    var f=WHEEL[i];
+    var next=festDate(f,state.hemi,state.now.getFullYear());
+    if(next.getTime()<state.now.getTime()) next=festDate(f,state.hemi,state.now.getFullYear()+1);
+    whisperEl.style.left=p.x+'%';whisperEl.style.top=p.y+'%';
+    whisperEl.textContent=f.name+' sleeps. It wakes '+fmtDate(next)+'.';
+    whisperEl.classList.add('show');
+    clearTimeout(whisperEl._t);whisperEl._t=setTimeout(function(){whisperEl.classList.remove('show');},3400);
+  }
+
+  /* seasonal worlds beyond the portal. img+particle here; lore/act are Ange's (marked slots). */
+  var SEASON_WORLD={
+    yule:{img:'https://res.cloudinary.com/ds8pkprtb/image/upload/yule.png',particle:'snow',
+      fire:{x:54,y:87,size:15},
+      hotspots:[{type:'meaning',x:39,y:67,label:'the meaning'},{type:'lore',x:56,y:58,label:'the lore'},{type:'act',x:67,y:69,label:'the offering'},{type:'strength',x:54,y:86,label:'draw strength'},{type:'wish',x:50,y:20,label:'make a wish'},{type:'tale',x:30,y:62,label:'the tale'}],
+      /* THE TALE — the Beast from the East's lost years (mourning + raging through the snow-capped
+         mountains). Unfolds in three parts with the real season (early/mid/late Yule); earlier parts
+         stay readable as "what came before". ALL THREE PARTS ARE ANGE'S TO WRITE — placeholders until then. */
+      taleParts:[null,null,null],
+      meaning:'The winter solstice, the pause and the knowing. Even though darkness encroaches morning and night, the world is preparing for the return. It brings promise of light and fulfilment.',
+      lore:'It\'s a time of gathering and belonging, sharing what we have with each other. Remembering the times that were prosperous and waiting for the longer days to come.',
+      strength:'As the Yule log burns, feel the fire within your own heart. Kindle it and let it burn. This will be the light that carries you through difficult times.',
+      invite:'Offer your time to rest. In the same way the land slows to wait for the renewal of the spring. What can you give that will start the new seed when it\'s time to plant?',
+      wishInvite:'The stars have never been closer, each night starts its time with you sooner as the sun hides away. They can hear your wishes now more than ever. Relinquish to the stars?',
+      pauseInvite:null,pauseLine:null,wishHint:'whisper your wish to the stars…',fieldHint:'lay it down here…',
+      /* Ange's share-choice invitation (2 Jul 2026, verbatim) — spoken before the wish joins the field or stays */
+      wishShareInvite:'Yule is a time of darkness, but not solitude. Strength comes from union together. Who do you share your wish with this Yule?',
+      /* north needs NO portrait render — the base image was composed to sit well on mobile (Ange, 2 Jul 2026) */
+      /* SOUTHERN Yule — Aetherwood's southern face (Ange, 2 Jul 2026): stones/fire/twilight constant, forest turns southern */
+      south:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/yule_southern.png',particle:'frost',
+        /* Claude's first estimates off the render — Ange fine-seats via ?calib=1 */
+        fire:{x:51,y:85,size:14},
+        hotspots:[{type:'meaning',x:24,y:74,label:'the meaning'},{type:'lore',x:55,y:68,label:'the lore'},{type:'act',x:78,y:72,label:'the offering'},{type:'strength',x:51,y:83,label:'draw strength'},{type:'wish',x:48,y:18,label:'make a wish'},{type:'tale',x:71,y:73,label:'the tale'}],
+        portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Portrait_yule_southern.png',
+          /* seated from Ange's phone screenshot 2 Jul — verify, fine-seat via ?calib=1 if still off */
+          fire:{x:50,y:56.5,size:12},
+          hotspots:[{type:'meaning',x:32.6,y:56.3,label:'the meaning'},{type:'lore',x:45,y:51,label:'the lore'},{type:'act',x:77,y:52,label:'the offering'},{type:'strength',x:50.5,y:59.7,label:'draw strength'},{type:'wish',x:49,y:33,label:'make a wish'},{type:'tale',x:22.6,y:58,label:'the tale'}]}}},
+    litha:{img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Litha.png',particle:'warm',
+      /* no fire at midsummer — the LIGHT plays the fire's role. ember = where strength-motes rise from. */
+      ember:{x:45,y:52},
+      hotspots:[{type:'meaning',x:76,y:55,label:'the meaning'},{type:'lore',x:14,y:60,label:'the lore'},{type:'act',x:50,y:84,label:'the offering'},{type:'strength',x:45,y:52,label:'drink the light'},{type:'wish',x:65,y:18,label:'make a wish'},{type:'tale',x:22,y:53,label:'the tale'}],
+      /* which tale resides in Litha = Ange's canon call; parts hers to write */
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim — typos only tidied). invite + wishInvite still hers to write. */
+      meaning:'As the sun reaches its greatest height, it is preparing to turn on the wheel and fall back down into darkness. Litha is an invitation to fully appreciate the now and be present in the moment. At the brightest point of the year, we remember that darkness will eventually return.',
+      lore:'It is a time of abundance and expansive life. Seeds sown earlier in the year are now in bloom. A celebration of life, energy, creativity, courage, passion and confidence.',
+      strength:'It is a celebration of the Resonance in its full expression. The spark is fully awake.',
+      invite:'A time of gratitude and reflection. What have you seen blossoming from your own efforts?',
+      wishInvite:'What will you take with you to hold as light?',
+      restStage:'resting in the warm earth',restLine:'it rests in the warm earth, to grow',wishDone:'the light holds your wish',
+      /* Litha's inversion: the wish is CARRIED as light, not relinquished — the words come toward you and go with you */
+      wishFx:'carry',
+      pauseInvite:'be present in the moment',pauseLine:'now',wishHint:'whisper your wish to the light…',fieldHint:'lay it down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/portrait_litha.png',fire:null,
+        /* Claude's first estimates off the portrait render — fine-seat on the phone via ?calib=1 */
+        ember:{x:39,y:52},
+        hotspots:[{type:'meaning',x:80,y:51,label:'the meaning'},{type:'lore',x:13,y:53,label:'the lore'},{type:'act',x:50,y:79,label:'the offering'},{type:'strength',x:39,y:52,label:'drink the light'},{type:'wish',x:51,y:12,label:'make a wish'},{type:'tale',x:26,y:48,label:'the tale'}]}},
+
+    /* ── THE AUGUST PAIR — both crown 1 Aug 2026 (Imbolc south / Lughnasadh north).
+       Skeletons (ready:false = "still being woven") until renders land. All words Ange's;
+       rest/wish lines below are Claude defaults, hers to replace. Fire-vs-ember per world
+       decided when the renders arrive. */
+    imbolc:{img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Imbolc.png',particle:'frost',
+      /* no fire — the returning sun is the strength-source (the quickening); ember = where its motes rise */
+      ember:{x:42,y:35},
+      hotspots:[{type:'meaning',x:81,y:49,label:'the meaning'},{type:'lore',x:66,y:43,label:'the lore'},{type:'act',x:30,y:84,label:'the offering'},{type:'strength',x:42,y:35,label:'the quickening'},{type:'wish',x:15,y:12,label:'make a wish'},{type:'tale',x:17,y:53,label:'the tale'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim). strength + wishInvite still hers to write. */
+      meaning:'Imbolc is the realisation of the promise told at Yule. The awakening, the return, as life quietly begins to take root.',
+      lore:'It is a time for healing, and tending the hearth, preparing for the bustle that\'s about to come. Planting the seeds ready for nourishment.',
+      strength:null,
+      invite:'A time for cleansing and creating space for what you would like to grow.',
+      wishInvite:null,
+      restStage:'stirring beneath the frost',restLine:'it stirs beneath the frost, to grow',wishDone:'the dawn holds your wish',
+      wishFx:'bloom', /* the dawn holds it — a warm bloom where the words arrive */
+      pauseInvite:'A gentle reminder that change has begun, will you sit long enough to hear its song?',pauseLine:'listen',
+      wishHint:'whisper your wish to the dawn…',fieldHint:'lay it down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Imbolc_portrait.png',fire:null,ember:{x:42,y:45},
+        hotspots:[{type:'meaning',x:78,y:45,label:'the meaning'},{type:'lore',x:72,y:62,label:'the lore'},{type:'act',x:55,y:82,label:'the offering'},{type:'strength',x:42,y:45,label:'the quickening'},{type:'wish',x:24,y:12,label:'make a wish'},{type:'tale',x:14,y:46,label:'the tale'}]},
+      south:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/southern_imbolc.png',particle:'frost',fire:null,ember:{x:64,y:38},
+        hotspots:[{type:'meaning',x:17,y:40,label:'the meaning'},{type:'lore',x:83,y:48,label:'the lore'},{type:'act',x:62,y:73,label:'the offering'},{type:'strength',x:64,y:38,label:'the quickening'},{type:'wish',x:80,y:12,label:'make a wish'},{type:'tale',x:45,y:87,label:'the tale'}],
+        portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Portrate_southern_imbolc.png',fire:null,ember:{x:63,y:46},
+          hotspots:[{type:'meaning',x:28,y:38,label:'the meaning'},{type:'lore',x:22,y:79,label:'the lore'},{type:'act',x:55,y:84,label:'the offering'},{type:'strength',x:63,y:46,label:'the quickening'},{type:'wish',x:60,y:9,label:'make a wish'},{type:'tale',x:48,y:62,label:'the tale'}]}}},
+    lughnasadh:{img:'https://res.cloudinary.com/ds8pkprtb/image/upload/lughnasadh.png',particle:'warm',
+      /* no fire — the bound sheaf is the strength-source (the honouring); ember = grain-dust rising from it */
+      ember:{x:30,y:58},
+      hotspots:[{type:'meaning',x:10,y:42,label:'the meaning'},{type:'lore',x:72,y:59,label:'the lore'},{type:'act',x:48,y:88,label:'the offering'},{type:'strength',x:30,y:58,label:'the honouring'},{type:'wish',x:25,y:11,label:'make a wish'},{type:'tale',x:62,y:22,label:'the tale'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim; meaning + invite are splices of her lines — flagged for her veto) */
+      meaning:'Lughnasadh, the time to see what grew to fruition within you, the seeds you nurtured and the ideas you sowed. To harvest, we must cut down the crop. To reap the rewards, we may need to first destroy what once held it.',
+      lore:'Reward yourself for the life you have nurtured and sustained. Notice what flourished during the sunnier times.',
+      strength:'Honour your skills, practice, patience and dedication.',
+      invite:'Remember to be generous with the gifts you have found, share your harvest and reap the rewards. What will you do with them to keep them going for the seasons to come?',
+      wishInvite:'Gratitude is a reflective journey, what has Lughnasadh revealed inside of you?',
+      restStage:'ripening in the golden field',restLine:'it ripens in the golden field',wishDone:'the harvest holds your wish',
+      wishFx:'bloom', /* the harvest holds it — a warm bloom at the waning light */
+      pauseInvite:null,pauseLine:null,wishHint:'whisper your wish to the waning light…',fieldHint:'lay it down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/Portrait_lughnasadh.png',fire:null,ember:{x:30,y:54},
+        hotspots:[{type:'meaning',x:20,y:26,label:'the meaning'},{type:'lore',x:77,y:54,label:'the lore'},{type:'act',x:48,y:66,label:'the offering'},{type:'strength',x:30,y:54,label:'the honouring'},{type:'wish',x:23,y:33,label:'make a wish'},{type:'tale',x:71,y:27,label:'the tale'}]}},
+
+    /* ── THE LAST FOUR ARMS — skeletons (ready:false = "still being woven") awaiting renders
+       at their crownings. All words Ange's; rest/wish lines are Claude defaults, hers to replace.
+       Strength-source + fire-vs-ember decided per world when its renders arrive. */
+    ostara:{ /* BUILT 2 Jul 2026 — equinox pair with Mabon; crowns south ~22 Sep 2026 / north ~20 Mar 2027 */
+      img:'https://res.cloudinary.com/ds8pkprtb/image/upload/ostara.png',particle:'warm',
+      /* bright daylight scene — washes out the standard text-shadow strength (Ange, 6 Jul 2026) */
+      bright:true,
+      /* no fire — the balanced sun through the arch is the strength-source */
+      ember:{x:61,y:26},
+      hotspots:[{type:'meaning',x:14,y:30,label:'the meaning'},{type:'lore',x:65,y:56,label:'the lore'},{type:'act',x:48,y:86,label:'the offering'},{type:'strength',x:38,y:49,label:'draw strength'},{type:'wish',x:61,y:24,label:'make a wish'},{type:'tale',x:86,y:50,label:'the tale'},{type:'fragment',x:23,y:73,label:'something half-buried'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim). invite (offering) still hers to write. */
+      meaning:'Ostara is the breath. The time when day and night are in perfect balance. The season is poised for change, are you ready?',
+      lore:'It is a thinning in the veil where life and renewal can be given freely.',
+      strength:'Turn to your strengths to remove your fears, as neither is more important than the other, but one can stop us from moving forward.',
+      invite:null,
+      wishInvite:'What do you want to breathe life into this Ostara? Make your wish!',
+      restStage:'unfurling in the fresh green',restLine:'it unfurls with the spring',wishDone:'the morning holds your wish',
+      wishFx:'bloom', /* breathed into life — a warm bloom in the morning light */
+      pauseInvite:null,pauseLine:null,wishHint:'whisper your wish to the morning…',fieldHint:'lay it down here…',
+      /* THE EOSTRE DISCOVERY — Ange's Lost Archives fragment (her words verbatim) + her rendered
+         artefact: the monk's letter (Bede, the outer record the fragment corrects). */
+      fragment:{img:'https://res.cloudinary.com/ds8pkprtb/image/upload/eostre_1.png',
+        head:'🕯️ Aetherwood Archives · Restricted Entry · Recovered Fragment 7A · On the Nature of Seasonal Thresholds',
+        note:'the outer record, recovered from beyond the Veil',
+        body:["They named her.","That is where the error begins.","In the outer records, beyond the Veil, there exists a singular reference. A monk, meticulous in his chronicling, recorded the passing of a month and attached to it a name.","Ēostre.","A goddess, he presumed. A figure to be honoured. A relic of a fading belief.","He did not know what he was preserving.","There is no singular presence bound to that name.","No throne. No dominion. No fixed form within the Loom.","What was witnessed was not a being.","It was a moment.","At the close of deep winter, when the Resonance runs thin and threads fall quiet, there comes a subtle disturbance. Not rupture. Not fracture.","A softening.","Threads long dormant begin to hum, not yet in harmony, but in memory of it. The Everflame does not rise in strength, but shifts in warmth, as though recalling something it had almost forgotten.","This is the first sign.","Those who listen too quickly will miss it. Those who listen too closely will mistake it for error.","Only the still ones… only the patient… hear what follows.","A call.","Not sung, as a Threadsinger would sing. Not woven, as the Loom is woven.","But something in between.","A resonance that does not command the threads, but invites them.","Across the northern reaches, this call is known as awakening.","Frost loosens its hold. Sap begins its slow ascent. Creatures stir, uncertain at first, as though remembering how to live.","Life does not return all at once.","It leans forward.","Yet at that same turning, in lands where the sun begins to retreat, the same presence moves differently.","There, it is not awakening.","It is release.","The air deepens. The earth exhales. The final fruits are gathered, and what must sleep is gently guided toward rest.","Nothing is taken.","Everything is allowed.","They believed these to be separate forces.","They were wrong.","It is one threshold. One presence.","Not bound by season, but by change itself.","Among the oldest Threadsingers, there are whispers of it.","They do not name it. To name it is to reduce it.","But they recognise the tremor when it comes.","Some step back from the Loom in reverence. Others attempt, foolishly, to follow its pattern.","None have succeeded.","It does not weave. It does not mend. It does not choose.","It creates the conditions in which choice becomes possible.","There are records, fragmented and unreliable, that suggest its influence extends beyond the turning of seasons.","Moments of unexpected union. Paths crossing where none should have met. The sudden, inexplicable knowing that something must begin… or end.","These are often attributed to chance.","They are not.","The outer scholars, in their limited understanding, preserved only a name.","Ēostre.","A sound. An echo. A misinterpretation of something they could neither see nor comprehend.","Let the record stand corrected.","She is not a goddess. She is not singular. She is not bound to form.","She is the breath between states.","The loosening of what was held.","The quiet permission for what comes next.","And when the world turns…","she is already there."]},
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/portrate_ostara.png',fire:null,ember:{x:60,y:44},
+        hotspots:[{type:'meaning',x:15,y:41,label:'the meaning'},{type:'lore',x:61,y:53,label:'the lore'},{type:'act',x:52,y:84,label:'the offering'},{type:'strength',x:29,y:57,label:'draw strength'},{type:'wish',x:60,y:43,label:'make a wish'},{type:'tale',x:83,y:35,label:'the tale'},{type:'fragment',x:24,y:62,label:'something half-buried'}]}},
+    beltane:{ /* BUILT 2 Jul 2026 — the flowering FIRE festival, first true fire since Yule.
+      Crowns SOUTH 31 Oct/1 Nov 2026 (opposite Samhain north — mind the dual-Samhain canon). */
+      img:'https://res.cloudinary.com/ds8pkprtb/image/upload/beltane.png',particle:'warm',
+      fire:{x:50,y:72,size:16},
+      hotspots:[{type:'meaning',x:77,y:37,label:'the meaning'},{type:'lore',x:48,y:13,label:'the lore'},{type:'act',x:22,y:70,label:'the offering'},{type:'strength',x:50,y:70,label:'draw strength'},{type:'wish',x:51,y:35,label:'make a wish'},{type:'tale',x:33,y:51,label:'the tale'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim, typos tidied; meaning is a splice — flagged for her veto).
+         invite (offering) still hers — the share-ideas-bring-them-to-life shape is waiting for her voice. */
+      meaning:'The dance begins. A time of creation, to share ideas and bring them to life as the flames dance within the circle.',
+      lore:'Connection, through nature, through dance, through each other. We can survive alone, and thrive together.',
+      strength:'As we watch the fire\'s flames dance together, we remember how entwined and interconnected our lives are.',
+      invite:null,
+      wishInvite:'Will you join the call to dance? To abandon your inhibitions and follow the flame of your heart?',
+      restStage:'swelling toward blossom',restLine:'it blossoms with the flowering',
+      wishDone:'Be merry. Rejoice. Feel alive.',
+      wishFx:'flame', /* the wish sinks INTO the bonfire — flame swells, embers rise */
+      pauseInvite:null,pauseLine:null,wishHint:'whisper your wish to the flames…',fieldHint:'lay it down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/portrate_beltane.png',fire:{x:49,y:56,size:13},
+        hotspots:[{type:'meaning',x:76,y:32,label:'the meaning'},{type:'lore',x:55,y:38,label:'the lore'},{type:'act',x:48,y:81,label:'the offering'},{type:'strength',x:49,y:55,label:'draw strength'},{type:'wish',x:48,y:45,label:'make a wish'},{type:'tale',x:27,y:51,label:'the tale'}]}},
+    mabon:{ /* BUILT 2 Jul 2026 — equinox pair with Ostara; crowns north ~22 Sep 2026 / south ~20 Mar 2027 */
+      img:'https://res.cloudinary.com/ds8pkprtb/image/upload/mabon.png',particle:'leaf',
+      /* no fire — the warm low light through the turning trees is the strength-source (the heart's beat) */
+      ember:{x:81,y:26},
+      hotspots:[{type:'meaning',x:30,y:37,label:'the meaning'},{type:'lore',x:69,y:51,label:'the lore'},{type:'act',x:48,y:86,label:'the offering'},{type:'strength',x:81,y:26,label:'draw strength'},{type:'wish',x:47,y:15,label:'make a wish'},{type:'tale',x:53,y:47,label:'the tale'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim). HER CALL: the seventh passage is the SEED OF MABON'S TALE —
+         'What will you reignite at the hearth when the long nights have passed? What will you leave behind?
+         Knowledge drives us forward, no matter how hard the lesson.' → opening thread when she writes the
+         tale's three parts (taleParts below stay null until then). */
+      meaning:'The time to pause and see, pause and feel, pause and reflect, pause and know. Everything you have worked towards is now come to pass. Did you tend your work well, and how will you sow your seeds at next equinox?',
+      lore:'To live without sorrow is to live without feeling. To love with your heart is to be alive.',
+      strength:'Not all things are within our control, but our own heart is ours to beat.',
+      invite:'Be gentle as you hear your own truth, what do you need to prepare for nourishing rest now that the hard work is done?',
+      wishInvite:'What will you take to the winter to hold dear and close?',
+      restStage:'settling among the fallen leaves',restLine:'it settles among the leaves, to grow',wishDone:'the turning holds your wish',
+      wishFx:'bloom', /* the turning holds it — a warm bloom among the falling leaves */
+      pauseInvite:'pause and see, pause and feel',pauseLine:'pause and know',
+      wishHint:'whisper your wish to the falling leaves…',fieldHint:'lay it down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/portrate_mabon.png',fire:null,ember:{x:83,y:41},
+        hotspots:[{type:'meaning',x:17,y:31,label:'the meaning'},{type:'lore',x:68,y:37,label:'the lore'},{type:'act',x:46,y:74,label:'the offering'},{type:'strength',x:83,y:41,label:'draw strength'},{type:'wish',x:73,y:12,label:'make a wish'},{type:'tale',x:52,y:49,label:'the tale'}]}},
+    samhain:{ /* BUILT 2 Jul 2026 — the veil at its thinnest; ties to the Memory Hall "Veil Thins".
+      Crowns NORTH 31 Oct 2026 / SOUTH 1 May 2027 (dual-Samhain canon). */
+      img:'https://res.cloudinary.com/ds8pkprtb/image/upload/samhain.png',particle:'frost',
+      /* no fire — the VEIL itself is the strength-source (the transformation of breath) */
+      ember:{x:48,y:44},
+      hotspots:[{type:'meaning',x:48,y:42,label:'the meaning'},{type:'lore',x:46,y:68,label:'the lore'},{type:'act',x:48,y:88,label:'the offering'},{type:'strength',x:38,y:28,label:'draw strength'},{type:'wish',x:36,y:13,label:'make a wish'},{type:'tale',x:79,y:76,label:'the tale'}],
+      taleParts:[null,null,null],
+      /* Ange's words (2 Jul 2026, verbatim). The MEANING sits ON the veil-curtain itself;
+         the LORE at the lantern-lit stone (those lost draw closer to the flickering light);
+         the OFFERING = a name laid down in thanks — at Samhain the shared field-lights READ AS THE REMEMBERED. */
+      meaning:'The threshold. The thinning of realms. The veil will allow you to cross if you choose. The Resonance pulses in anticipation of what will cross this night.',
+      lore:'Old stories are retold as those lost to us draw closer to the flickering light to hear, and we remember them well. This is a celebration of how we became who we are, shaped by the people who loved us and guided us on our path.',
+      strength:'This is the transformation of breath, as we pass through the loom and hear the resonance.',
+      invite:'Who do we thank for making us remember them well?',
+      wishInvite:'What version of ourselves will we carry forward so the next generation can remember us well?',
+      restStage:'resting at the year\'s root',restLine:'it rests at the year\'s root, to grow',wishDone:'the veil holds your wish',
+      wishFx:'veil', /* the veil takes it — a silver-violet shimmer where the words pass through */
+      pauseInvite:null,pauseLine:null,wishHint:'whisper your wish through the veil…',fieldHint:'lay their name down here…',
+      portrait:{ready:true,img:'https://res.cloudinary.com/ds8pkprtb/image/upload/portrate_samhain.png',fire:null,ember:{x:47,y:48},
+        hotspots:[{type:'meaning',x:47,y:48,label:'the meaning'},{type:'lore',x:44,y:55,label:'the lore'},{type:'act',x:55,y:74,label:'the offering'},{type:'strength',x:20,y:33,label:'draw strength'},{type:'wish',x:33,y:38,label:'make a wish'},{type:'tale',x:20,y:85,label:'the tale'}]}}
+  };
+  /* effective config for a season = base → southern overrides (visitor south + ready)
+     → portrait overrides (portrait screen + ready). Null fields fall back each step.
+     Same two-axis pattern as the wheel itself (POS/POS_P + hemisphere). */
+  function mergeCfg(base,over,skip){
+    var m={},k; for(k in base){if(skip.indexOf(k)<0)m[k]=base[k];}
+    if(over){for(k in over){if(skip.indexOf(k)<0&&k!=='ready'&&over[k]!=null)m[k]=over[k];}}
+    return m;
+  }
+  function worldCfg(key){
+    var base=SEASON_WORLD[key]; if(!base)return null;
+    var south=(state.hemi==='south'&&base.south&&base.south.ready)?base.south:null;
+    var m=mergeCfg(base,south,['south']);
+    if(south) m.ready=true;   /* a ready southern face opens the world even if the north render isn't in yet */
+    if(portraitMQ.matches&&m.portrait&&m.portrait.ready) m=mergeCfg(m,m.portrait,['south','portrait']);
+    return m;
+  }
+  /* re-seat the open world when orientation flips (rotate / fold) */
+  function refreshWorld(){
+    if(!worldOpen||!curWorld)return;
+    /* an iOS keyboard opening/closing is not an orientation change — never re-seat the
+       world mid-ritual (the mid-wish "blink", 6 Jul 2026). Re-seat when the reveal closes. */
+    if(document.getElementById('wReveal').classList.contains('show')||document.activeElement===document.getElementById('rField')){pendingRefresh=true;return;}
+    var cfg=worldCfg(curWorld); if(!cfg)return;
+    document.getElementById('wBg').style.backgroundImage="url('"+cfg.img+"')";
+    var fl=document.getElementById('wFlame');
+    if(cfg.fire){fl.style.display='';fl.style.left=cfg.fire.x+'%';fl.style.top=cfg.fire.y+'%';fl.style.width=(cfg.fire.size||15)+'%';}
+    else fl.style.display='none';
+    buildHotspots(cfg);
+    startWorldParticles(cfg.particle);
+  }
+  var worldParticleTimer=null, worldOpen=false, worldStilled=false, pendingRefresh=false;
+
+  function stepThrough(i){
+    var c=worldCfg(WHEEL[i].key);
+    if(c&&c.ready!==false){ openWorld(i); return; }   /* skeleton worlds (ready:false) stay "still being woven" */
+    placeholderThrough(i);
+  }
+  function placeholderThrough(i){
+    var f=WHEEL[i];
+    document.getElementById('throughName').textContent='You step into '+f.name;
+    document.getElementById('throughSub').innerHTML='<em>('+f.pron+')</em><br>This season’s world is still being woven.';
+    document.getElementById('through').classList.add('show');
+  }
+  var curWorld=null, pendingBody='', lastFieldBlur=0;
+  /* TEMPORARY test-night telemetry — any runtime error shows in the corner stamp, and every
+     beat of the ritual reports its name, so one cast shows exactly where the thread snaps.
+     REMOVE all stamp() calls and the stamp div before deploy. */
+  window.onerror=function(m,src,l){var s=document.getElementById('buildStamp');if(s)s.textContent='err: '+m+' @'+l;return false;};
+  function stamp(t){var s=document.getElementById('buildStamp');if(s)s.textContent='v3 · '+t;}
+  function planKey(s,k){return 'aetherwood_planting_'+s+'_'+k;}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function getPlantings(s,k){try{var v=JSON.parse(localStorage.getItem(planKey(s,k)));if(!v)return [];return Array.isArray(v)?v:[v];}catch(e){return [];}}
+  function savePlanting(s,k,body,isPublic){
+    var arr=getPlantings(s,k); arr.push({body:body,is_public:!!isPublic,planted_at:Date.now()});
+    try{localStorage.setItem(planKey(s,k),JSON.stringify(arr));}catch(e){}
+    try{ if(typeof PortalData!=='undefined'&&typeof AETHERWOOD!=='undefined'){
+      PortalData.submit('planting',{token:AETHERWOOD.getVisitorToken(),season:s,kind:k,body:body,is_public:!!isPublic,hemisphere:state.hemi});
+    } }catch(e){}
+  }
+  function growthStage(t,cfg){var d=(Date.now()-t)/86400000; cfg=cfg||{};
+    if(d<3)return cfg.restStage||(state.hemi==='south'?'resting in the cold earth':'resting beneath the snow');
+    if(d<14)return 'stirring in the dark';
+    if(d<45)return 'a green shoot, reaching for the light';
+    if(d<90)return 'budding, almost';
+    return 'in full bloom';}
+  function showChoice(){
+    var cfg=worldCfg(curWorld)||{};
+    var isWish=document.getElementById('wReveal').dataset.type==='wish';
+    var line=isWish?cfg.wishShareInvite:cfg.shareInvite;
+    var el=document.getElementById('rChoiceLine');
+    el.textContent=line||''; el.style.display=line?'':'none';
+    document.getElementById('rChoice').style.display='';
+    stamp('choosing');
+  }
+  function hideChoice(){document.getElementById('rChoice').style.display='none';}
+  function loadSharedField(season){
+    var host=document.getElementById('wFieldLights'); if(!host)return; host.innerHTML='';
+    if(typeof PortalData==='undefined')return;
+    PortalData.read('shared_plantings',{season:season}).then(function(data){
+      if(!data||!data.items||!worldOpen)return;
+      data.items.slice(0,60).forEach(function(){
+        var el=document.createElement('div'); el.className='field-light';
+        el.style.left=(8+Math.random()*84)+'%'; el.style.top=(63+Math.random()*27)+'%';
+        el.style.animationDelay=(Math.random()*4).toFixed(1)+'s';
+        host.appendChild(el);
+      });
+    }).catch(function(){});
+  }
+  var DEFAULT_HOTSPOTS=[{type:'meaning',x:40,y:60,label:'the meaning'},{type:'lore',x:56,y:58,label:'the lore'},{type:'act',x:67,y:69,label:'the offering'}];
+  function openWorld(i){
+    var f=WHEEL[i], cfg=worldCfg(f.key); if(!cfg||cfg.ready===false){placeholderThrough(i);return;}
+    curWorld=f.key;
+    var w=document.getElementById('world');
+    document.getElementById('wBg').style.backgroundImage="url('"+cfg.img+"')";
+    var fl=document.getElementById('wFlame');
+    if(cfg.fire){fl.style.display='';fl.style.left=cfg.fire.x+'%';fl.style.top=cfg.fire.y+'%';fl.style.width=(cfg.fire.size||15)+'%';}
+    else fl.style.display='none';
+    buildHotspots(cfg);
+    closeReveal(true); closeFire();
+    document.getElementById('wDoneLine').classList.remove('show');
+    w.dataset.key=f.key;
+    w.classList.toggle('bright',!!cfg.bright);
+    w.classList.add('show'); worldOpen=true; startWorldParticles(cfg.particle);
+    loadSharedField(f.key);
+  }
+  /* unwritten vessels stay hidden from visitors — a stone only appears once Ange has
+     given it words. (?calib=1 shows everything, so seating can happen before writing.) */
+  function hotspotReady(cfg,h){
+    switch(h.type){
+      case 'meaning':  return !!cfg.meaning;
+      case 'lore':     return !!cfg.lore;
+      case 'strength': return !!cfg.strength;
+      case 'act':      return !!cfg.invite;
+      case 'wish':     return !!cfg.wishInvite;
+      case 'tale':     return !!(cfg.taleParts&&cfg.taleParts.some(function(p){return !!p;}));
+      case 'fragment': return !!cfg.fragment;
+    }
+    return true;
+  }
+  var SHOW_ALL_VESSELS=/[?&]calib=1/.test(location.search);
+  function buildHotspots(cfg){
+    var host=document.getElementById('wHotspots'); host.innerHTML='';
+    (cfg.hotspots||DEFAULT_HOTSPOTS).forEach(function(h,i){
+      if(!SHOW_ALL_VESSELS && !hotspotReady(cfg,h)) return;
+      var el=document.createElement('div'); el.className='w-hot'; el.style.left=h.x+'%'; el.style.top=h.y+'%';
+      el.style.setProperty('--hd',(i*1.3).toFixed(1)+'s');
+      el.innerHTML='<div class="pt"></div><div class="lab">'+(h.label||h.type)+'</div>';
+      el.addEventListener('click',function(e){e.stopPropagation(); if(h.type==='strength') openFire(); else if(h.type==='fragment') openFragment(); else openReveal(h.type);});
+      el.addEventListener('touchstart',function(){el.classList.add('active');},{passive:true});
+      el.addEventListener('touchend',function(){setTimeout(function(){el.classList.remove('active');},800);});
+      host.appendChild(el);
+    });
+  }
+  function openReveal(type){
+    var cfg=worldCfg(curWorld); if(!cfg)return;
+    closeFire();
+    var title=document.getElementById('rTitle'),text=document.getElementById('rText'),field=document.getElementById('rField'),done=document.getElementById('rDone'),grown=document.getElementById('rGrown');
+    done.classList.remove('show'); field.value=''; field.style.display='none';
+    document.getElementById('rRelease').style.display='none';
+    grown.style.display='none'; hideChoice();
+    var rp=document.getElementById('rPause'); rp.style.display='none';
+    document.getElementById('wReveal').dataset.type=type;
+    if(type==='act'||type==='wish'){
+      var isWish=type==='wish', kind=isWish?'wish':'seed';
+      stamp(isWish?'wish open':'offering open');
+      var inv=isWish?(cfg.wishInvite||'⟡ your words · make a wish to the stars'):(cfg.invite||'⟡ your words · the invitation to the offering');
+      var isPh=isWish?!cfg.wishInvite:!cfg.invite;
+      title.textContent=isWish?'a wish':'the offering';
+      text.textContent=inv; text.classList.toggle('placeholder',isPh);
+      var list=getPlantings(curWorld,kind);
+      if(list.length){
+        grown.innerHTML = list.slice(-4).map(function(p){
+          return isWish ? '“'+esc(p.body)+'” · still rising'
+                        : '“'+esc(p.body)+'” · '+growthStage(p.planted_at,cfg);
+        }).join('<br>');
+        grown.style.display='';
+      }
+      field.style.display=''; field.placeholder=isWish?(cfg.wishHint||'whisper your wish…'):(cfg.fieldHint||'…');
+      setTimeout(function(){field.focus();},450);
+    }else{
+      var vmap={meaning:cfg.meaning,lore:cfg.lore,strength:cfg.strength};
+      var pmap={meaning:'⟡ your words · the meaning of this turning',lore:'⟡ your words · the lore of this season',strength:'⟡ your words · the strength the fire gives'};
+      var tmap={meaning:'the meaning',lore:'the lore',strength:'strength'};
+      var val=vmap[type];
+      title.textContent=tmap[type]||'';
+      text.textContent=val||pmap[type]; text.classList.toggle('placeholder',!val);
+      if(type==='strength') warmFlare();
+      if(type==='meaning'){ rp.style.display=''; rp.textContent=(cfg.pauseInvite||'be still a moment'); sceneGlow(); }
+      if(type==='lore'){ kindleGathering(); }
+      if(type==='tale'){
+        var st=taleStage(), parts=cfg.taleParts||[];
+        title.textContent='the tale';
+        var htm='';
+        for(var ti=0;ti<st;ti++){ htm+='<span class="tale-past">'+esc(parts[ti]||('⟡ part '+(ti+1)+' · yours to write'))+'</span><br><br>'; }
+        htm+=esc(parts[st]||('⟡ your words · the tale, part '+(st+1)+' of 3'));
+        text.innerHTML=htm; text.classList.toggle('placeholder',!parts[st]);
+        taleSweep();
+      }
+    }
+    document.getElementById('wReveal').classList.add('show');
+    document.getElementById('world').classList.add('reading');
+  }
+  /* which part of the season's tale is telling — thirds of the real season window */
+  function taleStage(){
+    var tp=new URLSearchParams(location.search).get('tale');   /* ?tale=1|2|3 to preview a part */
+    if(tp){var tn=parseInt(tp,10); if(tn>=1&&tn<=3)return tn-1;}
+    var f=WHEEL[state.cur], nf=WHEEL[(state.cur+1)%8], y=state.now.getFullYear();
+    var start=festDate(f,state.hemi,y);
+    if(start.getTime()>state.now.getTime()) start=festDate(f,state.hemi,y-1);
+    var end=festDate(nf,state.hemi,start.getFullYear());
+    if(end.getTime()<=start.getTime()) end=festDate(nf,state.hemi,start.getFullYear()+1);
+    var p=(state.now.getTime()-start.getTime())/(end.getTime()-start.getTime());
+    return p<1/3?0:(p<2/3?1:2);
+  }
+  function taleSweep(){
+    var host=document.getElementById('world');
+    var e=document.createElement('div'); e.className='tale-sweep';
+    host.appendChild(e); setTimeout(function(){e.remove();},4400);
+  }
+  /* the star now streaks FROM where the wish arrived (world is inset:0, so % of world = vw/vh);
+     no origin given = the old random sky position */
+  function spawnShootingStar(from){
+    var s=document.createElement('div'); s.className='shooting-star';
+    s.style.left=(from?from.x:(10+Math.random()*48))+'vw';
+    s.style.top=(from?Math.max(from.y-4,2):(8+Math.random()*20))+'vh';
+    s.style.animation='shoot 1.9s ease-out forwards';
+    document.body.appendChild(s); setTimeout(function(){s.remove();},2300);
+  }
+  function warmFlare(){var el=document.getElementById('wWarm'); if(!el)return; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');}
+  function sceneGlow(){var el=document.getElementById('wGlow'); if(!el)return; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');}
+  function kindleGathering(){var host=document.getElementById('world'); for(var i=0;i<14;i++){ setTimeout(function(){ if(!worldOpen)return; var e=document.createElement('div'); e.className='gather-light'; e.style.left=(10+Math.random()*80)+'%'; e.style.top=(42+Math.random()*44)+'%'; host.appendChild(e); setTimeout(function(){e.remove();},6400); }, Math.random()*1700); } }
+  function buriedSeed(tgt){ var host=document.getElementById('world'); var e=document.createElement('div'); e.className='seed-light';
+    var bx=tgt?tgt.x:(46+Math.random()*8), by=tgt?tgt.y:(80+Math.random()*8);
+    e.style.left=(bx+(Math.random()*4-2))+'%'; e.style.top=(by+(Math.random()*3-1.5))+'%';
+    host.appendChild(e); setTimeout(function(){e.remove();},6500); }
+  function startStillness(){
+    closeReveal(true);
+    var w=document.getElementById('world'); w.classList.add('stilled'); worldStilled=true;
+    var cfg=worldCfg(curWorld)||{};
+    var line=document.getElementById('wHushLine'); line.textContent=cfg.pauseLine||'breathe';
+    document.getElementById('wHush').classList.add('show'); line.classList.add('show');
+    setTimeout(function(){
+      document.getElementById('wHush').classList.remove('show'); line.classList.remove('show');
+      w.classList.remove('stilled'); worldStilled=false;
+    },7000);
+  }
+  /* closing a reveal now ANSWERS — the season's magic replays on the clean scene, where it can
+     actually be seen ("let it settle" settles visibly, 6 Jul 2026). skipEcho=true suppresses it
+     (stillness has its own answer). Note: used as a click listener too, so the guard is !==true. */
+  function closeReveal(skipEcho){
+    var wr=document.getElementById('wReveal');
+    var wasOpen=wr.classList.contains('show');
+    wr.classList.remove('show');
+    document.getElementById('world').classList.remove('reading');
+    if(wasOpen && skipEcho!==true){
+      var t=wr.dataset.type;
+      if(t==='meaning') sceneGlow();
+      else if(t==='lore') kindleGathering();
+      else if(t==='tale') taleSweep();
+    }
+    if(pendingRefresh){pendingRefresh=false; refreshWorld();}
+  }
+  /* the fragment — unearthing a recovered archive; the world takes one deep breath */
+  /* crude page-turn state for the fragment — cover "page" is index -1, then 0..n-1 are text pages */
+  var fragPages=[], fragIdx=-1;
+  function openFragment(){
+    var cfg=worldCfg(curWorld)||{}; var fr=cfg.fragment; if(!fr)return;
+    closeReveal(); closeFire();
+    document.getElementById('fHead').textContent=fr.head||'';
+    var im=document.getElementById('fImg');
+    if(fr.img){im.style.display='';im.src=fr.img;}else{im.style.display='none';}
+    document.getElementById('fNote').textContent=fr.note||'';
+    var w=document.getElementById('world');
+    w.classList.remove('breathing'); void w.offsetWidth; w.classList.add('breathing');
+    var wf=document.getElementById('wFragment');
+    wf.classList.add('show');
+    fragIdx=-1;
+    document.getElementById('fCoverPage').style.display='';
+    document.getElementById('fTextPage').style.display='none';
+    /* paginate after the show class has laid the box out, so the measurement is real */
+    setTimeout(function(){
+      fragPages=paginateFragmentBody(fr.body||[]);
+      renderFragPage();
+    },30);
+  }
+  function closeFragment(){document.getElementById('wFragment').classList.remove('show');}
+  /* single forward pass, never recursive — an oversized single paragraph just gets its
+     own page and clips, it can never spin the loop (feedback_js_patterns, 6 Jul 2026) */
+  function paginateFragmentBody(paragraphs){
+    var box=document.getElementById('fTextPage');
+    var cs=window.getComputedStyle(box);
+    var meas=document.createElement('div');
+    meas.style.cssText='position:absolute;visibility:hidden;left:-9999px;top:0;height:auto;box-sizing:border-box;'
+      +'width:'+box.clientWidth+'px;'
+      +'padding-top:'+cs.paddingTop+';padding-bottom:'+cs.paddingBottom+';padding-left:'+cs.paddingLeft+';padding-right:'+cs.paddingRight+';'
+      +'font-family:'+cs.fontFamily+';font-size:'+cs.fontSize+';line-height:'+cs.lineHeight+';text-align:'+cs.textAlign+';';
+    document.body.appendChild(meas);
+    var maxH=box.clientHeight||1;
+    var pages=[], buf=[];
+    for(var i=0;i<paragraphs.length;i++){
+      var testBuf=buf.concat([paragraphs[i]]);
+      meas.innerHTML=testBuf.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');
+      if(meas.scrollHeight>maxH && buf.length>0){
+        pages.push(buf.map(function(p){return '<p>'+esc(p)+'</p>';}).join(''));
+        buf=[paragraphs[i]];
+      }else{
+        buf=testBuf;
+      }
+    }
+    if(buf.length) pages.push(buf.map(function(p){return '<p>'+esc(p)+'</p>';}).join(''));
+    document.body.removeChild(meas);
+    return pages.length?pages:[''];
+  }
+  function renderFragPage(){
+    var cover=fragIdx===-1;
+    document.getElementById('fCoverPage').style.display=cover?'':'none';
+    var tp=document.getElementById('fTextPage');
+    tp.style.display=cover?'none':'';
+    if(!cover) tp.innerHTML=fragPages[fragIdx]||'';
+    document.getElementById('fPrev').classList.toggle('hidden',fragIdx<=-1);
+    document.getElementById('fNext').classList.toggle('hidden',fragIdx>=fragPages.length-1);
+    document.getElementById('fCount').textContent=cover?'':(fragIdx+1)+' / '+fragPages.length;
+  }
+  document.getElementById('fPrev').addEventListener('click',function(){
+    if(fragIdx>-1){ fragIdx--; renderFragPage(); }
+  });
+  document.getElementById('fNext').addEventListener('click',function(){
+    if(fragIdx<fragPages.length-1){ fragIdx++; renderFragPage(); }
+  });
+  document.getElementById('fClose').addEventListener('click',closeFragment);
+  // the fire moment — in-scene, no veil
+  function openFire(){
+    var cfg=worldCfg(curWorld)||{};
+    closeReveal();
+    document.getElementById('sWords').textContent = cfg.strength || '⟡ your words · the strength the fire gives';
+    warmFlare();
+    var fl=document.getElementById('wFlame');
+    if(cfg.fire&&fl){ fl.classList.add('flare'); setTimeout(function(){ fl.classList.remove('flare'); }, 2800); }
+    fireEmbers();
+    document.getElementById('wStrength').classList.add('show');
+  }
+  function closeFire(){ document.getElementById('wStrength').classList.remove('show'); }
+  function fireEmbers(){
+    var cfg=worldCfg(curWorld)||{}; var src=cfg.fire||cfg.ember||{x:50,y:85}; var fx=src.x, fy=src.y;
+    var host=document.getElementById('world');
+    for(var i=0;i<16;i++){ (function(){ setTimeout(function(){
+      if(!worldOpen)return;
+      var e=document.createElement('div'); e.className='fire-ember';
+      e.style.left=(fx+(Math.random()*8-4))+'%'; e.style.top=(fy+(Math.random()*4-2))+'%';
+      e.style.setProperty('--fx',(Math.random()*44-22)+'px'); e.style.setProperty('--fd',(2.6+Math.random()*2)+'s');
+      host.appendChild(e); setTimeout(function(){e.remove();},5200);
+    }, i*85); })(); }
+  }
+  function closeWorld(){document.getElementById('world').classList.remove('show');worldOpen=false;closeFire();closeFragment();if(worldParticleTimer){clearInterval(worldParticleTimer);worldParticleTimer=null;}}
+  function startWorldParticles(type){
+    if(worldParticleTimer)clearInterval(worldParticleTimer);
+    var host=document.getElementById('wParticles');
+    worldParticleTimer=setInterval(function(){
+      if(!worldOpen||worldStilled)return;
+      if(type==='snow'){
+        var s=document.createElement('div');s.className='snowflake';
+        var sz=1.5+Math.random()*3;s.style.width=sz+'px';s.style.height=sz+'px';
+        s.style.left=(Math.random()*100)+'%';s.style.setProperty('--sf',(7+Math.random()*7)+'s');
+        s.style.setProperty('--sx',(Math.random()*60-30)+'px');s.style.opacity=(.4+Math.random()*.5);
+        host.appendChild(s);setTimeout(function(){s.remove();},14000);
+      }else if(type==='leaf'){
+        if(Math.random()<.55)return; /* unhurried — a wood letting go, not a storm */
+        var lf=document.createElement('div');lf.className='leaffall';
+        var lz=5+Math.random()*6;lf.style.width=lz+'px';lf.style.height=(lz*.75)+'px';
+        lf.style.left=(Math.random()*100)+'%';lf.style.setProperty('--lf',(10+Math.random()*8)+'s');
+        lf.style.setProperty('--lx1',(Math.random()*70-35)+'px');lf.style.setProperty('--lx2',(Math.random()*70-35)+'px');
+        host.appendChild(lf);setTimeout(function(){lf.remove();},19000);
+      }else if(type==='frost'){
+        if(Math.random()<.5)return; /* sparser than snow — frost hangs, it doesn't fall */
+        var g=document.createElement('div');g.className='frostglint';
+        var gz=1+Math.random()*2;g.style.width=gz+'px';g.style.height=gz+'px';
+        g.style.left=(Math.random()*100)+'%';g.style.setProperty('--ff',(12+Math.random()*8)+'s');
+        g.style.setProperty('--fxs',(Math.random()*40-20)+'px');
+        host.appendChild(g);setTimeout(function(){g.remove();},21000);
+      }else{
+        if(Math.random()<.6)return; /* unhurried drift, not a flurry (Ange, 6 Jul 2026) */
+        var m=document.createElement('div');m.className='warmmote';
+        m.style.left=(Math.random()*100)+'%';m.style.setProperty('--wr',(14+Math.random()*8)+'s');
+        m.style.setProperty('--wx',(Math.random()*50-25)+'px');
+        host.appendChild(m);setTimeout(function(){m.remove();},24000);
+      }
+    },300);
+  }
+  document.getElementById('throughBack').addEventListener('click',function(){document.getElementById('through').classList.remove('show');});
+  /* iOS ghost-tap guard — a tap re-fired just after the keyboard closes can land on this
+     button and silently close the world mid-ritual (6 Jul 2026) */
+  document.getElementById('wBack').addEventListener('click',function(){
+    if(Date.now()-lastFieldBlur<900)return;
+    closeWorld();
+  });
+  document.getElementById('wBack').addEventListener('touchstart',function(){this.classList.add('active');},{passive:true});
+  document.getElementById('wBack').addEventListener('touchend',function(){var el=this;setTimeout(function(){el.classList.remove('active');},800);});
+  document.getElementById('rClose').addEventListener('click',closeReveal);
+  document.getElementById('rPause').addEventListener('click',startStillness);
+  document.getElementById('wReveal').addEventListener('click',function(e){if(e.target===this)closeReveal();});
+  /* one release path for both the return key and the in-world tap (6 Jul 2026) */
+  function releaseWords(){
+    var f=document.getElementById('rField');
+    var t=f.value.trim(); if(!t)return;
+    stamp('released');
+    pendingBody=t; f.style.display='none'; f.blur();
+    document.getElementById('rRelease').style.display='none';
+    showChoice();
+  }
+  document.getElementById('rField').addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return; e.preventDefault();
+    releaseWords();
+  });
+  document.getElementById('rField').addEventListener('input',function(){
+    if(this.value.trim())stamp('words written');
+    document.getElementById('rRelease').style.display=this.value.trim()?'':'none';
+  });
+  document.getElementById('rField').addEventListener('blur',function(){lastFieldBlur=Date.now();});
+  document.getElementById('rRelease').addEventListener('click',releaseWords);
+  /* the commit — restaged 6 Jul 2026 so the reaction owns the stage.
+     Sequence: panel melts away → the words fly to the season's own anchor → the season
+     answers there (star/flame/veil/bloom/seed) → the done-line speaks low in the scene →
+     only then do the stones return. Cause, then effect, then confirmation. */
+  function hotspotPoint(type,cfg){
+    var hs=cfg.hotspots||[]; for(var i=0;i<hs.length;i++) if(hs[i].type===type) return {x:hs[i].x,y:hs[i].y};
+    return null;
+  }
+  function commitPlanting(isPublic){
+    var type=document.getElementById('wReveal').dataset.type; var kind=type==='wish'?'wish':'seed';
+    var body=pendingBody; pendingBody='';
+    stamp('received');
+    savePlanting(curWorld,kind,body,isPublic);
+    hideChoice();
+    var wc=worldCfg(curWorld)||{};
+    /* the panel goes first — hotspots stay hidden (reading) until the moment has played out */
+    document.getElementById('wReveal').classList.remove('show');
+    var doneText,fx,tgt;
+    if(kind==='wish'){
+      doneText=wc.wishDone||'the stars hold your wish';
+      fx=wc.wishFx||'star';
+      tgt=(fx==='flame'&&wc.fire)?{x:wc.fire.x,y:wc.fire.y}
+         :(fx==='carry')?{x:50,y:42}
+         :(hotspotPoint('wish',wc)||{x:50,y:16});
+    }else{
+      doneText=wc.restLine||(state.hemi==='south'?'it rests in the cold earth, to grow':'it rests beneath the snow, to grow');
+      fx='seed';
+      var ap=hotspotPoint('act',wc)||{x:50,y:84};
+      tgt={x:ap.x,y:Math.min(ap.y+6,92)};
+    }
+    spawnDriftTo(body,tgt,fx,function(){ landReaction(fx,tgt); });
+    setTimeout(function(){
+      if(!worldOpen)return;
+      var dl=document.getElementById('wDoneLine'); dl.textContent=doneText; dl.classList.add('show');
+      setTimeout(function(){ dl.classList.remove('show'); },4500);
+    },2600);
+    setTimeout(function(){
+      if(worldOpen && !document.getElementById('wReveal').classList.contains('show')){
+        document.getElementById('world').classList.remove('reading');
+        if(pendingRefresh){pendingRefresh=false; refreshWorld();}
+      }
+    },7200);
+  }
+  /* the flight is a plain transition, not a keyframe — calc()+var() inside keyframe
+     transforms misfires on some iOS Safari versions (6 Jul 2026, Ange's phone test) */
+  function spawnDriftTo(t,tgt,fx,cb){
+    var host=document.getElementById('world');
+    var e=document.createElement('div'); e.className='drift-word'; e.textContent=t;
+    e.style.left='50%'; e.style.top='50%';
+    if(fx==='carry'){ e.classList.add('carry'); host.appendChild(e); }
+    else{
+      var r=host.getBoundingClientRect();
+      var dx=((tgt.x-50)/100*r.width).toFixed(1), dy=((tgt.y-50)/100*r.height).toFixed(1);
+      host.appendChild(e);
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        e.style.opacity='1';
+        e.style.transform='translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px)) scale(.6)';
+      });});
+      setTimeout(function(){ e.style.opacity='0'; },2400);
+    }
+    setTimeout(function(){ if(cb)cb(); },2500);
+    setTimeout(function(){e.remove();},3800);
+  }
+  /* THE ANSWER — one engine, every spoke (6 Jul 2026). Three beats, identical everywhere:
+     the words arrive → a white-core burst + scene swell no render can swallow → wishes
+     release a rising mote-column, offerings wake the earth with a triple seed pulse.
+     Per-season flavour (star/flame/veil-tint/carry) rides on top; a spoke with no flavour
+     configured still answers in full. Config supplies only coordinates. */
+  function landReaction(fx,tgt){
+    if(!worldOpen){ stamp('world closed before answer'); return; }
+    stamp('answered: '+fx);
+    var host=document.getElementById('world');
+    var tint=(fx==='veil')?' veil':(fx==='seed')?' seed':'';
+    var b=document.createElement('div'); b.className='answer-burst'+tint;
+    b.style.left=tgt.x+'%'; b.style.top=tgt.y+'%';
+    host.appendChild(b); void b.offsetWidth; b.classList.add('go');
+    setTimeout(function(){b.remove();},4400);
+    var sw=document.createElement('div'); sw.className='answer-swell'+tint;
+    sw.style.setProperty('--ax',tgt.x+'%'); sw.style.setProperty('--ay',tgt.y+'%');
+    host.appendChild(sw); void sw.offsetWidth; sw.classList.add('go');
+    setTimeout(function(){sw.remove();},4900);
+    if(fx==='seed'){
+      buriedSeed(tgt);
+    }else{
+      for(var i=0;i<14;i++){(function(){setTimeout(function(){
+        if(!worldOpen)return;
+        var m=document.createElement('div'); m.className='answer-mote'+(fx==='veil'?' veil':'');
+        m.style.left=(tgt.x+(Math.random()*10-5))+'%'; m.style.top=(tgt.y+(Math.random()*4-2))+'%';
+        m.style.setProperty('--amx',(Math.random()*56-28)+'px');
+        m.style.setProperty('--amd',(2.6+Math.random()*1.8)+'s');
+        host.appendChild(m); setTimeout(function(){m.remove();},4800);
+      },Math.random()*1400);})();}
+    }
+    if(fx==='star'){ spawnShootingStar(tgt); setTimeout(function(){ if(worldOpen)spawnShootingStar(); },1500); }
+    else if(fx==='flame'){
+      var fl=document.getElementById('wFlame');
+      if(fl&&fl.style.display!=='none'){ fl.classList.remove('flare'); void fl.offsetWidth; fl.classList.add('flare'); setTimeout(function(){fl.classList.remove('flare');},2900); }
+      fireEmbers();
+    }
+    else if(fx==='carry'){ warmFlare(); }
+  }
+  document.getElementById('sClose').addEventListener('click',closeFire);
+  document.getElementById('rOptPublic').addEventListener('click',function(){commitPlanting(true);});
+  document.getElementById('rOptPrivate').addEventListener('click',function(){commitPlanting(false);});
+
+  /* ember motes near the living station */
+  var moteTimer=null;
+  function seedMotes(){
+    if(moteTimer) clearInterval(moteTimer);
+    moteTimer=setInterval(function(){
+      var stage=document.getElementById('stage').getBoundingClientRect();
+      var p=activePOS()[0];   // the lit season is always crowned at slot 0 (the peak well)
+      var m=document.createElement('div');m.className='mote';
+      m.style.left=(stage.left+stage.width*(p.x/100)+(Math.random()*30-15))+'px';
+      m.style.top=(stage.top+stage.height*(p.y/100)+(Math.random()*20-10))+'px';
+      m.style.setProperty('--md',(5+Math.random()*4)+'s');
+      m.style.setProperty('--mx',(Math.random()*24-12)+'px');
+      document.body.appendChild(m);
+      setTimeout(function(){m.remove();},9000);
+    },560);
+  }
+
+  /* embers riding the wind across the clearing */
+  function startWindEmbers(){
+    setInterval(function(){
+      var e=document.createElement('div');e.className='wind-ember';
+      e.style.left=(Math.random()*window.innerWidth)+'px';
+      e.style.top=(window.innerHeight*(0.5+Math.random()*0.45))+'px';
+      var dur=10+Math.random()*6;
+      e.style.setProperty('--wd',dur+'s');
+      e.style.setProperty('--wdx',(60+Math.random()*130)+'px');
+      e.style.setProperty('--wdy',(-(60+Math.random()*130))+'px');
+      document.body.appendChild(e);
+      setTimeout(function(){e.remove();},(dur+0.6)*1000);
+    },900);
+  }
+
+  /* hemisphere toggle */
+  document.getElementById('hSouth').addEventListener('click',function(){state.hemi='south';setHemi('south');render();});
+  document.getElementById('hNorth').addEventListener('click',function(){state.hemi='north';setHemi('north');render();});
+
+  /* ——— navigation ——— */
+  function navigateTo(href){var c=document.getElementById('fadeCover');c.style.transition='opacity 1.4s ease';c.style.opacity='1';setTimeout(function(){window.location.href=href;},1500);}
+  function logTrail(name,href){var t=JSON.parse(sessionStorage.getItem('aetherwood_trail')||'[]');t=t.filter(function(e){return e.href!==href;});t.unshift({name:name,href:href});if(t.length>8)t=t.slice(0,8);sessionStorage.setItem('aetherwood_trail',JSON.stringify(t));}
+  logTrail('the year wheel','year-wheel.html');
+  var EF_ANCHORS=['hearthfire.html','whispered-archives.html'];var efOpen=false;
+  function buildTrail(){var efT=document.getElementById('efTrail'),efL=document.getElementById('efTrailList');
+    var t=JSON.parse(sessionStorage.getItem('aetherwood_trail')||'[]').filter(function(e){return e.href!=='year-wheel.html'&&EF_ANCHORS.indexOf(e.href)===-1;});
+    if(!t.length){efT.style.display='none';return;}efT.style.display='';efL.innerHTML='';
+    t.slice(0,3).forEach(function(e){var li=document.createElement('li');li.className='ef-item';var b=document.createElement('button');b.className='ef-link';b.textContent=e.name;b.addEventListener('click',function(){closeEf();navigateTo(e.href);});li.appendChild(b);efL.appendChild(li);});}
+  function openEf(){buildTrail();document.getElementById('efMenu').classList.add('open');document.getElementById('efScrim').classList.add('open');efOpen=true;}
+  function closeEf(){document.getElementById('efMenu').classList.remove('open');document.getElementById('efScrim').classList.remove('open');efOpen=false;}
+  var ef=document.getElementById('everflame');
+  ef.addEventListener('click',function(){efOpen?closeEf():openEf();});
+  ef.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();efOpen?closeEf():openEf();}});
+  document.getElementById('efScrim').addEventListener('click',closeEf);
+  document.getElementById('efArchives').addEventListener('click',function(){closeEf();navigateTo('whispered-archives.html');});
+  document.getElementById('efHearthfire').addEventListener('click',function(){closeEf();navigateTo('hearthfire.html');});
+  document.getElementById('efCorridor').addEventListener('click',function(){closeEf();navigateTo('vestibule.html?walk=1');});
+  document.getElementById('efLeave').addEventListener('click',function(){closeEf();navigateTo('index.html');});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeEf();document.getElementById('through').classList.remove('show');closeWorld();}});
+
+  /* ——— calibration aid (?calib=1) ——— */
+  if(/[?&]all=1/.test(location.search)){ document.getElementById('stations').classList.add('reveal'); }
+  if(/[?&]calib=1/.test(location.search)){
+    var box=document.getElementById('calib'),cross=document.getElementById('calibCross'),stg=document.getElementById('stage'),wld=document.getElementById('world');
+    box.style.display='block';cross.style.display='block';
+    function updEl(el,cx,cy){var r=el.getBoundingClientRect();var px=((cx-r.left)/r.width*100),py=((cy-r.top)/r.height*100);box.textContent='x:'+px.toFixed(1)+'%  y:'+py.toFixed(1)+'%';cross.style.left=px+'%';cross.style.top=py+'%';}
+    stg.addEventListener('mousemove',function(e){updEl(stg,e.clientX,e.clientY);});
+    stg.addEventListener('touchmove',function(e){if(e.touches[0])updEl(stg,e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
+    wld.addEventListener('mousemove',function(e){updEl(wld,e.clientX,e.clientY);});
+    wld.addEventListener('touchmove',function(e){if(e.touches[0])updEl(wld,e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
+  }
+
+  /* ——— boot ——— */
+  function init(){
+    setTimeout(function(){document.getElementById('fadeCover').style.opacity='0';},120);
+    render();
+    startWindEmbers();
+    portraitMQ.addEventListener('change', render);
+    portraitMQ.addEventListener('change', refreshWorld);
+    setTimeout(function(){var al=document.getElementById('arrivalLine');al.style.opacity='1';setTimeout(function(){al.style.opacity='0';},3400);},1000);
+  }
+  window.navigateTo=navigateTo;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

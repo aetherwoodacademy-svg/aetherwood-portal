@@ -133,11 +133,184 @@
       text-align: center;
     }
 
+    /* ——— SOLSTICE FEATURE ——— */
+    .solstice-section {
+      text-align: center;
+      max-width: min(90vw, 440px);
+      margin-bottom: 6vh;
+      animation: pageRise 2.8s ease 0.6s both;
+    }
+
+    .solstice-eyebrow {
+      font-size: clamp(9px, 0.9vw, 11px);
+      letter-spacing: 0.48em;
+      text-transform: uppercase;
+      color: rgba(210, 170, 80, 0.6);
+      margin-bottom: 1.2em;
+    }
+
+    .solstice-invite {
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.85;
+      color: rgba(238, 218, 165, 0.82);
+      margin-bottom: 2.2em;
+    }
+
+    .solstice-choice {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .solstice-btn {
+      background: none;
+      border: 1px solid rgba(210, 170, 80, 0.32);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(10px, 1vw, 12px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(210, 170, 80, 0.72);
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+    .solstice-btn:hover {
+      color: rgba(242, 208, 120, 1);
+      border-color: rgba(242, 208, 120, 0.55);
+    }
+    .sc-draw-again {
+      margin-top: 0.4em;
+    }
+    .sc-season-label {
+      font-size: clamp(9px, 0.85vw, 10px);
+      letter-spacing: 0.48em;
+      text-transform: uppercase;
+      color: rgba(195, 168, 108, 0.45);
+      margin-bottom: 1.6em;
+    }
+
+    /* Crystal reveal */
+    .solstice-crystal {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+      margin-top: 2.6em;
+    }
+    .solstice-crystal.visible { display: flex; }
+    .solstice-crystal.faded   { opacity: 1; }
+
+    .sc-img-wrap {
+      width: min(44vw, 180px);
+      aspect-ratio: 2 / 3;
+      overflow: hidden;
+      margin-bottom: 1.8em;
+      position: relative;
+    }
+    .sc-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.92) sepia(0.08);
+    }
+    .sc-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(6,3,5,0.55) 100%);
+      pointer-events: none;
+    }
+
+    .sc-world-name {
+      font-size: clamp(22px, 2.6vw, 28px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(242, 220, 155, 0.97);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.2em;
+    }
+    .sc-real-name {
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.44em;
+      text-transform: uppercase;
+      color: rgba(185, 155, 88, 0.52);
+      margin-bottom: 1.5em;
+    }
+    .sc-meaning {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-style: italic;
+      color: rgba(228, 205, 148, 0.88);
+      margin-bottom: 1.4em;
+    }
+    .sc-supports {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+      margin-bottom: 1.6em;
+    }
+    .sc-support-chip {
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: rgba(195, 165, 98, 0.62);
+      border: 1px solid rgba(195, 165, 98, 0.22);
+      padding: 4px 10px;
+    }
+    .sc-reflection {
+      font-size: clamp(13px, 1.4vw, 15px);
+      font-style: italic;
+      color: rgba(210, 185, 120, 0.7);
+      margin-bottom: 2.2em;
+    }
+    .sc-cta {
+      font-size: clamp(9px, 0.9vw, 11px);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(195, 168, 108, 0.45);
+      text-decoration: none;
+      transition: color 0.4s ease;
+    }
+    .sc-cta:hover { color: rgba(228, 200, 135, 0.85); }
+
+    .sc-divider {
+      width: 40px;
+      height: 1px;
+      background: rgba(210, 170, 80, 0.2);
+      margin: 0 auto 2.4em;
+    }
+
     /* ——— MOBILE ——— */
     @media (max-width: 600px) {
       .lantern-wrap { width: min(88vw, 380px); }
     }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec; placed last so it wins. .wordmark left atmospheric.
+    —————————————————————————————————————— */
+    /* reading (17px floor) */
+    .poem-line       { font-size: clamp(17px, 2vw, 21px); }
+    .solstice-invite { font-size: clamp(17px, 1.6vw, 18px); }
+    .sc-meaning      { font-size: clamp(17px, 1.4vw, 18px); }
+    .sc-reflection   { font-size: clamp(17px, 1.3vw, 18px); }
+    /* buttons + CTAs (12–14px, tracking trimmed) */
+    .portal-cta      { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
+    .solstice-btn    { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .sc-cta          { font-size: clamp(12px, 1vw, 13px); letter-spacing: 0.3em; }
+    /* names, eyebrows, small-caps labels (12–13px floor) */
+    .moon-phase      { font-size: clamp(12px, 1vw, 13px); }
+    .solstice-eyebrow{ font-size: clamp(12px, 1vw, 13px); }
+    .sc-season-label { font-size: clamp(12px, 1vw, 13px); }
+    .sc-real-name    { font-size: clamp(12px, 1vw, 13px); }
+    .sc-support-chip { font-size: clamp(12px, 1vw, 13px); }
   </style>
+  <script src="sound-control.js"></script>
 </head>
 <body>
   <div class="page">
@@ -150,8 +323,34 @@
 
     <div class="poem" id="poem"></div>
 
+    <!-- SOLSTICE FEATURE — visible June 18–24 -->
+    <div class="solstice-section" id="solsticeSection" style="display:none">
+      <p class="solstice-eyebrow">the solstice · June 21</p>
+      <p class="solstice-invite">The wheel turns at the same moment for all of us.<br>Which threshold are you crossing?</p>
+      <div class="solstice-choice" id="solsticeChoice">
+        <button class="solstice-btn" id="btnLight">I am greeting the light</button>
+        <button class="solstice-btn" id="btnDark">I am welcoming the dark</button>
+      </div>
+
+      <div class="solstice-crystal" id="solsticeCrystal">
+        <div class="sc-divider"></div>
+        <p class="sc-season-label" id="scSeasonLabel"></p>
+        <div class="sc-img-wrap">
+          <img id="scImg" src="" alt="">
+        </div>
+        <p class="sc-world-name" id="scWorldName"></p>
+        <p class="sc-real-name" id="scRealName"></p>
+        <p class="sc-meaning" id="scMeaning"></p>
+        <div class="sc-supports" id="scSupports"></div>
+        <p class="sc-reflection" id="scReflection"></p>
+        <button class="solstice-btn sc-draw-again" id="scDrawAgain" style="display:none">draw again</button>
+        <div class="sc-divider" style="margin-top:2em"></div>
+        <a class="sc-cta" href="apothecary.html">step into the apothecary →</a>
+      </div>
+    </div>
+
     <!-- Reveal this when the portal opens: remove display:none and set href -->
-    <a class="portal-cta" href="threshold.html" id="portalCta">follow the light</a>
+    <a class="portal-cta" href="index.html" id="portalCta">follow the light</a>
 
     <div class="wordmark">Aetherwood</div>
 
@@ -248,6 +447,109 @@
         poemEl.appendChild(span);
       }
     });
+    /* ——————————————————————————————————————
+       SOLSTICE FEATURE
+       Active: June 18–24 each year
+       Litha  = Northern Hemisphere (greeting the light)
+       Yule   = Southern Hemisphere (welcoming the dark)
+    —————————————————————————————————————— */
+    var LITHA_CRYSTALS = [
+      {
+        worldName:  'Sunbright',
+        realName:   'Citrine',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunbright.png',
+        meaning:    'Joy made visible.',
+        supports:   ['Confidence', 'Creativity', 'Prosperity', 'Personal power'],
+        reflection: 'What light wishes to be shared?'
+      },
+      {
+        worldName:  'Daybringer',
+        realName:   'Sunstone',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/daybringer.png',
+        meaning:    'Radiance and leadership.',
+        supports:   ['Self belief', 'Optimism', 'Freedom', 'Action'],
+        reflection: 'Where am I ready to shine?'
+      }
+    ];
+
+    var YULE_CRYSTALS = [
+      {
+        worldName:  'Emberheart',
+        realName:   'Garnet',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/emberheart.png',
+        meaning:    'The flame that survives the longest night.',
+        supports:   ['Courage and inner strength', 'Vitality and life force', 'Passion and motivation', 'Perseverance and endurance'],
+        reflection: 'What flame refuses to die?'
+      },
+      {
+        worldName:  'Veilstone',
+        realName:   'Smoky Quartz',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/veilstone.png',
+        meaning:    'Grounding in the quiet dark.',
+        supports:   ['Releasing burdens', 'Shadow work', 'Grounding', 'Protection in transition'],
+        reflection: 'What must be released before the light returns?'
+      }
+    ];
+
+    (function() {
+      var now   = new Date();
+      var month = now.getMonth() + 1;
+      var day   = now.getDate();
+      if (!(month === 6 && day >= 18 && day <= 24)) return;
+
+      document.getElementById('solsticeSection').style.display = '';
+
+      var currentPool   = null;
+      var crystalPanel  = document.getElementById('solsticeCrystal');
+      var choicePanel   = document.getElementById('solsticeChoice');
+
+      function drawFrom(pool, seasonLabel) {
+        var c = pool[Math.floor(Math.random() * pool.length)];
+
+        document.getElementById('scSeasonLabel').textContent = seasonLabel;
+        document.getElementById('scImg').src        = c.image;
+        document.getElementById('scImg').alt        = c.worldName;
+        document.getElementById('scWorldName').textContent   = c.worldName;
+        document.getElementById('scRealName').textContent    = c.realName;
+        document.getElementById('scMeaning').textContent     = c.meaning;
+        document.getElementById('scReflection').textContent  = '“' + c.reflection + '”';
+
+        var supportsEl = document.getElementById('scSupports');
+        supportsEl.innerHTML = '';
+        c.supports.forEach(function(s) {
+          var chip = document.createElement('span');
+          chip.className   = 'sc-support-chip';
+          chip.textContent = s;
+          supportsEl.appendChild(chip);
+        });
+
+        var drawAgain = document.getElementById('scDrawAgain');
+        drawAgain.style.display = pool.length > 1 ? '' : 'none';
+
+        crystalPanel.classList.remove('faded');
+        crystalPanel.classList.add('visible');
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() { crystalPanel.classList.add('faded'); });
+        });
+      }
+
+      document.getElementById('btnLight').addEventListener('click', function() {
+        currentPool = LITHA_CRYSTALS;
+        choicePanel.style.display = 'none';
+        drawFrom(LITHA_CRYSTALS, 'Litha · summer solstice');
+      });
+
+      document.getElementById('btnDark').addEventListener('click', function() {
+        currentPool = YULE_CRYSTALS;
+        choicePanel.style.display = 'none';
+        drawFrom(YULE_CRYSTALS, 'Yule · winter solstice');
+      });
+
+      document.getElementById('scDrawAgain').addEventListener('click', function() {
+        crystalPanel.classList.remove('faded');
+        setTimeout(function() { drawFrom(currentPool, document.getElementById('scSeasonLabel').textContent); }, 150);
+      });
+    })();
   </script>
 </body>
 </html>

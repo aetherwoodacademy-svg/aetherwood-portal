@@ -1,0 +1,3437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood · The Apothecary</title>
+
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/apothecary">
+  <meta property="og:title"       content="Aetherwood · The Apothecary">
+  <meta property="og:description" content="A room for teas, remedies, and quiet knowing. The grimoire is always open.">
+  <meta property="og:image"       content="https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/apothecary.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="lunar.js"></script>
+  <script src="intention_alchemy.js"></script>
+
+  <style>
+    :root {
+      --bg-deep:   #0e0802;
+      --ink-cream: rgba(238, 220, 175, 0.92);
+      --ink-muted: rgba(210, 190, 138, 0.62);
+      --ink-faint: rgba(188, 165, 108, 0.34);
+      --gold:      rgba(195, 155, 72, 0.88);
+      --serif:     "Cormorant Garamond", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— BACKGROUND ——— */
+    .bg {
+      position: fixed; inset: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/apothecary_1.png') center 38% / cover no-repeat;
+      z-index: 0;
+      transition: filter 1.4s ease;
+    }
+    .bg.dimmed { filter: brightness(0.55) blur(3px); }
+
+    /* Lighter vignette — this room breathes more freely */
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 38%, transparent 30%, rgba(14,8,2,0.34) 65%, rgba(10,5,1,0.68) 100%),
+        linear-gradient(to bottom, rgba(10,5,1,0.32) 0%, transparent 20%, transparent 72%, rgba(10,5,1,0.9) 100%);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(1.1);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-1deg)  scaleX(1.02); }
+      82%  { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+
+    /* ——— HOTSPOT SYSTEM ——— */
+    .hotspot {
+      position: fixed;
+      z-index: 10;
+      cursor: pointer;
+    }
+
+    .hs-glow {
+      position: absolute; inset: -15%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(255, 214, 130, 0.85) 0%,
+        rgba(220, 160, 62, 0.5) 35%,
+        rgba(170, 120, 50, 0.15) 60%,
+        transparent 78%);
+      /* idle breath — genuinely visible without hover/touch, matches the
+         Whispered Archives jar standard (6 Jul, portal-wide consistency pass).
+         Bloom tightened to -15% and staggered below, same follow-up as
+         Hearthfire, so three hotspots don't blur into one glowing table.
+         Colour reworked again (6 Jul) — the flat amber wash read as a smudge
+         against this room's brighter background. Added a pale hot core and
+         a tighter falloff so it reads as a defined glow, not a haze. */
+      animation: glowBreath 7s ease-in-out infinite;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+    @keyframes glowBreath {
+      0%, 100% { opacity: 0.42; }
+      50%       { opacity: 0.8; }
+    }
+    #hs-grimoire .hs-glow { animation-delay: 0s; }
+    #hs-window .hs-glow   {
+      animation-delay: 2.3s;
+      /* window sits on a lighter patch of the image than the other two —
+         needs more contrast to read, not just more time offset (6 Jul) */
+      background: radial-gradient(ellipse at center,
+        rgba(255, 230, 160, 0.95) 0%,
+        rgba(230, 175, 75, 0.6) 35%,
+        rgba(180, 130, 55, 0.22) 60%,
+        transparent 78%);
+    }
+    #hs-cup .hs-glow      { animation-delay: 4.6s; }
+    .hotspot:hover .hs-glow,
+    .hotspot.active .hs-glow { animation: none; opacity: 1; }
+
+    .hs-label {
+      position: absolute;
+      left: 50%; bottom: -2.6em;
+      transform: translateX(-50%);
+      font-size: clamp(9px, 0.82vw, 11px);
+      letter-spacing: 0.48em;
+      text-transform: uppercase;
+      color: rgba(220, 190, 118, 0.92);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.2s;
+      pointer-events: none;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.99), 0 0 20px rgba(0,0,0,0.99), 0 2px 12px rgba(0,0,0,0.99);
+      background: rgba(0,0,0,0.38);
+      padding: 3px 10px 4px;
+      border-radius: 1px;
+    }
+    .hotspot:hover .hs-label,
+    .hotspot.active .hs-label { opacity: 1; }
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Same tool as Hearthfire and Year Wheel: shows cursor/touch position as
+       % of viewport so hotspot coordinates can be read straight off the phone. */
+    #calib {
+      position: fixed; top: 8px; right: 8px; z-index: 999;
+      font-family: monospace; font-size: 12px; color: #ffd27a;
+      background: rgba(0,0,0,.6); padding: 4px 8px; border-radius: 4px;
+      display: none; pointer-events: none;
+    }
+
+    /* ——— HOTSPOT POSITIONS ——— */
+    /* Grimoire/book — on the table, lower centre of image */
+    #hs-grimoire {
+      left: 28%;
+      top: 66%;
+      width: 36vw;
+      height: 26vh;
+      min-width: 100px;
+      min-height: 70px;
+    }
+
+    /* Window — arched window, upper centre-right */
+    #hs-window {
+      left: 32%;
+      top: 10%;
+      width: 34vw;
+      height: 38vh;
+      min-width: 90px;
+      min-height: 80px;
+    }
+
+    /* Steaming cup — right of book on the table */
+    #hs-cup {
+      right: 24%;
+      top: 70%;
+      width: 10vw;
+      height: 16vh;
+      min-width: 40px;
+      min-height: 48px;
+    }
+
+    /* ——— RETURN TO HEARTHFIRE — visual doorway, bottom-left ———
+       A small round window showing the hearth scene itself, not a written
+       link. First-pass position, calibrate on the phone like the others. */
+    .thumb-hotspot {
+      border-radius: 50%;
+      overflow: hidden;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/hearthfire.jpg') center 70% / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    .thumb-hotspot:hover,
+    .thumb-hotspot.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+    #hs-hearthfire {
+      left: 5%;
+      bottom: 5%;
+      width: 12vmin;
+      height: 12vmin;
+      min-width: 64px;
+      min-height: 64px;
+    }
+
+    /* ——— RETURN TO APOTHECARY — visual doorway, bottom-left ———
+       Shown whenever a feature inside this room (grimoire, tea reading,
+       crystal modal) is open, a small round window back to the room itself,
+       not a written close button. Sits above all of them (z-index 600). */
+    #returnApothecary {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/apothecary_1.png') center 38% / cover no-repeat;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.3), 0 0 20px rgba(200, 150, 70, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      cursor: pointer;
+      z-index: 600;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnApothecary.show { opacity: 0.65; pointer-events: all; }
+    #returnApothecary:hover,
+    #returnApothecary.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.6), 0 0 28px rgba(220, 170, 90, 0.5);
+    }
+
+    /* ——— GRIMOIRE PANEL — frosted dark glass ——— */
+    .grimoire-scrim {
+      position: fixed; inset: 0; z-index: 55;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .grimoire-scrim.open { opacity: 1; pointer-events: all; cursor: pointer; }
+
+    .grimoire-panel {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(105%);
+      width: min(96vw, 600px);
+      height: 78vh;
+      z-index: 60;
+      transition: transform 1s cubic-bezier(0.22, 0.1, 0.18, 1);
+      overflow-y: auto;
+      background: rgba(22, 46, 30, 0.48);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-radius: 18px 18px 0 0;
+      border: 1px solid rgba(160, 130, 65, 0.14);
+      border-bottom: none;
+      box-shadow:
+        0 -8px 48px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(200, 170, 90, 0.08);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .grimoire-panel::before { display: none; }
+    .grimoire-panel.open {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .grimoire-close {
+      position: relative; z-index: 2;
+      display: block; margin: 0 0 0 auto;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: 22px; line-height: 1;
+      color: rgba(195, 165, 95, 0.4);
+      padding: 20px 22px 0 0;
+      transition: color 0.4s ease;
+    }
+    .grimoire-close:hover { color: rgba(220, 195, 130, 0.9); }
+
+    /* ——— RECIPE ——— */
+    .recipe-wrap {
+      position: relative; z-index: 1;
+      padding: 4px 32px 32px;
+    }
+
+    .recipe-kicker {
+      display: block;
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.72);
+      margin-bottom: 14px;
+    }
+
+    .recipe-loose-leaf {
+      display: block;
+      font-size: clamp(8px, 0.75vw, 9px);
+      letter-spacing: 0.48em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.4);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .recipe-category {
+      display: block;
+      font-size: clamp(7px, 0.7vw, 8px);
+      letter-spacing: 0.58em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.5);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .recipe-image {
+      display: block;
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 16px;
+      opacity: 0.9;
+      border: 1px solid rgba(160, 130, 65, 0.2);
+    }
+
+    .recipe-name {
+      display: block;
+      font-size: clamp(24px, 3.2vw, 32px);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(238, 218, 168, 0.96);
+      text-align: center;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .recipe-intention {
+      display: block;
+      font-size: clamp(8px, 0.75vw, 9px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.55);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .recipe-divider {
+      width: 36px;
+      border: none;
+      border-top: 1px solid rgba(160, 130, 65, 0.25);
+      margin: 0 auto 16px;
+    }
+
+    .recipe-ingredients {
+      list-style: none;
+      margin-bottom: 22px;
+    }
+
+    .recipe-ingredients li {
+      font-size: clamp(15px, 1.5vw, 17px);
+      font-weight: 300;
+      color: rgba(225, 205, 155, 0.88);
+      letter-spacing: 0.04em;
+      line-height: 2;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .recipe-ingredients li::before {
+      content: '·';
+      position: absolute;
+      left: 3px;
+      color: rgba(175, 145, 80, 0.55);
+    }
+
+    .recipe-note {
+      display: block;
+      font-size: clamp(14px, 1.3vw, 16px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.85);
+      letter-spacing: 0.03em;
+      line-height: 1.88;
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(160, 130, 65, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+    }
+
+    .recipe-purpose {
+      display: block;
+      font-size: clamp(13px, 1.2vw, 15px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.82);
+      letter-spacing: 0.03em;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+
+    .recipe-experience {
+      display: block;
+      font-size: clamp(10px, 0.9vw, 11px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.65);
+      margin-bottom: 16px;
+    }
+
+    .recipe-significance {
+      display: block;
+      font-size: clamp(13px, 1.2vw, 15px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.78);
+      line-height: 1.82;
+      margin-bottom: 14px;
+    }
+
+    .recipe-ritual {
+      display: block;
+      font-size: clamp(12px, 1.1vw, 13px);
+      font-weight: 300;
+      color: rgba(185, 158, 95, 0.7);
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+      padding-left: 14px;
+      border-left: 1px solid rgba(160, 130, 65, 0.28);
+      margin-bottom: 18px;
+    }
+
+    .recipe-reflection {
+      display: block;
+      font-size: clamp(14px, 1.3vw, 16px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(238, 218, 168, 0.88);
+      text-align: center;
+      line-height: 1.75;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      border-top: 1px solid rgba(160, 130, 65, 0.18);
+    }
+
+    /* ——— GRIMOIRE STATE PANELS ——— */
+    .gm-state {
+      padding: 28px 28px 8px;
+    }
+    .gm-question {
+      font-size: clamp(20px, 2.2vw, 26px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(242, 224, 178, 0.98);
+      text-align: center;
+      letter-spacing: 0.02em;
+      margin-bottom: 22px;
+      line-height: 1.4;
+    }
+    .gm-subq {
+      font-size: clamp(8px, 0.78vw, 9px);
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(205, 175, 110, 0.78);
+      text-align: center;
+      margin: 18px 0 12px;
+    }
+    .gm-choice-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .gm-choice-btn {
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.3vw, 16px);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(160, 130, 65, 0.28);
+      border-radius: 24px;
+      color: rgba(242, 218, 158, 0.98);
+      padding: 11px 22px 10px;
+      cursor: pointer;
+      flex: 1;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    .gm-choice-btn:hover {
+      background: rgba(160, 130, 65, 0.16);
+      border-color: rgba(160, 130, 65, 0.5);
+      color: var(--ink-cream);
+    }
+    .gm-search-link {
+      display: block; width: 100%;
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(175, 148, 88, 0.42);
+      text-align: center;
+      cursor: pointer;
+      padding: 8px 0 4px;
+      transition: color 0.3s ease;
+    }
+    .gm-search-link:hover { color: rgba(210, 175, 105, 0.8); }
+
+    .gm-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .gm-chip {
+      font-family: var(--serif);
+      font-size: clamp(13px, 1.2vw, 15px);
+      letter-spacing: 0.14em;
+      background: none;
+      border: 1px solid rgba(160, 130, 65, 0.32);
+      border-radius: 24px;
+      color: rgba(228, 205, 148, 0.96);
+      padding: 8px 18px 7px;
+      cursor: pointer;
+      transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+    .gm-chip:hover {
+      background: rgba(160, 130, 65, 0.14);
+      border-color: rgba(160, 130, 65, 0.48);
+      color: var(--ink-cream);
+    }
+    .gm-foot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 18px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(160, 130, 65, 0.1);
+    }
+    .gm-back {
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(195, 165, 100, 0.72);
+      cursor: pointer;
+      transition: color 0.25s ease;
+    }
+    .gm-back:hover { color: rgba(228, 200, 130, 0.95); }
+    .gm-chance {
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(215, 183, 110, 0.85);
+      cursor: pointer;
+      transition: color 0.25s ease;
+    }
+    .gm-chance:hover { color: rgba(225, 195, 120, 0.95); }
+
+    .gm-search-input {
+      display: block; width: 100%;
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.4vw, 17px);
+      font-style: italic;
+      background: rgba(255,255,255,0.04);
+      border: none;
+      border-bottom: 1px solid rgba(160, 130, 65, 0.28);
+      color: var(--ink-cream);
+      padding: 8px 4px;
+      outline: none;
+      margin-bottom: 18px;
+    }
+    .gm-search-input::placeholder { color: rgba(175, 148, 88, 0.35); }
+
+    .gm-results { margin-bottom: 16px; }
+    .gm-result-btn {
+      display: block; width: 100%;
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.35vw, 16px);
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.85);
+      text-align: left;
+      padding: 10px 4px;
+      border-bottom: 1px solid rgba(160, 130, 65, 0.1);
+      cursor: pointer;
+      transition: color 0.25s ease;
+    }
+    .gm-result-btn:hover { color: var(--ink-cream); }
+    .gm-no-results {
+      font-style: italic;
+      font-size: clamp(13px, 1.2vw, 15px);
+      color: rgba(175, 148, 88, 0.4);
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    /* ——— READING BAR (multi-result) ——— */
+    #readingBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid rgba(160, 130, 65, 0.14);
+      position: sticky;
+      top: 0;
+      background: rgba(14, 8, 2, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    #readingBar button {
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      background: none; border: none;
+      color: rgba(205, 175, 110, 0.78);
+      cursor: pointer;
+      transition: color 0.25s ease;
+    }
+    #readingBar button:hover { color: rgba(235, 210, 145, 0.98); }
+    #readingBar .bar-sep {
+      color: rgba(160, 130, 65, 0.25);
+      align-self: center;
+    }
+
+    .result-card {
+      padding: 4px 0 20px;
+    }
+    .result-card + .result-card {
+      border-top: 1px solid rgba(160, 130, 65, 0.14);
+      padding-top: 20px;
+    }
+
+    /* ——— SECTION TOGGLE (teas / crystals) — kept for legacy refs ——— */
+    .grimoire-toggle {
+      display: none;
+      position: relative; z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 6px 32px 20px;
+    }
+    .section-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(160, 130, 65, 0.22);
+      cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(11px, 1.1vw, 13px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(175, 148, 88, 0.65);
+      padding: 5px 18px 4px;
+      transition: color 0.35s ease, background 0.35s ease, border-color 0.35s ease;
+      border-radius: 20px;
+    }
+    .section-btn:hover {
+      color: rgba(220, 195, 130, 0.9);
+      background: rgba(255,255,255,0.1);
+    }
+    .section-btn.active {
+      color: rgba(238, 215, 155, 0.98);
+      background: rgba(160, 130, 65, 0.18);
+      border-color: rgba(160, 130, 65, 0.45);
+    }
+    .section-sep {
+      color: rgba(160, 130, 65, 0.3);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    /* ——— CRYSTAL IMAGE ——— */
+    .crystal-img {
+      display: block;
+      width: 140px; height: 200px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 8px;
+      margin: 0 auto 20px;
+      opacity: 0.92;
+      border: 1px solid rgba(160, 130, 65, 0.22);
+    }
+
+    /* ——— CRYSTAL DISCOVER toggle ——— */
+    .crystal-discover {
+      display: block;
+      margin: 20px auto 0;
+      background: none;
+      border: none;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.85vw, 10px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(175, 148, 88, 0.55);
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .crystal-discover:hover { color: rgba(220, 195, 130, 0.9); }
+
+    /* ——— CRYSTAL EXPANDED details ——— */
+    .crystal-expanded {
+      display: none;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(160, 130, 65, 0.18);
+    }
+    .crystal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .crystal-tag {
+      font-size: clamp(9px, 0.85vw, 10px);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.7);
+      border: 1px solid rgba(160, 130, 65, 0.28);
+      border-radius: 20px;
+      padding: 3px 12px 2px;
+    }
+    .crystal-lore {
+      display: block;
+      font-size: clamp(13px, 1.25vw, 15px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.82);
+      letter-spacing: 0.03em;
+      line-height: 1.85;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .crystal-how-label {
+      display: block;
+      font-size: clamp(7px, 0.66vw, 8px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.48);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .crystal-how {
+      list-style: none;
+      margin-bottom: 18px;
+    }
+    .crystal-how li {
+      font-size: clamp(14px, 1.3vw, 15px);
+      font-weight: 300;
+      color: rgba(225, 205, 155, 0.85);
+      letter-spacing: 0.03em;
+      line-height: 2;
+      padding-left: 16px;
+      position: relative;
+    }
+    .crystal-how li::before {
+      content: '·';
+      position: absolute;
+      left: 3px;
+      color: rgba(175, 145, 80, 0.55);
+    }
+    .crystal-reflection {
+      display: block;
+      font-size: clamp(15px, 1.5vw, 17px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(238, 218, 168, 0.9);
+      text-align: center;
+      line-height: 1.75;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      border-top: 1px solid rgba(160, 130, 65, 0.18);
+    }
+
+    /* ——— NAVIGATION — hidden inside scroll, navigation via floating arrows ——— */
+    .grimoire-nav { display: none; }
+    .nav-btn { display: none; }
+    .nav-count {
+      position: fixed;
+      bottom: 3.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 62;
+      font-size: clamp(9px, 0.8vw, 11px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(205, 178, 118, 0.55);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .nav-count.visible { opacity: 1; }
+
+    /* Floating page-turn arrows */
+    .grimoire-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 62;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(32px, 5vw, 56px);
+      color: rgba(205, 172, 98, 0.6);
+      padding: 24px 16px;
+      line-height: 1;
+      text-shadow: 0 2px 14px rgba(0,0,0,0.9), 0 0 28px rgba(0,0,0,0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: color 0.35s ease, opacity 0.45s ease, transform 0.3s ease;
+    }
+    #arrowPrev { left: 12px; }
+    #arrowNext { right: 12px; }
+    .grimoire-arrow.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .grimoire-arrow:hover {
+      color: rgba(240, 210, 140, 1);
+      transform: translateY(-50%) scale(1.18);
+      text-shadow: 0 2px 14px rgba(0,0,0,0.9), 0 0 20px rgba(205,172,98,0.5);
+    }
+    .grimoire-arrow:disabled {
+      opacity: 0.15 !important;
+      cursor: default;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    /* ——— SEALED WHISPER ——— */
+    .sealed-whisper {
+      position: fixed;
+      left: 50%; bottom: 12vh;
+      transform: translateX(-50%);
+      z-index: 80;
+      font-size: clamp(12px, 1.15vw, 15px);
+      font-style: italic;
+      letter-spacing: 0.05em;
+      color: rgba(208, 182, 122, 0.72);
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      white-space: nowrap;
+      max-width: 80vw;
+    }
+    .sealed-whisper.show { opacity: 1; }
+    /* Cup's own "still steaming" label sits close enough to the whisper text
+       that both together read as garbled — hide the label while the whisper
+       is up, the whisper already says everything the label does. */
+    body.whisper-open .hotspot .hs-label { opacity: 0 !important; }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%,
+        rgba(14,8,2,0.82) 0%,
+        rgba(14,8,2,0.5) 45%,
+        transparent 78%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .ef-section-label {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(175, 140, 72, 0.35);
+      margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block;
+      background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(220, 180, 95, 0.72);
+      cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease;
+      white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-link.ef-current { color: rgba(220, 180, 95, 0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160, 125, 55, 0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim {
+      position: fixed; inset: 0;
+      z-index: 199; pointer-events: none;
+    }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——— WORDMARK ——— */
+    .wordmark {
+      position: fixed;
+      bottom: max(2.5vh, 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: rgba(155, 130, 82, 0.18);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ——— CRYSTAL DRAW BAR ——— */
+    #crystalDrawBar {
+      display: none;
+      text-align: center;
+      padding: 0 0 10px;
+    }
+    #crystalDrawBar.visible { display: block; }
+
+    .crystal-draw-btn {
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.82vw, 10px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(175, 148, 88, 0.55);
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.3s ease;
+    }
+    .crystal-draw-btn:hover { color: rgba(210, 175, 105, 0.95); }
+
+    .crystal-solo-bar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+    .crystal-solo-btn {
+      background: none; border: none;
+      font-family: var(--serif);
+      font-size: clamp(11px, 1vw, 13px);
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: rgba(215, 182, 108, 0.88);
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .crystal-solo-btn:hover { color: rgba(242, 215, 140, 1); }
+
+    /* ——— CRYSTAL FULL-SCREEN MODAL ——— */
+    #crystalModal {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+      background: rgba(4, 2, 0, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 500;
+      overflow-y: auto;
+    }
+    #crystalModal.open { display: flex; }
+
+    .cm-inner {
+      width: min(100%, 960px);
+      display: grid;
+      grid-template-columns: minmax(200px, 340px) 1fr;
+      gap: 28px;
+      padding: 28px;
+      border-radius: 22px;
+      background: rgba(14, 8, 2, 0.97);
+      border: 1px solid rgba(160, 130, 65, 0.28);
+      box-shadow: 0 28px 80px rgba(0,0,0,0.72);
+      margin: auto;
+    }
+
+    .cm-img {
+      display: block; width: 100%; height: auto;
+      border-radius: 14px;
+      object-fit: cover;
+    }
+
+    .cm-content { padding: 2px 4px 4px 0; }
+
+    .cm-close {
+      float: right;
+      background: none;
+      border: 1px solid rgba(160, 130, 65, 0.22);
+      border-radius: 20px;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.9vw, 11px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.78);
+      padding: 6px 16px 5px;
+      cursor: pointer;
+      margin: 0 0 14px 14px;
+      transition: color 0.25s ease, border-color 0.25s ease;
+    }
+    .cm-close:hover { color: var(--ink-cream); border-color: rgba(160, 130, 65, 0.5); }
+
+    .cm-kicker {
+      display: block; clear: both;
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.75);
+      margin-bottom: 10px;
+    }
+
+    .cm-title {
+      font-size: clamp(2rem, 3.2vw, 3rem);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(238, 218, 168, 0.96);
+      line-height: 1.08;
+      margin-bottom: 6px;
+    }
+
+    .cm-meaning {
+      font-size: clamp(14px, 1.35vw, 16px);
+      font-weight: 300;
+      color: rgba(218, 196, 142, 0.95);
+      line-height: 1.82;
+      margin-bottom: 16px;
+    }
+
+    .cm-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 18px;
+    }
+    .cm-tag {
+      font-size: clamp(10px, 0.9vw, 11px);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.88);
+      border: 1px solid rgba(160, 130, 65, 0.42);
+      border-radius: 20px;
+      padding: 3px 12px 2px;
+    }
+
+    .cm-lore {
+      display: block;
+      font-size: clamp(13px, 1.25vw, 15px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(218, 196, 142, 0.9);
+      line-height: 1.85;
+      margin-bottom: 18px;
+    }
+
+    .cm-how-label {
+      display: block;
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(185, 158, 95, 0.72);
+      margin-bottom: 10px;
+    }
+
+    .cm-how { list-style: none; margin-bottom: 18px; }
+    .cm-how li {
+      font-size: clamp(14px, 1.3vw, 15px);
+      font-weight: 300;
+      color: rgba(232, 215, 168, 0.93);
+      letter-spacing: 0.03em;
+      line-height: 2;
+      padding-left: 16px;
+      position: relative;
+    }
+    .cm-how li::before { content: '·'; position: absolute; left: 3px; color: rgba(185, 158, 95, 0.7); }
+
+    .cm-reflection {
+      display: block;
+      font-size: clamp(15px, 1.5vw, 17px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(238, 218, 168, 0.9);
+      text-align: center;
+      line-height: 1.75;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      border-top: 1px solid rgba(160, 130, 65, 0.18);
+    }
+
+    @media (max-width: 680px) {
+      .cm-inner { grid-template-columns: 1fr; }
+      .cm-img { max-height: 280px; object-fit: cover; object-position: top; }
+    }
+
+    /* ——— WIDE / LANDSCAPE SCREENS — Mac fullscreen etc. ——— */
+    /* cover on a wide viewport scales the image by width, zooming in vertically
+       and cropping the table off the bottom. Switching to auto 100% fills the
+       viewport height with no vertical cropping — the table is always visible.
+       Side gaps (if image is narrower than viewport) are hidden by bg-deep + vignette. */
+    @media (min-aspect-ratio: 4/3) {
+      /* On landscape viewports cover scales by width, which crops the bottom.
+         Anchoring to bottom keeps the table always visible with no black bars. */
+      .bg { background-position: center bottom; }
+      /* Cup drifts left on wide screens as the image fills from the bottom center */
+      #hs-cup { right: 32%; top: 66%; }
+    }
+
+    /* ——— MOBILE ——— */
+    @media (max-width: 600px) {
+      /* These were 58vw/52vw wide — over half the screen each, not hotspots,
+         just one giant tap area. Shrunk to the same small circle standard as
+         Hearthfire (6 Jul). First-pass centres, calibrate with ?calib=1. */
+      #hs-grimoire, #hs-window, #hs-cup { border-radius: 50%; }
+      #hs-grimoire { left: 18.3%; width: 14vmin; top: 70.5%; height: 14vmin; }
+      #hs-window   { left: 56.9%; width: 14vmin; top: 39.8%; height: 14vmin; }
+      #hs-cup      { right: 20.4%; top: 77.2%; width: 14vmin; height: 14vmin; }
+      .recipe-wrap { padding: 4px 20px 24px; }
+      .grimoire-close { padding: 16px 18px 0 0; }
+      #arrowPrev { left: 4px; font-size: 28px; }
+      #arrowNext { right: 4px; font-size: 28px; }
+      .recipe-image { width: 130px; height: 130px; }
+
+      /* Tea reading stage — mobile layout */
+      .tea-reading { top: 10%; width: 88vw; }
+      .tea-line { font-size: 16px; line-height: 1.7; margin-bottom: 0.4em; }
+      .tea-suggestion { top: 44%; }
+      .tea-name-reveal { font-size: 34px; }
+      .tea-desc-reveal { font-size: 14px; }
+      .tea-crystal { top: 67%; width: 86vw; }
+      .tea-crystal-name { font-size: 18px; }
+      .tea-crystal-desc { font-size: 13px; }
+      .tea-cta { top: 87%; font-size: 12px; letter-spacing: 0.04em; }
+      .tea-steam { bottom: 16%; }
+    }
+
+    /* ——— WAXING CRESCENT — CUP ACTIVATION ——— */
+
+    /* In-scene steam rising from the cup — visible before clicking, draws the eye */
+    .cup-steam {
+      position: absolute; bottom: 80%; left: 50%;
+      transform: translateX(-50%);
+      width: 60px; height: 110px;
+      pointer-events: none; opacity: 0;
+      transition: opacity 2.4s ease;
+    }
+    #hs-cup.waxing-crescent .cup-steam { opacity: 1; }
+    .cup-steam-wisp {
+      position: absolute; bottom: 0;
+      width: 7px; border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+      background: linear-gradient(to top, rgba(212,200,168,0.58), rgba(212,200,168,0.04));
+      opacity: 0;
+      animation: cupWispRise var(--cw-d, 6s) var(--cw-dy, 0s) ease-in-out infinite;
+    }
+    .cup-steam-wisp:nth-child(1) { left: 10%; --cw-d: 5.8s; --cw-dy: 0.0s; --cw-dx: -10px; --cw-dx2: -18px; height: 80px; }
+    .cup-steam-wisp:nth-child(2) { left: 30%; --cw-d: 7.2s; --cw-dy: 1.1s; --cw-dx:   5px; --cw-dx2:   9px; height: 95px; }
+    .cup-steam-wisp:nth-child(3) { left: 50%; --cw-d: 6.5s; --cw-dy: 2.2s; --cw-dx:  -4px; --cw-dx2:  -7px; height: 110px; }
+    .cup-steam-wisp:nth-child(4) { left: 68%; --cw-d: 8.0s; --cw-dy: 0.7s; --cw-dx:  12px; --cw-dx2:  20px; height: 88px; }
+    .cup-steam-wisp:nth-child(5) { left: 82%; --cw-d: 5.5s; --cw-dy: 3.4s; --cw-dx:   8px; --cw-dx2:  14px; height: 72px; }
+    @keyframes cupWispRise {
+      0%   { transform: translateY(0)   translateX(0)                scaleX(1);    opacity: 0; }
+      14%  { opacity: 0.88; }
+      52%  { transform: translateY(calc(var(--cw-h,-55px) * 0.5)) translateX(var(--cw-dx,5px))  scaleX(0.55); opacity: 0.40; }
+      100% { transform: translateY(var(--cw-h,-110px))            translateX(var(--cw-dx2,9px)) scaleX(0.18); opacity: 0; }
+    }
+    /* Make the wisp heights work via the element heights */
+    .cup-steam-wisp:nth-child(1) { --cw-h: -80px; }
+    .cup-steam-wisp:nth-child(2) { --cw-h: -95px; }
+    .cup-steam-wisp:nth-child(3) { --cw-h: -110px; }
+    .cup-steam-wisp:nth-child(4) { --cw-h: -88px; }
+    .cup-steam-wisp:nth-child(5) { --cw-h: -72px; }
+
+    #hs-cup.waxing-crescent .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(195, 165, 85, 0.42) 0%,
+        rgba(165, 132, 55, 0.22) 48%,
+        transparent 72%);
+      animation: glowBreathTea 5s ease-in-out infinite;
+    }
+    #hs-cup.waxing-crescent .hs-label { opacity: 0.72; }
+    #hs-cup.waxing-crescent:hover .hs-label { opacity: 1; }
+    @keyframes glowBreathTea {
+      0%, 100% { opacity: 0.52; }
+      50%       { opacity: 1.0; }
+    }
+
+    /* ——— TEA LEAF READING STAGE ——— */
+    .tea-scrim {
+      position: fixed; inset: 0; z-index: 55;
+      background: rgba(6,3,1,0.72);
+      backdrop-filter: blur(3px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 1s ease;
+    }
+    .tea-scrim.open { opacity: 1; pointer-events: all; }
+
+    .tea-stage {
+      position: fixed; inset: 0; z-index: 60;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.9s ease;
+      overflow-y: auto;
+    }
+    .tea-stage.open { opacity: 1; pointer-events: all; }
+
+    /* Warm amber-green hearth from below — breathes gently throughout the reading */
+    .tea-stage-bg {
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 90vw; height: 68vh;
+      background: radial-gradient(ellipse at 50% 100%,
+        rgba(90, 128, 52, 0.28) 0%,
+        rgba(162, 120, 36, 0.16) 38%,
+        rgba(95, 65, 14, 0.08) 65%,
+        transparent 80%);
+      pointer-events: none;
+      animation: teaBgBreath 10s ease-in-out infinite;
+    }
+    @keyframes teaBgBreath {
+      0%, 100% { opacity: 0.65; }
+      45%       { opacity: 1.0; }
+      75%       { opacity: 0.52; }
+    }
+
+    .tea-close {
+      position: fixed; top: 22px; right: 26px; z-index: 70;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-size: 20px;
+      color: rgba(155,135,75,0.22); padding: 10px;
+      transition: color 0.4s ease;
+    }
+    .tea-close:hover { color: rgba(200,175,105,0.65); }
+
+    .tea-phase-label {
+      position: fixed; top: max(3.5vh, 20px); left: 50%;
+      transform: translateX(-50%); z-index: 61;
+      font-size: clamp(8px, 0.72vw, 9px);
+      letter-spacing: 0.55em; text-transform: uppercase;
+      color: rgba(155,135,75,0.22); white-space: nowrap; pointer-events: none;
+    }
+
+    /* Stage steam — thick wafting pillars that fill the lower stage */
+    .tea-steam {
+      position: absolute; bottom: 20%; left: 50%;
+      transform: translateX(-50%);
+      width: 220px; height: 200px; pointer-events: none;
+    }
+    .steam-wisp {
+      position: absolute; bottom: 0;
+      border-radius: 50% 50% 38% 38% / 55% 55% 45% 45%;
+      background: linear-gradient(to top,
+        rgba(208,195,158,0.48) 0%,
+        rgba(208,195,158,0.22) 45%,
+        rgba(208,195,158,0.04) 100%);
+      opacity: 0;
+      animation: steamRise var(--sd, 7s) var(--sdy, 0s) cubic-bezier(0.25,0.46,0.45,0.94) infinite;
+    }
+    /* Three wide, slow primary wisps */
+    .steam-wisp:nth-child(1) { left:  8%; width: 22px; height: 130px; --sd: 7.5s; --sdy: 0.0s; --sdx: -22px; --sdx2: -38px; }
+    .steam-wisp:nth-child(2) { left: 42%; width: 28px; height: 170px; --sd: 9.2s; --sdy: 1.4s; --sdx:   8px; --sdx2:  14px; }
+    .steam-wisp:nth-child(3) { left: 74%; width: 20px; height: 145px; --sd: 8.0s; --sdy: 3.1s; --sdx:  20px; --sdx2:  35px; }
+    @keyframes steamRise {
+      0%   { transform: translateY(0) translateX(0) scaleX(1); opacity: 0; }
+      10%  { opacity: 0.85; }
+      48%  { transform: translateY(calc(var(--sd-h, -100px))) translateX(var(--sdx, 8px)) scaleX(0.58); opacity: 0.45; }
+      100% { transform: translateY(calc(var(--sd-h, -100px) * 1.9)) translateX(var(--sdx2, 14px)) scaleX(0.22); opacity: 0; }
+    }
+    .steam-wisp:nth-child(1) { --sd-h: -130px; }
+    .steam-wisp:nth-child(2) { --sd-h: -170px; }
+    .steam-wisp:nth-child(3) { --sd-h: -145px; }
+
+    /* Reading lines */
+    .tea-reading {
+      position: absolute; top: 18%; left: 50%;
+      transform: translateX(-50%);
+      width: min(72vw, 600px); text-align: center;
+    }
+    .tea-line {
+      display: block;
+      font-family: var(--serif); font-style: italic; font-weight: 300;
+      font-size: clamp(18px, 1.85vw, 26px);
+      color: rgba(215,190,135,0.72);
+      letter-spacing: 0.04em; line-height: 1.95;
+      margin-bottom: 0.6em; pointer-events: none;
+      opacity: 0; animation: teaMaterialize 2.4s var(--td, 0s) ease forwards;
+    }
+    .tea-line.accent { color: rgba(238,215,162,0.92); }
+
+    /* Tea name reveal */
+    .tea-suggestion {
+      position: absolute; top: 52%; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; pointer-events: none;
+    }
+    .tea-suggests-label {
+      font-size: clamp(11px, 1.0vw, 14px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(155,135,75,0.55); display: block; margin-bottom: 1.6em;
+      opacity: 0; animation: teaMaterialize 2.2s var(--td, 0s) ease forwards;
+    }
+    .tea-name-reveal {
+      font-family: var(--serif);
+      font-size: clamp(40px, 5.2vw, 70px);
+      font-style: italic; font-weight: 300;
+      color: rgba(238,212,152,0.96); letter-spacing: 0.12em;
+      display: block; margin-bottom: 0.5em;
+      opacity: 0;
+      animation:
+        teaNameCondense 3.2s var(--td, 0s) cubic-bezier(0.22,0.68,0.35,1.0) forwards,
+        teaNameShimmer  5s  calc(var(--td, 0s) + 3.4s) ease-in-out infinite;
+      /* glow softened + label spacing doubled (6 Jul) — the glow was bleeding
+         upward and washing out "The Apothecary reaches for" above it */
+      text-shadow: 0 0 25px rgba(200,165,75,0.38), 0 0 50px rgba(148,118,40,0.18);
+      transition: color 0.4s ease;
+    }
+    .tea-name-reveal.linkable {
+      cursor: pointer;
+      pointer-events: all;
+    }
+    .tea-name-reveal.linkable:hover {
+      color: rgba(255,235,175,1.0);
+      text-shadow: 0 0 30px rgba(220,180,80,0.72), 0 0 60px rgba(168,135,52,0.42);
+    }
+    @keyframes teaNameShimmer {
+      0%, 100% { text-shadow: 0 0 20px rgba(200,165,75,0.35), 0 0 40px rgba(148,118,40,0.15); }
+      50%       { text-shadow: 0 0 35px rgba(225,185,90,0.72), 0 0 65px rgba(168,135,52,0.38), 0 0 100px rgba(195,160,75,0.15); }
+    }
+    .tea-desc-reveal {
+      font-size: clamp(15px, 1.4vw, 20px);
+      font-style: italic; color: rgba(195,170,115,0.68);
+      letter-spacing: 0.05em; line-height: 1.9; display: block;
+      opacity: 0; animation: teaMaterialize 2.2s var(--td, 0s) ease forwards;
+    }
+
+    /* Crystal suggestion */
+    .tea-crystal {
+      position: absolute; top: 73%; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; pointer-events: none;
+      width: min(68vw, 520px);
+    }
+    .tea-crystal-label {
+      font-size: clamp(11px, 1.0vw, 14px);
+      letter-spacing: 0.45em; text-transform: uppercase;
+      color: rgba(145,125,68,0.50); display: block; margin-bottom: 0.6em;
+      opacity: 0; animation: teaMaterialize 2.2s var(--td, 0s) ease forwards;
+    }
+    .tea-crystal-name {
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(20px, 2.0vw, 28px);
+      color: rgba(218,196,146,0.82); letter-spacing: 0.08em; display: block;
+      margin-bottom: 0.4em;
+      opacity: 0; animation: teaMaterialize 2.2s var(--td, 0s) ease forwards;
+    }
+    .tea-crystal-desc {
+      font-size: clamp(14px, 1.3vw, 18px);
+      font-style: italic; color: rgba(182,158,100,0.62);
+      letter-spacing: 0.04em; line-height: 1.85; display: block;
+      opacity: 0; animation: teaMaterialize 2.2s var(--td, 0s) ease forwards;
+    }
+
+    /* CTA */
+    .tea-cta {
+      position: absolute; top: 90%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(13px, 1.2vw, 17px);
+      font-style: italic; color: rgba(168,145,88,0.55);
+      letter-spacing: 0.06em; line-height: 2;
+      text-align: center; white-space: pre-line; pointer-events: none;
+      opacity: 0; animation: teaFadeIn 2s var(--td, 0s) ease forwards;
+    }
+
+    /* Tender archive pathway — small, unhurried, never alarming */
+    .tea-archive-whisper {
+      position: absolute; top: 95%; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(9px, 0.82vw, 11px);
+      font-style: italic; color: rgba(148,128,78,0.38);
+      letter-spacing: 0.04em; text-align: center;
+      white-space: nowrap; pointer-events: all;
+      opacity: 0; animation: teaMaterialize 2s var(--td, 0s) ease forwards;
+    }
+    .archive-link {
+      color: rgba(168,148,92,0.55);
+      text-decoration: none; border-bottom: 1px solid rgba(168,148,92,0.22);
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+    .archive-link:hover {
+      color: rgba(210,185,120,0.85);
+      border-bottom-color: rgba(210,185,120,0.45);
+    }
+
+    /* Floating motes — ambient particles drifting up during the reading */
+    .tea-mote {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 62;
+      animation: moteDrift var(--md, 18s) var(--mdelay, 0s) ease-in-out forwards;
+    }
+    @keyframes moteDrift {
+      0%   { transform: translate(0, 0); opacity: 0; }
+      8%   { opacity: 1; }
+      68%  { transform: translate(var(--mdx, 20px), var(--mdy, -240px)); opacity: var(--mop, 0.45); }
+      100% { transform: translate(var(--mdx2, 30px), var(--mdy2, -480px)); opacity: 0; }
+    }
+
+    /* Words materialize from blur — like language condensing out of steam */
+    @keyframes teaMaterialize {
+      0%   { opacity: 0; transform: translateY(-10px); filter: blur(10px); }
+      55%  { filter: blur(0); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    /* Tea name: letter-spacing condenses from mist into form */
+    @keyframes teaNameCondense {
+      0%   { opacity: 0; transform: translateY(-18px); filter: blur(22px); letter-spacing: 0.68em; }
+      62%  { filter: blur(2px); letter-spacing: 0.15em; }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); letter-spacing: 0.12em; }
+    }
+    /* teaFadeIn: for .tea-cta (position:absolute; left:50% — needs X centering through animation) */
+    @keyframes teaFadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-10px); filter: blur(6px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); filter: blur(0); }
+    }
+    /* teaFadeUp: kept as fallback */
+    @keyframes teaFadeUp {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec; placed last so it wins over the base rules and the
+       mobile @media. Tracking trimmed on the bumped buttons so the larger sizes
+       never run off-screen. Atmospheric-only text (.wordmark, .tea-phase-label)
+       is left as mood-dressing.
+    —————————————————————————————————————— */
+    /* reading + story (17px floor) */
+    .recipe-ingredients li { font-size: clamp(17px, 1.6vw, 19px); }
+    .recipe-note        { font-size: clamp(17px, 1.5vw, 18px); }
+    .recipe-purpose     { font-size: clamp(17px, 1.5vw, 18px); }
+    .recipe-significance{ font-size: clamp(17px, 1.5vw, 18px); }
+    .recipe-ritual      { font-size: clamp(17px, 1.5vw, 18px); }
+    .recipe-reflection  { font-size: clamp(17px, 1.5vw, 19px); }
+    .crystal-lore       { font-size: clamp(17px, 1.5vw, 18px); }
+    .crystal-how li     { font-size: clamp(17px, 1.5vw, 18px); }
+    .crystal-reflection { font-size: clamp(17px, 1.5vw, 19px); }
+    .cm-meaning         { font-size: clamp(17px, 1.5vw, 18px); }
+    .cm-lore            { font-size: clamp(17px, 1.5vw, 18px); }
+    .cm-how li          { font-size: clamp(17px, 1.5vw, 18px); }
+    .cm-reflection      { font-size: clamp(17px, 1.5vw, 19px); }
+    .gm-result-btn      { font-size: clamp(17px, 1.4vw, 18px); }
+    .tea-line           { font-size: clamp(17px, 1.85vw, 26px); }
+    .tea-desc-reveal    { font-size: clamp(17px, 1.5vw, 20px); }
+    .tea-crystal-desc   { font-size: clamp(17px, 1.4vw, 18px); }
+    /* secondary messages */
+    .gm-no-results      { font-size: clamp(15px, 1.3vw, 17px); }
+    .tea-cta            { font-size: clamp(15px, 1.3vw, 17px); }
+    .sealed-whisper     { font-size: clamp(14px, 1.4vw, 16px); white-space: normal; }
+    /* text input (16px floor keeps iOS from zooming on focus) */
+    .gm-search-input    { font-size: clamp(16px, 1.5vw, 18px); }
+    /* ritual buttons + CTAs (12–14px, tracking trimmed so they never wrap off-screen) */
+    .gm-search-link     { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .gm-back            { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .gm-chance          { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    #readingBar button  { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .crystal-discover   { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .crystal-draw-btn   { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .crystal-solo-btn   { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.28em; }
+    .cm-close           { font-size: clamp(12px, 1.05vw, 14px); }
+    .ef-link            { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
+    .tea-archive-whisper{ font-size: clamp(12px, 1vw, 13px); }
+    /* names, eyebrows, small-caps labels (12–13px floor) */
+    .hs-label           { font-size: clamp(12px, 1vw, 13px); }
+    .recipe-kicker      { font-size: clamp(12px, 1vw, 13px); }
+    .recipe-loose-leaf  { font-size: clamp(12px, 1vw, 13px); }
+    .recipe-category    { font-size: clamp(12px, 1vw, 13px); }
+    .recipe-intention   { font-size: clamp(12px, 1vw, 13px); }
+    .recipe-experience  { font-size: clamp(12px, 1vw, 13px); }
+    .gm-subq            { font-size: clamp(12px, 1vw, 13px); }
+    .crystal-tag        { font-size: clamp(12px, 1vw, 13px); }
+    .crystal-how-label  { font-size: clamp(12px, 1vw, 13px); }
+    .cm-kicker          { font-size: clamp(12px, 1vw, 13px); }
+    .cm-tag             { font-size: clamp(12px, 1vw, 13px); }
+    .cm-how-label       { font-size: clamp(12px, 1vw, 13px); }
+    .nav-count          { font-size: clamp(12px, 1vw, 13px); }
+    .ef-section-label   { font-size: clamp(12px, 1vw, 13px); }
+    .tea-suggests-label { font-size: clamp(12px, 1vw, 14px); }
+    .tea-crystal-label  { font-size: clamp(12px, 1vw, 14px); }
+
+    /* ——— TEA READING: flow down a centred, scrollable column ———
+       Each block used to be pinned to a fixed % of the screen, so long or
+       larger text made them overlap into ghosted, unreadable layers. Now they
+       stack in normal flow and the stage scrolls. (8 Jul) */
+    .tea-stage { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 13vh 6vw 16vh; }
+    #teaReading, #teaSuggestion, #teaCrystalBlock, #teaCta, #teaArchiveWhisper {
+      position: static; left: auto; top: auto; transform: none;
+      width: min(88vw, 620px); max-width: 620px; margin-left: auto; margin-right: auto;
+    }
+    #teaReading      { margin-bottom: 4vh; }
+    #teaSuggestion   { margin-bottom: 3.5vh; }
+    #teaCrystalBlock { margin-bottom: 4vh; }
+    #teaCta          { margin-bottom: 2.4vh; animation-name: teaFadeUp; }
+    #teaArchiveWhisper { white-space: normal; }
+
+    /* Crystal name is tappable to open its detail, like the tea name */
+    .tea-crystal-name.linkable { cursor: pointer; pointer-events: all; transition: color 0.4s ease, text-shadow 0.4s ease; }
+    .tea-crystal-name.linkable:hover { color: rgba(240,216,162,0.98); text-shadow: 0 0 22px rgba(212,180,92,0.55); }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <div id="fadeCover"></div>
+
+  <div class="bg" id="bg"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- Everflame — always alive -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+
+  <!-- Everflame menu -->
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- ——— HOTSPOTS ——— -->
+  <div class="hotspot" id="hs-grimoire" role="button" tabindex="0" aria-label="The Grimoire">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the grimoire</span>
+  </div>
+
+  <div class="hotspot" id="hs-window" role="button" tabindex="0" aria-label="The window">
+    <div class="hs-glow"></div>
+    <span class="hs-label">look beyond</span>
+  </div>
+
+  <div class="hotspot" id="hs-cup" role="button" tabindex="0" aria-label="A cup of tea">
+    <div class="hs-glow"></div>
+    <div class="cup-steam" id="cupSteam">
+      <div class="cup-steam-wisp"></div>
+      <div class="cup-steam-wisp"></div>
+      <div class="cup-steam-wisp"></div>
+      <div class="cup-steam-wisp"></div>
+      <div class="cup-steam-wisp"></div>
+    </div>
+    <span class="hs-label">still steaming</span>
+  </div>
+
+  <div class="hotspot thumb-hotspot" id="hs-hearthfire" role="button" tabindex="0" aria-label="Return to the Hearthfire">
+    <span class="hs-label">the hearthfire</span>
+  </div>
+
+  <!-- Whisper -->
+  <div class="sealed-whisper" id="sealedWhisper"></div>
+
+  <!-- Return to Apothecary — visible only while a feature panel is open -->
+  <div id="returnApothecary" role="button" tabindex="0" aria-label="Return to the Apothecary"></div>
+
+  <!-- Calibration aid — ?calib=1, mirrors hearthfire.html / year-wheel.html -->
+  <div id="calib">· move mouse / touch ·</div>
+
+  <!-- ——— WAXING CRESCENT — TEA LEAF READING STAGE ——— -->
+  <div class="tea-scrim" id="teaScrim"></div>
+  <div class="tea-stage" id="teaStage" role="dialog" aria-modal="true" aria-label="The tea leaf reading">
+    <div class="tea-stage-bg"></div>
+    <button class="tea-close" id="teaClose" aria-label="Close">×</button>
+    <span class="tea-phase-label">Waxing Crescent · The Leaves Speak</span>
+
+    <!-- Reading lines — populated by JS -->
+    <div class="tea-reading" id="teaReading"></div>
+
+    <!-- Tea name reveal -->
+    <div class="tea-suggestion" id="teaSuggestion">
+      <span class="tea-suggests-label" id="teaSuggestsLabel"></span>
+      <span class="tea-name-reveal" id="teaNameReveal"></span>
+      <span class="tea-desc-reveal" id="teaDescReveal"></span>
+    </div>
+
+    <!-- Crystal suggestion -->
+    <div class="tea-crystal" id="teaCrystalBlock">
+      <span class="tea-crystal-label" id="teaCrystalLabel"></span>
+      <span class="tea-crystal-name" id="teaCrystalName"></span>
+      <span class="tea-crystal-desc" id="teaCrystalDesc"></span>
+    </div>
+
+    <!-- CTA -->
+    <p class="tea-cta" id="teaCta"></p>
+  </div>
+
+  <!-- Crystal full-screen modal -->
+  <div id="crystalModal" role="dialog" aria-modal="true" aria-label="Crystal detail">
+    <div class="cm-inner" id="cmInner"></div>
+  </div>
+
+  <!-- ——— GRIMOIRE PANEL ——— -->
+  <div class="grimoire-scrim" id="grimoireScrim"></div>
+  <div class="grimoire-panel" id="grimoirePanel" role="dialog" aria-modal="true" aria-label="The Grimoire">
+    <button class="grimoire-close" id="grimoireClose" aria-label="Close">×</button>
+
+    <!-- HOME -->
+    <div class="gm-state" id="gmHome">
+      <p class="gm-question">what do you seek?</p>
+      <div class="gm-choice-row">
+        <button class="gm-choice-btn" id="gmToTea">craft a tea</button>
+        <button class="gm-choice-btn" id="gmToStone">find a stone</button>
+      </div>
+      <button class="gm-search-link" id="gmToSearch">search by name</button>
+    </div>
+
+    <!-- TEA PICKER -->
+    <div class="gm-state" id="gmTeaPick" style="display:none">
+      <p class="gm-question">what calls to you?</p>
+      <p class="gm-subq">by time of day</p>
+      <div class="gm-chips" id="gmDailyChips"></div>
+      <p class="gm-subq">by the moon</p>
+      <div class="gm-chips" id="gmLunarChips"></div>
+      <p class="gm-subq">for a purpose</p>
+      <div class="gm-chips" id="gmBlendChips"></div>
+      <div class="gm-foot-row">
+        <button class="gm-back" id="gmTeaBack">← back</button>
+        <button class="gm-chance" id="gmTeaChance">let chance decide</button>
+      </div>
+    </div>
+
+    <!-- STONE PICKER -->
+    <div class="gm-state" id="gmStonePick" style="display:none">
+      <p class="gm-question">which archive calls to you?</p>
+      <div class="gm-chips" id="gmStoneChips"></div>
+      <div class="gm-foot-row">
+        <button class="gm-back" id="gmStoneBack">← back</button>
+        <button class="gm-chance" id="gmStoneChance">let one find me</button>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="gm-state" id="gmSearch" style="display:none">
+      <p class="gm-question">search by name</p>
+      <input class="gm-search-input" id="gmSearchInput" type="text" placeholder="a tea, a stone…" autocomplete="off">
+      <div id="gmSearchResults" class="gm-results"></div>
+      <button class="gm-back" id="gmSearchBack">← back</button>
+    </div>
+
+    <!-- RESULT -->
+    <div class="recipe-wrap" id="recipeWrap" style="display:none"><!-- rendered by JS --></div>
+  </div>
+
+  <div class="wordmark">Aetherwood</div>
+
+  <script>
+    /* ——— RECIPE DATA ——— */
+    /* Note: botanical images are numbered for now — assign to specific recipes as you like */
+    /* World names marked [unnamed] need their Aetherwood name still */
+    var recipes = [
+      /* ——— DAILY TEAS ——— */
+      {
+        worldName:    'Threadwake',
+        subtitle:     'Dawn Tea',
+        rhythm:       'daily',
+        time:         'Dawn',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_01.png',
+        ingredients:  ['lemon myrtle', 'lemongrass', 'spearmint', 'gotu kola'],
+        purpose:      'Gentle awakening and intention.',
+        experience:   'Fresh, bright, uplifting.',
+        significance: 'The first thread chosen from the Loom each morning.',
+        ritual:       'Morning tea circle. Share what thread you will strengthen today.',
+        reflection:   'What thread will you strengthen today?'
+      },
+      {
+        worldName:    'Sunthread',
+        subtitle:     'Midday Tea',
+        rhythm:       'daily',
+        time:         'Midday',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_02.png',
+        ingredients:  ['earl grey', 'lemon balm', 'gotu kola', 'a pinch of rose'],
+        purpose:      'Clarity, focus, momentum.',
+        experience:   'Clean energy without heaviness.',
+        significance: 'Walking the chosen path.',
+        ritual:       'Shared work sessions and creative gatherings.',
+        reflection:   'Where is my focus strongest right now?'
+      },
+      {
+        worldName:    'Emberrest',
+        subtitle:     'Evening Tea',
+        rhythm:       'daily',
+        time:         'Evening',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_03.png',
+        ingredients:  ['rose', 'lemon balm', 'hibiscus', 'lavender'],
+        purpose:      'Reflection and gratitude.',
+        experience:   'Soft, floral, comforting.',
+        significance: 'Gathering the day\'s threads before nightfall.',
+        ritual:       'Sharing highlights from the day.',
+        reflection:   'What am I grateful for from this day?'
+      },
+      {
+        worldName:    'Moonkiss',
+        subtitle:     'Night Tea',
+        rhythm:       'daily',
+        time:         'Night',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_04.png',
+        ingredients:  ['chamomile', 'passionflower', 'marshmallow root', 'lavender', 'a touch of rose'],
+        purpose:      'Rest, dreaming, restoration.',
+        experience:   'Gentle, protective, calming.',
+        significance: 'Crossing safely through the Veil.',
+        ritual:       'Evening reflection, storytelling, dream journals.',
+        reflection:   'What does the night ask of you tonight?'
+      },
+
+      /* ——— PURPOSE BLENDS ——— */
+      {
+        worldName:    'Root Song',
+        subtitle:     'Grounding Blend',
+        rhythm:       'blend',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_05.png',
+        ingredients:  ['rooibos', 'ginger', 'cinnamon'],
+        purpose:      'When the earth feels far away.',
+        experience:   'Warming, earthy, steady.',
+        significance: 'Three herbs that anchor the Loom to the ground. Nothing more is needed.',
+        ritual:       'Brew slowly. Hold the cup before drinking. Feel the weight of it.',
+        reflection:   'What does it mean to be here, right now?'
+      },
+      {
+        worldName:    'Hearthbloom',
+        subtitle:     'Heart Blend',
+        rhythm:       'blend',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_06.png',
+        ingredients:  ['rose', 'hibiscus', 'chamomile', 'a little mint'],
+        purpose:      'For the tender days. For anything that needs tending.',
+        experience:   'Soft, floral, gently bright.',
+        significance: 'The herbs of the Heartwood, woven together. Each one knows how to comfort.',
+        ritual:       'Share this with someone you love, or drink it alone when you need to feel held.',
+        reflection:   'What tender thing deserves my attention today?'
+      },
+      {
+        worldName:    'Mindthread',
+        subtitle:     'Clarity Blend',
+        rhythm:       'blend',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_07.png',
+        ingredients:  ['gotu kola', 'lemongrass', 'a little mint', 'a whisper of ginger'],
+        purpose:      'For the work that asks something of you.',
+        experience:   'Clear, awakening, sharp.',
+        significance: 'The Scholar\'s Leaf leads the thread. Each herb a different kind of knowing.',
+        ritual:       'Drink before you begin. Let it be the signal that work is starting.',
+        reflection:   'What needs my clearest thinking today?'
+      },
+      {
+        worldName:    'Golden Veil',
+        subtitle:     'Winter Blend',
+        rhythm:       'blend',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_08.png',
+        ingredients:  ['1 part lemongrass', '½ part ginger', '½ part hibiscus', '½ part rose'],
+        purpose:      'A winter blend for resilience.',
+        experience:   'Bright, warming, vibrant.',
+        significance: 'The Veil\'s protection woven into each sip. Make it in quantity.',
+        ritual:       'Make a large jar and keep it close through the cold months.',
+        reflection:   'How am I tending my resilience right now?'
+      },
+
+      /* ——— LUNAR TEAS ——— */
+      {
+        worldName:    'Heartthread',
+        subtitle:     'Waning Moon',
+        rhythm:       'lunar',
+        lunar:        'Waning Moon',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_09.png',
+        ingredients:  ['hawthorn berries', 'rose', 'passionflower'],
+        purpose:      'Release and integration.',
+        experience:   'Deep, floral, gently astringent.',
+        significance: 'The Heartwood\'s letting go, the thread that must be released for the pattern to move forward.',
+        ritual:       'Drink slowly. Let yourself feel what needs to move through.',
+        reflection:   'What am I ready to release?'
+      },
+      {
+        worldName:    'Enchantment',
+        subtitle:     'Full Moon',
+        rhythm:       'lunar',
+        lunar:        'Full Moon',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/grimoire/botanical_10.png',
+        ingredients:  ['ceremonial cacao', 'rooibos chai', 'rose', 'lavender'],
+        purpose:      'Community, creativity, storytelling.',
+        experience:   'Rich, ceremonial, intoxicating.',
+        significance: 'The cacao moon. When the Everflame is at its fullest and community gathers.',
+        ritual:       'Share it. Enchantment is not for ordinary evenings.',
+        reflection:   'What wants to be celebrated right now?'
+      },
+      {
+        worldName:    'Duskweave',
+        subtitle:     'Dark Moon',
+        rhythm:       'lunar',
+        lunar:        'Dark Moon',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_01.png',
+        ingredients:  ['rooibos chai', 'lavender', 'marshmallow root'],
+        purpose:      'Stillness and listening.',
+        experience:   'Smooth, enveloping, deeply calming.',
+        significance: 'The Veil at its thinnest. A time to listen inward before the new cycle begins.',
+        ritual:       'Drink in quiet before bed, with a journal or in stillness.',
+        reflection:   'What does the silence have to teach me?'
+      },
+      {
+        worldName:    'Seedthread',
+        subtitle:     'New Moon',
+        rhythm:       'lunar',
+        lunar:        'New Moon',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_02.png',
+        ingredients:  ['lemon myrtle', 'gotu kola', 'spearmint'],
+        purpose:      'Intention and beginnings.',
+        experience:   'Bright, fresh, clarifying.',
+        significance: 'The first thread of a new cycle. The Loom is ready and the pattern awaits you.',
+        ritual:       'Write your intentions before or after. Let the tea open the space.',
+        reflection:   'What seed am I planting in this cycle?'
+      },
+      {
+        worldName:    'Emberwake',
+        subtitle:     'First Quarter',
+        rhythm:       'lunar',
+        lunar:        'First Quarter',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_03.png',
+        ingredients:  ['earl grey', 'lemon myrtle', 'hibiscus'],
+        purpose:      'Action and movement.',
+        experience:   'Warming, invigorating, clean.',
+        significance: 'The moment the ember catches. Action begins here. The path is lit.',
+        ritual:       'Drink before a challenge. Use it as a signal to begin.',
+        reflection:   'What am I ready to move toward?'
+      },
+      {
+        worldName:    'Loomflow',
+        subtitle:     'Waxing Gibbous',
+        rhythm:       'lunar',
+        lunar:        'Waxing Gibbous',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/e_background_removal/aetherwood/grimoire/botanical_04.png',
+        ingredients:  ['hawthorn berries', 'rose', 'lemon balm'],
+        purpose:      'Refinement and alignment.',
+        experience:   'Layered, heart-opening, gently rounded.',
+        significance: 'The Loom in motion, checking that the pattern holds before the full expression arrives.',
+        ritual:       'Review your intentions. Adjust without judgment. Keep weaving.',
+        reflection:   'What is working, and what needs tending?'
+      },
+
+      /* ——— CRYSTALS ——— */
+      {
+        type:       'crystal',
+        worldName:  'Veilstone',
+        realName:   'Smoky Quartz',
+        archive:     'Guardian',
+        associations: ['Grounding', 'Release', 'Protection'],
+        sabbat:      'Yule',
+        subtitle:   'The Stone of Grounding and Release',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/veilstone.png',
+        meaning:    'Grounding during uncertainty. Smoky Quartz anchors swirling energy, helping you release what no longer serves and stand steady in the truth of the present moment.',
+        supports:   ['Releasing burdens', 'Shadow work', 'Emotional processing', 'Moving through grief', 'Grounding and stability', 'Protection during transition'],
+        lore:       'Veilstone is said to be born from the first tear of the mountain, when the world was still learning to hold both light and dark. Travellers carry it to walk through the unknown, reminding them that even the deepest shadows teach the way home.',
+        howTo:      [
+          'Hold during meditation to anchor your energy and quiet mental noise.',
+          'Place by your bedside for peaceful dreams and protection.',
+          'Carry with you when releasing what no longer serves.',
+          'Use in rituals for shadow work and deep emotional healing.'
+        ],
+        reflection: 'What shadow has become my teacher?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Ravenglass',
+        realName:   'Labradorite',
+        archive:     'Veil',
+        associations: ['Insight', 'Mystery', 'Hidden truths'],
+        sabbat:      'Samhain',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/ravenglass.png',
+        meaning:    'Magic hidden beneath ordinary sight.',
+        supports:   ['Intuition', 'Dreamwalking', 'Veil work', 'Transformation'],
+        reflection: 'What truth waits beyond the veil?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Moonthread',
+        realName:   'Moonstone',
+        archive:     'Veil',
+        associations: ['Cycles', 'Intuition', 'Beginnings'],
+        sabbat:      'Lunar Festivals',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/moonthread.png',
+        meaning:    'Trusting unseen cycles.',
+        supports:   ['New beginnings', 'Emotional balance', 'Feminine wisdom', 'Lunar connection'],
+        reflection: 'What thread remains unwoven?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Heartwood Stone',
+        realName:   'Moss Agate',
+        archive:     'Heartwood',
+        associations: ['Nature connection', 'Grounded growth'],
+        sabbat:      'Ostara',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/heartwood-stone.png',
+        meaning:    'Life sleeping beneath winter soil.',
+        supports:   ['Patience', 'Slow growth', 'Healing', 'Connection to nature'],
+        reflection: 'What root still grows unseen?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Emberheart',
+        realName:   'Garnet',
+        archive:     'Guardian',
+        associations: ['Endurance', 'Commitment', 'Inner fire'],
+        sabbat:      'Yule',
+        subtitle:   'The Stone of Enduring Fire',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/emberheart.png',
+        meaning:    'The flame that survives the longest night. Garnet fuels courage, passion, and determination. It awakens your inner fire, strengthens your will, and helps you persevere through any darkness.',
+        supports:   ['Courage and inner strength', 'Vitality and life force', 'Passion and motivation', 'Perseverance and endurance', 'Emotional healing and renewal', 'Protection during challenging times'],
+        lore:       'Emberheart is said to be forged from the first spark of the Everflame, carried in the hearts of those who refused to surrender to the dark. It has protected wanderers, warriors, and keepers who carried the light when all hope seemed lost.',
+        howTo:      [
+          'Hold over your heart to ignite courage and strengthen your resolve.',
+          'Place in your space to restore energy and inspire action.',
+          'Carry with you for protection and confidence in difficult situations.',
+          'Use in rituals for passion, motivation, and emotional healing.'
+        ],
+        reflection: 'What flame refuses to die?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Shadowguard',
+        realName:   'Black Tourmaline',
+        archive:     'Guardian',
+        associations: ['Protection', 'Boundaries'],
+        sabbat:      'Winter',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/shadowguard.png',
+        meaning:    'Protection at the threshold.',
+        supports:   ['Boundaries', 'Stability', 'Protection', 'Grounding'],
+        reflection: 'What deserves protection?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Sunbright',
+        realName:   'Citrine',
+        archive:     'Sun',
+        associations: ['Abundance', 'Confidence', 'Creativity', 'Joy'],
+        sabbat:      'Litha',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunbright.png',
+        meaning:    'Joy made visible.',
+        supports:   ['Confidence', 'Creativity', 'Prosperity', 'Personal power'],
+        reflection: 'What light wishes to be shared?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Daybringer',
+        realName:   'Sunstone',
+        archive:     'Sun',
+        associations: ['Vitality', 'Optimism', 'Leadership'],
+        sabbat:      'Litha',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/daybringer.png',
+        meaning:    'Radiance and leadership.',
+        supports:   ['Self belief', 'Optimism', 'Freedom', 'Action'],
+        reflection: 'Where am I ready to shine?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Fireheart',
+        realName:   'Carnelian',
+        archive:     'Sun',
+        associations: ['Motivation', 'Courage', 'Creative energy'],
+        sabbat:      'Lughnasadh',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/fireheart.png',
+        meaning:    'The courage to create.',
+        supports:   ['Motivation', 'Creativity', 'Confidence', 'Momentum'],
+        reflection: 'What wants to come alive?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Verdant Path',
+        realName:   'Green Aventurine',
+        archive:     'Heartwood',
+        associations: ['Growth', 'Opportunity', 'Optimism'],
+        sabbat:      'Ostara',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/verdant-path.png',
+        meaning:    'Growth meeting opportunity.',
+        supports:   ['Expansion', 'Luck', 'New experiences', 'Adventure'],
+        reflection: 'What path is opening before me?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Purelight',
+        realName:   'Clear Quartz',
+        archive:     'Resonance',
+        associations: ['Clarity', 'Amplification', 'Intention', 'Alignment'],
+        sabbat:      'Imbolc',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/purelight.png',
+        meaning:    'Amplification and clarity.',
+        supports:   ['Intention setting', 'Focus', 'Manifestation', 'Energy work'],
+        reflection: 'What deserves my full attention?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Sunhold',
+        realName:   'Amber',
+        archive:     'Sun',
+        associations: ['Wisdom', 'Gratitude', 'Preservation'],
+        sabbat:      'Mabon',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunhold.png',
+        meaning:    'Ancient sunlight preserved.',
+        supports:   ['Warmth', 'Vitality', 'Joy', 'Memory'],
+        reflection: 'What treasure have I already gathered?'
+      },
+      {
+        type:       'crystal',
+        worldName:  'Heartveil',
+        realName:   'Rose Quartz',
+        archive:     'Heartwood',
+        associations: ['Love', 'Compassion', 'Emotional healing'],
+        sabbat:      'Beltane',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/heartveil.png',
+        meaning:    '',
+        supports:   [],
+        reflection: ''
+      },
+      {
+        type:       'crystal',
+        worldName:  'Dreamveil',
+        realName:   'Amethyst',
+        archive:     'Veil',
+        associations: ['Dreams', 'Wisdom', 'Spiritual awareness'],
+        sabbat:      'Imbolc',
+        image:      'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/dreamveil.png',
+        meaning:    '',
+        supports:   [],
+        reflection: ''
+      },
+
+      /* ——— NEW CRYSTALS — 26 additions ——— */
+
+      /* SUN ARCHIVE */
+      {
+        type:         'crystal',
+        worldName:    'Sunforge',
+        realName:     'Pyrite',
+        archive:      'Sun',
+        associations: ['Manifestation', 'Prosperity', 'Purposeful action'],
+        sabbat:       'Lughnasadh',
+        subtitle:     'The Stone of Manifestation',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunforge.png',
+        meaning:      'Sunforge is the smith\'s stone, where intention meets the hammer and becomes real. Pyrite carries no softness, only purpose. It asks you what you are actually making, and whether you are willing to work for it.',
+        supports:     ['Manifestation', 'Prosperity', 'Purposeful action'],
+        reflection:   'How might the gifts of Sunforge guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Sunwarden',
+        realName:     'Tiger\'s Eye',
+        archive:      'Guardian/Sun',
+        associations: ['Confidence', 'Leadership', 'Discernment'],
+        sabbat:       'Mabon',
+        subtitle:     'The Stone of Confidence and Leadership',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunwarden.png',
+        meaning:      'Sunwarden holds the line where action meets wisdom. Tiger\'s Eye carries the quiet authority of someone who knows their own mind, confidence that doesn\'t need to announce itself, discernment that sees clearly through the noise.',
+        supports:     ['Confidence', 'Leadership', 'Discernment'],
+        reflection:   'How might the gifts of Sunwarden guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Sunstone of Clarity',
+        realName:     'Golden Calcite',
+        archive:      'Sun',
+        associations: ['Learning', 'Confidence', 'Momentum'],
+        subtitle:     'The Stone of Learning and Momentum',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/sunstone-of-clarity.png',
+        meaning:      'Golden Calcite is learning lit from within. Sunstone of Clarity holds the moment before mastery, the tender space of becoming. It brings warmth to the effort and confidence to the not-yet-knowing.',
+        supports:     ['Learning', 'Confidence', 'Momentum'],
+        reflection:   'How might the gifts of Sunstone of Clarity guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Evening\'s Heart',
+        realName:     'Peridot',
+        archive:      'Heartwood/Sun',
+        associations: ['Flourishing', 'Abundance', 'Joy'],
+        subtitle:     'The Stone of Flourishing',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/evenings-heart.png',
+        meaning:      'Evening\'s Heart is abundance in the lingering light. Peridot holds flourishing and joy in the same breath, the warmth that remains at the end of a full day. It is a reminder that thriving is not just possible, it is already here.',
+        supports:     ['Flourishing', 'Abundance', 'Joy'],
+        reflection:   'How might the gifts of Evening\'s Heart guide my next step?'
+      },
+
+      /* HEARTWOOD ARCHIVE */
+      {
+        type:         'crystal',
+        worldName:    'Thornheart',
+        realName:     'Rhodonite',
+        archive:      'Heartwood',
+        associations: ['Forgiveness', 'Healing', 'Compassion'],
+        sabbat:       'Beltane',
+        subtitle:     'The Stone of Forgiveness and Compassion',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/thornheart.png',
+        meaning:      'Forgiveness is not forgetting. It is releasing the hold. Thornheart carries the rose and the thorn together, the tenderness alongside the wound. Rhodonite opens the way back to compassion, beginning with the self.',
+        supports:     ['Forgiveness', 'Healing', 'Compassion'],
+        reflection:   'How might the gifts of Thornheart guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Earth\'s Canopy',
+        realName:     'Tree Agate',
+        archive:      'Heartwood',
+        associations: ['Stability', 'Roots', 'Resilience'],
+        subtitle:     'The Stone of Stability and Roots',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/earths-canopy.png',
+        meaning:      'Roots below, canopy above. Earth\'s Canopy holds both. Tree Agate is the stability that allows growth, the deep anchor that makes the reaching possible. It holds you steady not by keeping you still, but by keeping you grounded.',
+        supports:     ['Stability', 'Roots', 'Resilience'],
+        reflection:   'How might the gifts of Earth\'s Canopy guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Heart\'s Renewal',
+        realName:     'Chrysoprase',
+        archive:      'Heartwood',
+        associations: ['Hope', 'Renewal', 'Recovery'],
+        subtitle:     'The Stone of Hope and Recovery',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/hearts-renewal.png',
+        meaning:      'Hope after the hard season. Heart\'s Renewal grows green through the places that have healed. Chrysoprase holds the tender green of recovery, proof that what was difficult can also be a beginning. It does not rush the process, only affirms it.',
+        supports:     ['Hope', 'Renewal', 'Recovery'],
+        reflection:   'How might the gifts of Heart\'s Renewal guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Memorybloom',
+        realName:     'Unakite',
+        archive:      'Heartwood',
+        associations: ['Integration', 'Memory', 'Growth'],
+        subtitle:     'The Stone of Integration and Memory',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/memorybloom.png',
+        meaning:      'Memorybloom grows the self from what has already been lived. Unakite holds past and present together without forcing resolution. It invites integration, the quiet weaving of who you were into who you are becoming.',
+        supports:     ['Integration', 'Memory', 'Growth'],
+        reflection:   'How might the gifts of Memorybloom guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Verdant Crown',
+        realName:     'Malachite',
+        archive:      'Heartwood',
+        associations: ['Transformation', 'Empowerment', 'Growth'],
+        subtitle:     'The Stone of Transformation',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/verdant-crown.png',
+        meaning:      'Verdant Crown calls in the transformation you are already ready for. Malachite does not soften change. It empowers it. The green spiral at the heart of this stone is the pattern of growth itself: cyclic, relentless, alive.',
+        supports:     ['Transformation', 'Empowerment', 'Growth'],
+        reflection:   'How might the gifts of Verdant Crown guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Earthsong',
+        realName:     'Serpentine',
+        archive:      'Heartwood',
+        associations: ['Nature wisdom', 'Renewal', 'Regeneration'],
+        subtitle:     'The Stone of Nature Wisdom',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/earthsong.png',
+        meaning:      'Earthsong carries the knowledge of what grows, returns, and renews. Serpentine holds the wisdom of the green places, of the forest floor, the spiral fern, the root that finds its way through stone. It knows that things come back.',
+        supports:     ['Nature wisdom', 'Renewal', 'Regeneration'],
+        reflection:   'How might the gifts of Earthsong guide my next step?'
+      },
+
+      /* VEIL ARCHIVE */
+      {
+        type:         'crystal',
+        worldName:    'Mistveil',
+        realName:     'Lepidolite',
+        archive:      'Veil',
+        associations: ['Release', 'Calm', 'Transition'],
+        subtitle:     'The Stone of Release and Transition',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/mistveil.png',
+        meaning:      'Mistveil holds the gentle release. Lepidolite does not push. It creates the conditions in which things can let go of their own accord. It is the stone of transitions that feel impossible until they are done.',
+        supports:     ['Release', 'Calm', 'Transition'],
+        reflection:   'How might the gifts of Mistveil guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Moonfire',
+        realName:     'Selenite',
+        archive:      'Veil',
+        associations: ['Purification', 'Illumination', 'Clarity'],
+        subtitle:     'The Stone of Purification',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/moonfire.png',
+        meaning:      'Luminous and pure. Moonfire illuminates what is hidden and gently clears what no longer belongs. Selenite carries the light of the full moon distilled into form. It does not force revelation, it simply makes the space brighter.',
+        supports:     ['Purification', 'Illumination', 'Clarity'],
+        reflection:   'How might the gifts of Moonfire guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Skywhisper',
+        realName:     'Celestite',
+        archive:      'Veil',
+        associations: ['Peace', 'Higher guidance', 'Serenity'],
+        subtitle:     'The Stone of Peace and Guidance',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/skywhisper.png',
+        meaning:      'Skywhisper is the quietest stone. Celestite opens a channel to peace and higher knowing. It is the stillness between thoughts, the blue space where the noise falls away and something clearer can be heard.',
+        supports:     ['Peace', 'Higher guidance', 'Serenity'],
+        reflection:   'How might the gifts of Skywhisper guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Tidesinger',
+        realName:     'Aquamarine',
+        archive:      'Veil',
+        associations: ['Communication', 'Flow', 'Courage'],
+        subtitle:     'The Stone of Communication and Flow',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/tidesinger.png',
+        meaning:      'The courage to speak. Tidesinger aligns the voice with the heart. Aquamarine holds the place where truth and expression meet, where the words that have been circling finally find their way out. It is the stone of the thing that needs to be said.',
+        supports:     ['Communication', 'Flow', 'Courage'],
+        reflection:   'How might the gifts of Tidesinger guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Starfall',
+        realName:     'Moldavite',
+        archive:      'Veil/Resonance',
+        associations: ['Transformation', 'Thresholds', 'Awakening'],
+        sabbat:       'Samhain',
+        subtitle:     'The Stone of Transformation and Awakening',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/starfall.png',
+        meaning:      'Born from the threshold between worlds. Starfall carries the energy of deep transformation. Moldavite is not a gentle stone. It marks the moment before and after. If it has come to you, something is already shifting.',
+        supports:     ['Transformation', 'Thresholds', 'Awakening'],
+        reflection:   'How might the gifts of Starfall guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Skybridge',
+        realName:     'Kyanite',
+        archive:      'Veil/Resonance',
+        associations: ['Alignment', 'Connection', 'Balance'],
+        subtitle:     'The Stone of Alignment and Connection',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/skybridge.png',
+        meaning:      'Skybridge links what has come apart and restores the pattern. Kyanite carries alignment, between thought and action, between one part of yourself and another. It never needs cleansing because it does not hold what it clears.',
+        supports:     ['Alignment', 'Connection', 'Balance'],
+        reflection:   'How might the gifts of Skybridge guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Snowveil',
+        realName:     'Howlite',
+        archive:      'Veil',
+        associations: ['Patience', 'Stillness', 'Peace'],
+        sabbat:       'Yule',
+        subtitle:     'The Stone of Patience and Peace',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/snowveil.png',
+        meaning:      'In stillness, patience becomes its own kind of strength. Snowveil asks you to rest in the quiet. Howlite holds the pause, the deep breath, the moment before speaking. It is the stone of waiting without straining.',
+        supports:     ['Patience', 'Stillness', 'Peace'],
+        reflection:   'How might the gifts of Snowveil guide my next step?'
+      },
+
+      /* GUARDIAN ARCHIVE */
+      {
+        type:         'crystal',
+        worldName:    'Nightmirror',
+        realName:     'Obsidian',
+        archive:      'Guardian',
+        associations: ['Shadow work', 'Truth', 'Reflection'],
+        sabbat:       'Samhain',
+        subtitle:     'The Stone of Shadow Work and Truth',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/nightmirror.png',
+        meaning:      'The stone that shows what is true. Nightmirror does not soften the reflection. Obsidian holds the mirror steady so you can see clearly what has been hidden or avoided. It is not a comfortable stone, but it stands with you.',
+        supports:     ['Shadow work', 'Truth', 'Reflection'],
+        reflection:   'How might the gifts of Nightmirror guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Ironmirror',
+        realName:     'Hematite',
+        archive:      'Guardian',
+        associations: ['Focus', 'Stability', 'Grounding'],
+        subtitle:     'The Stone of Focus and Grounding',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/ironmirror.png',
+        meaning:      'Grounding through focus. Ironmirror steadies the scattered mind and draws energy back to the body. Hematite is the weight that anchors. It does not calm the storm, it gives you something solid to stand on while the storm passes.',
+        supports:     ['Focus', 'Stability', 'Grounding'],
+        reflection:   'How might the gifts of Ironmirror guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Shadowshield',
+        realName:     'Shungite',
+        archive:      'Guardian',
+        associations: ['Protection', 'Purification', 'Boundary'],
+        subtitle:     'The Stone of Protection and Purification',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/shadowshield.png',
+        meaning:      'Ancient protection. Shadowshield purifies the energetic field and holds the boundary firm. Shungite carries a quiet authority that has been present since before memory. It does not announce itself. It simply holds the line.',
+        supports:     ['Protection', 'Purification', 'Boundary'],
+        reflection:   'How might the gifts of Shadowshield guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Hearthstone',
+        realName:     'Red Jasper',
+        archive:      'Guardian',
+        associations: ['Strength', 'Endurance', 'Courage'],
+        subtitle:     'The Stone of Strength and Endurance',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/hearthstone.png',
+        meaning:      'Deep strength and quiet endurance. Hearthstone burns slow and steady. Red Jasper does not blaze and exhaust itself. It sustains. It is the stone for the long effort, the commitment that doesn\'t falter because it isn\'t built on intensity.',
+        supports:     ['Strength', 'Endurance', 'Courage'],
+        reflection:   'How might the gifts of Hearthstone guide my next step?'
+      },
+
+      /* RESONANCE ARCHIVE */
+      {
+        type:         'crystal',
+        worldName:    'Pathweaver',
+        realName:     'Fluorite',
+        archive:      'Resonance',
+        associations: ['Clarity', 'Direction', 'Focus'],
+        subtitle:     'The Stone of Clarity and Direction',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/pathweaver.png',
+        meaning:      'When the way is unclear, Pathweaver brings clarity. Fluorite holds many colours, each a different frequency of focus, and together they cut through the confusion to show the thread that is worth following.',
+        supports:     ['Clarity', 'Direction', 'Focus'],
+        reflection:   'How might the gifts of Pathweaver guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Truthleaf',
+        realName:     'Amazonite',
+        archive:      'Resonance',
+        associations: ['Truth', 'Harmony', 'Expression'],
+        subtitle:     'The Stone of Truth and Harmony',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/truthleaf.png',
+        meaning:      'Where truth meets harmony. Truthleaf gives you the words, and the courage to speak them. Amazonite holds the balance between what is true and what is kind, and insists that you do not have to choose between them.',
+        supports:     ['Truth', 'Harmony', 'Expression'],
+        reflection:   'How might the gifts of Truthleaf guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Skythread',
+        realName:     'Apatite',
+        archive:      'Resonance',
+        associations: ['Vision', 'Inspiration', 'Creativity'],
+        subtitle:     'The Stone of Vision and Inspiration',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/skythread.png',
+        meaning:      'Vision and inspiration woven in blue-green. Skythread opens the mind to creative possibility. Apatite is the stone for the moment when the project is calling and the ideas are just out of reach. It narrows the distance.',
+        supports:     ['Vision', 'Inspiration', 'Creativity'],
+        reflection:   'How might the gifts of Skythread guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Veilwhisper',
+        realName:     'Prehnite',
+        archive:      'Resonance',
+        associations: ['Preparation', 'Intuition', 'Potential'],
+        sabbat:       'Imbolc',
+        subtitle:     'The Stone of Preparation and Intuition',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/veilwhisper.png',
+        meaning:      'The stone of preparation. Veilwhisper cultivates the inner knowing that guides right action before the moment arrives. Prehnite holds the space between readiness and beginning, where the intuition does its quiet work.',
+        supports:     ['Preparation', 'Intuition', 'Potential'],
+        reflection:   'How might the gifts of Veilwhisper guide my next step?'
+      },
+      {
+        type:         'crystal',
+        worldName:    'Starkeeper',
+        realName:     'Lapis Lazuli',
+        archive:      'Resonance',
+        associations: ['Wisdom', 'Truth', 'Knowledge'],
+        subtitle:     'The Stone of Wisdom and Truth',
+        image:        'https://res.cloudinary.com/ds8pkprtb/image/upload/w_300,h_450,c_fill,g_north,b_white,f_jpg/aetherwood/grimoire/starkeeper.png',
+        meaning:      'Lapis Lazuli holds the wisdom of ages. Starkeeper invites you to seek truth and deepen your knowing. It is the stone of the one who has studied long enough to understand that the more you know, the more there is to know.',
+        supports:     ['Wisdom', 'Truth', 'Knowledge'],
+        reflection:   'How might the gifts of Starkeeper guide my next step?'
+      }
+    ];
+
+    var currentRecipe = 0;
+
+    var CRYSTAL_START = 14; /* index where crystal entries begin */
+
+    function renderRecipe(idx, targetEl) {
+      var r    = recipes[idx];
+      var wrap = targetEl || document.getElementById('recipeWrap');
+
+      if (r.type === 'crystal') {
+        /* ——— CRYSTAL LAYOUT — DOM-built, mirrors tea structure ——— */
+        wrap.innerHTML = '';
+
+        var localImg = r.image;
+
+        /* real name label */
+        var catEl = document.createElement('span');
+        catEl.className = 'recipe-category';
+        catEl.textContent = r.realName;
+        wrap.appendChild(catEl);
+
+        /* crystal image */
+        var imgEl = document.createElement('img');
+        imgEl.className = 'crystal-img';
+        imgEl.src = localImg;
+        imgEl.alt = r.worldName;
+        wrap.appendChild(imgEl);
+
+        /* world name */
+        var nameEl = document.createElement('span');
+        nameEl.className = 'recipe-name';
+        nameEl.textContent = r.worldName;
+        wrap.appendChild(nameEl);
+
+        /* divider */
+        var hrEl = document.createElement('hr');
+        hrEl.className = 'recipe-divider';
+        wrap.appendChild(hrEl);
+
+        /* meaning */
+        if (r.meaning) {
+          var meaningEl = document.createElement('span');
+          meaningEl.className = 'recipe-note';
+          meaningEl.textContent = r.meaning;
+          wrap.appendChild(meaningEl);
+        }
+
+        /* expandable discover section */
+        var hasMore = (r.supports && r.supports.length) || r.lore || (r.howTo && r.howTo.length) || r.reflection;
+        if (hasMore) {
+          var discoverBtn = document.createElement('button');
+          discoverBtn.className = 'crystal-discover';
+          discoverBtn.textContent = 'discover more';
+          wrap.appendChild(discoverBtn);
+
+          var detDiv = document.createElement('div');
+          detDiv.className = 'crystal-expanded';
+          detDiv.style.display = 'none';
+
+          if (r.supports && r.supports.length) {
+            var tagsDiv = document.createElement('div');
+            tagsDiv.className = 'crystal-tags';
+            r.supports.forEach(function(s) {
+              var tag = document.createElement('span');
+              tag.className = 'crystal-tag';
+              tag.textContent = s;
+              tagsDiv.appendChild(tag);
+            });
+            detDiv.appendChild(tagsDiv);
+          }
+
+          if (r.lore) {
+            var loreEl = document.createElement('span');
+            loreEl.className = 'crystal-lore';
+            loreEl.textContent = r.lore;
+            detDiv.appendChild(loreEl);
+          }
+
+          if (r.howTo && r.howTo.length) {
+            var howLbl = document.createElement('span');
+            howLbl.className = 'crystal-how-label';
+            howLbl.textContent = 'how to work with ' + r.realName.toLowerCase();
+            detDiv.appendChild(howLbl);
+            var howList = document.createElement('ul');
+            howList.className = 'crystal-how';
+            r.howTo.forEach(function(h) {
+              var li = document.createElement('li');
+              li.textContent = h;
+              howList.appendChild(li);
+            });
+            detDiv.appendChild(howList);
+          }
+
+          if (r.reflection) {
+            var reflEl = document.createElement('span');
+            reflEl.className = 'crystal-reflection';
+            reflEl.textContent = r.reflection;
+            detDiv.appendChild(reflEl);
+          }
+
+          wrap.appendChild(detDiv);
+
+          discoverBtn.addEventListener('click', function() {
+            var open = detDiv.style.display === 'block';
+            detDiv.style.display = open ? 'none' : 'block';
+            discoverBtn.textContent = open ? 'discover more' : 'discover less';
+          });
+        }
+
+      } else {
+        /* ——— TEA LAYOUT — DOM-built ——— */
+        wrap.innerHTML = '';
+
+        /* subtitle kicker */
+        var subEl = document.createElement('span');
+        subEl.className = 'recipe-kicker';
+        subEl.textContent = r.subtitle || '';
+        wrap.appendChild(subEl);
+
+        /* botanical image */
+        var imgEl = document.createElement('img');
+        imgEl.className = 'recipe-image';
+        imgEl.src = r.image;
+        imgEl.alt = r.worldName;
+        wrap.appendChild(imgEl);
+
+        /* world name */
+        var nameEl = document.createElement('span');
+        nameEl.className = 'recipe-name';
+        nameEl.textContent = r.worldName;
+        wrap.appendChild(nameEl);
+
+        /* purpose line */
+        if (r.purpose) {
+          var purposeEl = document.createElement('span');
+          purposeEl.className = 'recipe-purpose';
+          purposeEl.textContent = r.purpose;
+          wrap.appendChild(purposeEl);
+        }
+
+        /* experience */
+        if (r.experience) {
+          var expEl = document.createElement('span');
+          expEl.className = 'recipe-experience';
+          expEl.textContent = r.experience;
+          wrap.appendChild(expEl);
+        }
+
+        /* divider */
+        var hrEl = document.createElement('hr');
+        hrEl.className = 'recipe-divider';
+        wrap.appendChild(hrEl);
+
+        /* ingredients */
+        var ulEl = document.createElement('ul');
+        ulEl.className = 'recipe-ingredients';
+        r.ingredients.forEach(function(ing) {
+          var li = document.createElement('li');
+          li.textContent = ing;
+          ulEl.appendChild(li);
+        });
+        wrap.appendChild(ulEl);
+
+        /* significance */
+        if (r.significance) {
+          var sigEl = document.createElement('span');
+          sigEl.className = 'recipe-significance';
+          sigEl.textContent = r.significance;
+          wrap.appendChild(sigEl);
+        }
+
+        /* ritual */
+        if (r.ritual) {
+          var ritualEl = document.createElement('span');
+          ritualEl.className = 'recipe-ritual';
+          ritualEl.textContent = r.ritual;
+          wrap.appendChild(ritualEl);
+        }
+
+        /* reflection question */
+        if (r.reflection) {
+          var reflEl = document.createElement('span');
+          reflEl.className = 'recipe-reflection';
+          reflEl.textContent = r.reflection;
+          wrap.appendChild(reflEl);
+        }
+      }
+
+      document.getElementById('grimoirePanel').scrollTop = 0;
+    }
+
+    /* ——— ELEMENT REFS ——— */
+    var cover         = document.getElementById('fadeCover');
+    var bg            = document.getElementById('bg');
+    var grimoirePanel = document.getElementById('grimoirePanel');
+    var grimoireScrim = document.getElementById('grimoireScrim');
+    var whisper       = document.getElementById('sealedWhisper');
+    var efMenu        = document.getElementById('efMenu');
+    var efScrim       = document.getElementById('efScrim');
+    var efTrail       = document.getElementById('efTrail');
+    var efTrailList   = document.getElementById('efTrailList');
+    var whisperTimer  = null;
+    var efOpen        = false;
+
+    /* ——— FADE IN ——— */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        cover.style.opacity = '0';
+        setTimeout(function(){ cover.style.display = 'none'; }, 2600);
+      });
+    });
+
+    /* ——— FADE NAVIGATION ——— */
+    function navigateTo(href){
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        cover.style.opacity = '1';
+        setTimeout(function(){ window.location.href = href; }, 1500);
+      }); });
+    }
+
+    /* ——— TRAIL LOGGING ——— */
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    function logTrail(name, href) {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the apothecary', 'apothecary.html');
+
+    /* ——— EVERFLAME MENU ——— */
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'apothecary.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (trail.length === 0) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(e){
+        var li  = document.createElement('li');
+        li.className = 'ef-item';
+        var btn = document.createElement('button');
+        btn.className   = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn);
+        efTrailList.appendChild(li);
+      });
+    }
+
+    function openEfMenu()  { buildTrail(); efMenu.classList.add('open'); efScrim.classList.add('open'); efOpen = true;  }
+    function closeEfMenu() { efMenu.classList.remove('open'); efScrim.classList.remove('open'); efOpen = false; }
+
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function(){ efOpen ? closeEfMenu() : openEfMenu(); });
+    ef.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efArchives').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('whispered-archives.html');
+    });
+    document.getElementById('efHearthfire').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('hearthfire.html');
+    });
+    document.getElementById('efCorridor').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('vestibule.html?walk=1');
+    });
+    document.getElementById('efLeave').addEventListener('click', function(){
+      closeEfMenu(); navigateTo('index.html');
+    });
+
+    /* ——— GRIMOIRE STATE MACHINE ——— */
+    var recipeWrap = document.getElementById('recipeWrap');
+    var stateIds   = ['gmHome', 'gmTeaPick', 'gmStonePick', 'gmSearch'];
+
+    function showState(id) {
+      stateIds.forEach(function(s) {
+        document.getElementById(s).style.display = (s === id) ? '' : 'none';
+      });
+      recipeWrap.style.display = 'none';
+      grimoirePanel.scrollTop  = 0;
+    }
+
+    var resultsArea = null;
+    var addingMode  = false;
+
+    function showResult() {
+      stateIds.forEach(function(s) {
+        document.getElementById(s).style.display = 'none';
+      });
+      recipeWrap.style.display = '';
+      grimoirePanel.scrollTop  = 0;
+    }
+
+    function ensureResultsArea() {
+      if (!resultsArea) {
+        resultsArea = document.createElement('div');
+        resultsArea.id = 'resultsArea';
+        recipeWrap.appendChild(resultsArea);
+      }
+    }
+
+    function ensureReadingBar() {
+      if (document.getElementById('readingBar')) return;
+      var bar = document.createElement('div');
+      bar.id = 'readingBar';
+
+      function sep() {
+        var s = document.createElement('span');
+        s.className = 'bar-sep';
+        s.textContent = '·';
+        return s;
+      }
+
+      var addTea = document.createElement('button');
+      addTea.textContent = 'add a tea';
+      addTea.addEventListener('click', function() { addingMode = true; showState('gmTeaPick'); });
+
+      var addStone = document.createElement('button');
+      addStone.textContent = 'add a stone';
+      addStone.addEventListener('click', function() { addingMode = true; showState('gmStonePick'); });
+
+      var startOver = document.createElement('button');
+      startOver.textContent = 'start over';
+      startOver.addEventListener('click', function() {
+        addingMode  = false;
+        resultsArea.innerHTML = '';
+        var rb = document.getElementById('readingBar');
+        if (rb) rb.remove();
+        showState('gmHome');
+      });
+
+      bar.appendChild(addTea);
+      bar.appendChild(sep());
+      bar.appendChild(addStone);
+      bar.appendChild(sep());
+      bar.appendChild(startOver);
+      recipeWrap.insertBefore(bar, recipeWrap.firstChild);
+    }
+
+    /* ——— GRIMOIRE OPEN / CLOSE ——— */
+    function openGrimoire() {
+      showState('gmHome');
+      bg.classList.add('dimmed');
+      grimoirePanel.classList.add('open');
+      grimoireScrim.classList.add('open');
+      updateReturnThumb();
+    }
+    function closeGrimoire() {
+      bg.classList.remove('dimmed');
+      grimoirePanel.classList.remove('open');
+      grimoireScrim.classList.remove('open');
+      updateReturnThumb();
+    }
+
+    var hsGrimoire = document.getElementById('hs-grimoire');
+    hsGrimoire.addEventListener('click', openGrimoire);
+    hsGrimoire.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGrimoire(); }
+    });
+    grimoireScrim.addEventListener('click', closeGrimoire);
+    document.getElementById('grimoireClose').addEventListener('click', closeGrimoire);
+
+    /* ——— RESULT BAR HELPERS ——— */
+    function injectBar(backLabel, backState, extraBtns) {
+      var bar = document.createElement('div');
+      bar.className = 'crystal-solo-bar';
+      var back = document.createElement('button');
+      back.className   = 'crystal-solo-btn';
+      back.textContent = backLabel;
+      back.addEventListener('click', function() { showState(backState); });
+      bar.appendChild(back);
+      (extraBtns || []).forEach(function(b) { bar.appendChild(b); });
+      recipeWrap.insertBefore(bar, recipeWrap.firstChild);
+    }
+
+    function makeBtn(label, fn) {
+      var b = document.createElement('button');
+      b.className   = 'crystal-solo-btn';
+      b.textContent = label;
+      b.addEventListener('click', fn);
+      return b;
+    }
+
+    /* ——— CRYSTAL MODAL ——— */
+    var crystalModal = document.getElementById('crystalModal');
+    var cmInner      = document.getElementById('cmInner');
+
+    function openCrystalModal(r, localImg) {
+      cmInner.innerHTML = '';
+
+      // Serve a high-res image in the modal so card text is legible
+      var modalSrc = localImg.replace(
+        /\/upload\/[^/]+\//,
+        '/upload/w_900,h_1350,c_fill,g_north,b_white,f_jpg/'
+      );
+
+      var img = document.createElement('img');
+      img.className = 'cm-img';
+      img.src = modalSrc;
+      img.alt = r.worldName;
+      cmInner.appendChild(img);
+
+      var content = document.createElement('div');
+      content.className = 'cm-content';
+
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'cm-close';
+      closeBtn.textContent = 'close';
+      closeBtn.addEventListener('click', closeCrystalModal);
+      content.appendChild(closeBtn);
+
+      var kicker = document.createElement('span');
+      kicker.className = 'cm-kicker';
+      var sl = seasonLabel(r);
+      kicker.textContent = sl ? r.realName + '  ·  a ' + sl + ' stone' : r.realName;
+      content.appendChild(kicker);
+
+      var title = document.createElement('h2');
+      title.className = 'cm-title';
+      title.textContent = r.worldName;
+      content.appendChild(title);
+
+      if (r.meaning) {
+        var meaning = document.createElement('p');
+        meaning.className = 'cm-meaning';
+        meaning.textContent = r.meaning;
+        content.appendChild(meaning);
+      }
+      if (r.supports && r.supports.length) {
+        var tags = document.createElement('div');
+        tags.className = 'cm-tags';
+        r.supports.forEach(function(s) {
+          var tag = document.createElement('span');
+          tag.className = 'cm-tag';
+          tag.textContent = s;
+          tags.appendChild(tag);
+        });
+        content.appendChild(tags);
+      }
+      if (r.lore) {
+        var lore = document.createElement('span');
+        lore.className = 'cm-lore';
+        lore.textContent = r.lore;
+        content.appendChild(lore);
+      }
+      if (r.howTo && r.howTo.length) {
+        var howLbl = document.createElement('span');
+        howLbl.className = 'cm-how-label';
+        howLbl.textContent = 'how to work with ' + r.realName.toLowerCase();
+        content.appendChild(howLbl);
+        var howList = document.createElement('ul');
+        howList.className = 'cm-how';
+        r.howTo.forEach(function(h) {
+          var li = document.createElement('li');
+          li.textContent = h;
+          howList.appendChild(li);
+        });
+        content.appendChild(howList);
+      }
+      if (r.reflection) {
+        var refl = document.createElement('span');
+        refl.className = 'cm-reflection';
+        refl.textContent = r.reflection;
+        content.appendChild(refl);
+      }
+
+      cmInner.appendChild(content);
+      crystalModal.classList.add('open');
+      updateReturnThumb();
+    }
+
+    function closeCrystalModal() { crystalModal.classList.remove('open'); updateReturnThumb(); }
+    crystalModal.addEventListener('click', function(e) {
+      if (e.target === crystalModal) closeCrystalModal();
+    });
+
+    /* ——— CRYSTAL DRAW (seasonal pool) ——— */
+    var drawnCrystal = null;
+    var drawnImg     = null;
+    var CRYSTAL_END_FULL = recipes.length - 1;
+
+    /* Sabbat windows — both hemispheres, ~10-day window either side */
+    var SABBAT_WINDOWS = {
+      'Yule':       [{ from: '12-18', to: '12-24' }, { from: '06-18', to: '06-24' }],
+      'Imbolc':     [{ from: '01-28', to: '02-07' }, { from: '07-28', to: '08-07' }],
+      'Ostara':     [{ from: '03-18', to: '03-28' }, { from: '09-18', to: '09-28' }],
+      'Beltane':    [{ from: '04-28', to: '05-07' }, { from: '10-28', to: '11-07' }],
+      'Litha':      [{ from: '06-18', to: '06-24' }, { from: '12-18', to: '12-24' }],
+      'Lughnasadh': [{ from: '07-28', to: '08-07' }, { from: '01-28', to: '02-07' }],
+      'Mabon':      [{ from: '09-18', to: '09-28' }, { from: '03-18', to: '03-28' }],
+      'Samhain':    [{ from: '10-28', to: '11-07' }, { from: '04-28', to: '05-07' }]
+    };
+
+    function inDateRange(now, from, to) {
+      return (from <= to) ? (now >= from && now <= to) : (now >= from || now <= to);
+    }
+
+    function isAvailableNow(r) {
+      var today = new Date();
+      var now = String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+      if (r.window) return inDateRange(now, r.window.from, r.window.to);
+      if (r.sabbat && SABBAT_WINDOWS[r.sabbat]) {
+        return SABBAT_WINDOWS[r.sabbat].some(function(w) { return inDateRange(now, w.from, w.to); });
+      }
+      return true;
+    }
+
+    function seasonLabel(r) {
+      if (!r.window) return null;
+      var seasons = [
+        { from: '03-01', to: '05-31', name: 'autumn' },
+        { from: '06-01', to: '08-31', name: 'winter' },
+        { from: '09-01', to: '11-30', name: 'spring' },
+        { from: '12-01', to: '02-28', name: 'summer' }
+      ];
+      for (var i = 0; i < seasons.length; i++) {
+        var s = seasons[i];
+        if (r.window.from >= s.from && r.window.to <= s.to) return s.name;
+      }
+      return null;
+    }
+
+    function buildDrawPool(filterFn) {
+      var pool = [];
+      for (var i = CRYSTAL_START; i <= CRYSTAL_END_FULL; i++) {
+        var r = recipes[i];
+        if (r.meaning && isAvailableNow(r) && (!filterFn || filterFn(r))) pool.push(i);
+      }
+      if (!pool.length) {
+        for (var i = CRYSTAL_START; i <= CRYSTAL_END_FULL; i++) {
+          if (recipes[i].meaning && (!filterFn || filterFn(recipes[i]))) pool.push(i);
+        }
+      }
+      if (!pool.length) {
+        for (var i = CRYSTAL_START; i <= CRYSTAL_END_FULL; i++) {
+          if (recipes[i].meaning) pool.push(i);
+        }
+      }
+      return pool;
+    }
+
+    function drawCrystal(filterFn, backState) {
+      var pool = buildDrawPool(filterFn);
+      var idx  = pool[Math.floor(Math.random() * pool.length)];
+      var r    = recipes[idx];
+      var img  = r.image;
+
+      ensureResultsArea();
+      showResult();
+      ensureReadingBar();
+
+      var card = document.createElement('div');
+      card.className = 'result-card';
+      resultsArea.appendChild(card);
+      renderRecipe(idx, card);
+
+      var detDiv      = card.querySelector('.crystal-expanded');
+      var discoverBtn = card.querySelector('.crystal-discover');
+      if (detDiv)      { detDiv.style.display = 'block'; }
+      if (discoverBtn) { discoverBtn.textContent = 'discover less'; }
+
+      // Per-card controls: draw again + open in full
+      var cardBar = document.createElement('div');
+      cardBar.className = 'crystal-solo-bar';
+      (function(capturedR, capturedImg, capturedFilter, capturedBack) {
+        cardBar.appendChild(makeBtn('draw again', function() { drawCrystal(capturedFilter, capturedBack); }));
+        cardBar.appendChild(makeBtn('open in full', function() { openCrystalModal(capturedR, capturedImg); }));
+      })(r, img, filterFn, backState);
+      card.insertBefore(cardBar, card.firstChild);
+
+      addingMode = false;
+      grimoirePanel.scrollTop = grimoirePanel.scrollHeight;
+    }
+
+    /* ——— TEA DRAW ——— */
+    function drawTea(filterFn, backState) {
+      var pool = [];
+      for (var i = 0; i < CRYSTAL_START; i++) {
+        if (filterFn(recipes[i])) pool.push(i);
+      }
+      if (!pool.length) {
+        for (var i = 0; i < CRYSTAL_START; i++) pool.push(i);
+      }
+      var idx = pool[Math.floor(Math.random() * pool.length)];
+
+      ensureResultsArea();
+      showResult();
+      ensureReadingBar();
+
+      var card = document.createElement('div');
+      card.className = 'result-card';
+      resultsArea.appendChild(card);
+      renderRecipe(idx, card);
+
+      // Per-card draw again
+      var cardBar = document.createElement('div');
+      cardBar.className = 'crystal-solo-bar';
+      (function(capturedFilter, capturedBack) {
+        cardBar.appendChild(makeBtn('draw again', function() { drawTea(capturedFilter, capturedBack); }));
+      })(filterFn, backState);
+      card.insertBefore(cardBar, card.firstChild);
+
+      addingMode = false;
+      grimoirePanel.scrollTop = grimoirePanel.scrollHeight;
+    }
+
+    /* ——— HOME BUTTONS ——— */
+    document.getElementById('gmToTea').addEventListener('click', function() { showState('gmTeaPick'); });
+    document.getElementById('gmToStone').addEventListener('click', function() { showState('gmStonePick'); });
+    document.getElementById('gmToSearch').addEventListener('click', function() {
+      showState('gmSearch');
+      setTimeout(function(){ document.getElementById('gmSearchInput').focus(); }, 80);
+    });
+
+    /* ——— TEA PICKER ——— */
+    var teaDailyChips = [
+      { label: 'dawn',    fn: function(r){ return r.time === 'Dawn'; } },
+      { label: 'midday',  fn: function(r){ return r.time === 'Midday'; } },
+      { label: 'evening', fn: function(r){ return r.time === 'Evening'; } },
+      { label: 'night',   fn: function(r){ return r.time === 'Night'; } }
+    ];
+    var teaLunarChips = [
+      { label: 'dark moon',      fn: function(r){ return r.lunar === 'Dark Moon'; } },
+      { label: 'new moon',       fn: function(r){ return r.lunar === 'New Moon'; } },
+      { label: 'first quarter',  fn: function(r){ return r.lunar === 'First Quarter'; } },
+      { label: 'waxing gibbous', fn: function(r){ return r.lunar === 'Waxing Gibbous'; } },
+      { label: 'full moon',      fn: function(r){ return r.lunar === 'Full Moon'; } },
+      { label: 'waning moon',    fn: function(r){ return r.lunar === 'Waning Moon'; } }
+    ];
+    var teaBlendChips = [
+      { label: 'grounding', fn: function(r){ return r.worldName === 'Root Song'; } },
+      { label: 'heart',     fn: function(r){ return r.worldName === 'Hearthbloom'; } },
+      { label: 'clarity',   fn: function(r){ return r.worldName === 'Mindthread'; } },
+      { label: 'winter',    fn: function(r){ return r.worldName === 'Golden Veil'; } }
+    ];
+
+    function buildChips(chips, containerId, backState) {
+      var el = document.getElementById(containerId);
+      chips.forEach(function(c) {
+        var btn = document.createElement('button');
+        btn.className   = 'gm-chip';
+        btn.textContent = c.label;
+        btn.addEventListener('click', function() {
+          if (containerId.indexOf('Stone') !== -1) {
+            drawCrystal(c.fn, backState);
+          } else {
+            drawTea(c.fn, backState);
+          }
+        });
+        el.appendChild(btn);
+      });
+    }
+
+    buildChips(teaDailyChips, 'gmDailyChips', 'gmTeaPick');
+    buildChips(teaLunarChips, 'gmLunarChips', 'gmTeaPick');
+    buildChips(teaBlendChips, 'gmBlendChips', 'gmTeaPick');
+
+    document.getElementById('gmTeaBack').addEventListener('click',   function() { showState('gmHome'); });
+    document.getElementById('gmTeaChance').addEventListener('click', function() { drawTea(function(){ return true; }, 'gmTeaPick'); });
+
+    /* ——— STONE PICKER ——— */
+    var stoneNeeds = [
+      { label: 'Sun',       fn: function(r){ return r.archive && r.archive.indexOf('Sun') !== -1; } },
+      { label: 'Heartwood', fn: function(r){ return r.archive && r.archive.indexOf('Heartwood') !== -1; } },
+      { label: 'Veil',      fn: function(r){ return r.archive && r.archive.indexOf('Veil') !== -1; } },
+      { label: 'Guardian',  fn: function(r){ return r.archive && r.archive.indexOf('Guardian') !== -1; } },
+      { label: 'Resonance', fn: function(r){ return r.archive && r.archive.indexOf('Resonance') !== -1; } }
+    ];
+
+    function crystalHas(r, keywords) {
+      if (!r.supports) return false;
+      return r.supports.some(function(s) {
+        var lower = s.toLowerCase();
+        return keywords.some(function(k) { return lower.indexOf(k) !== -1; });
+      });
+    }
+
+    buildChips(stoneNeeds, 'gmStoneChips', 'gmStonePick');
+
+    document.getElementById('gmStoneBack').addEventListener('click',   function() { showState('gmHome'); });
+    document.getElementById('gmStoneChance').addEventListener('click', function() { drawCrystal(null, 'gmStonePick'); });
+
+    /* ——— SEARCH ——— */
+    document.getElementById('gmSearchBack').addEventListener('click', function() { showState('gmHome'); });
+    document.getElementById('gmSearchInput').addEventListener('input', function() {
+      var q = this.value.toLowerCase().trim();
+      var results = document.getElementById('gmSearchResults');
+      results.innerHTML = '';
+      if (!q) return;
+
+      var matches = [];
+      recipes.forEach(function(r, i) {
+        var name  = (r.worldName || '').toLowerCase();
+        var real  = (r.realName  || '').toLowerCase();
+        var sub   = (r.subtitle  || '').toLowerCase();
+        var lunar = (r.lunar     || '').toLowerCase();
+        if (name.indexOf(q) !== -1 || real.indexOf(q) !== -1 || sub.indexOf(q) !== -1 || lunar.indexOf(q) !== -1) matches.push(i);
+      });
+
+      if (!matches.length) {
+        var none = document.createElement('p');
+        none.className   = 'gm-no-results';
+        none.textContent = 'nothing found · try a different name';
+        results.appendChild(none);
+        return;
+      }
+
+      matches.forEach(function(idx) {
+        var r   = recipes[idx];
+        var btn = document.createElement('button');
+        btn.className   = 'gm-result-btn';
+        btn.textContent = r.worldName + (r.realName && r.realName !== r.worldName ? '  ·  ' + r.realName : '');
+        btn.addEventListener('click', function() {
+          showResult();
+          renderRecipe(idx);
+          if (r.type === 'crystal') {
+            drawnCrystal = r;
+            drawnImg = r.image;
+            injectBar('← back to search', 'gmSearch', [
+              makeBtn('open in full', function() { openCrystalModal(drawnCrystal, drawnImg); })
+            ]);
+            var detDiv      = recipeWrap.querySelector('.crystal-expanded');
+            var discoverBtn = recipeWrap.querySelector('.crystal-discover');
+            if (detDiv)      { detDiv.style.display = 'block'; }
+            if (discoverBtn) { discoverBtn.textContent = 'discover less'; }
+          } else {
+            injectBar('← back to search', 'gmSearch');
+          }
+          grimoirePanel.scrollTop = 0;
+        });
+        results.appendChild(btn);
+      });
+    });
+
+    /* ——— WHISPERS ——— */
+    function showWhisper(text, duration){
+      whisper.textContent = text;
+      whisper.classList.add('show');
+      document.body.classList.add('whisper-open');
+      clearTimeout(whisperTimer);
+      whisperTimer = setTimeout(function(){
+        whisper.classList.remove('show');
+        document.body.classList.remove('whisper-open');
+      }, duration || 4200);
+    }
+
+    document.getElementById('hs-window').addEventListener('click', function(){ navigateTo('oracle.html'); });
+    document.getElementById('hs-window').addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); navigateTo('oracle.html'); }
+    });
+    /* ——— WAXING CRESCENT — TEA LEAF READING ——— */
+    var lunarState  = LUNAR.getLunarState();
+    var teaStage    = document.getElementById('teaStage');
+    var teaScrim    = document.getElementById('teaScrim');
+    var hsCup       = document.getElementById('hs-cup');
+
+    /* Activate the cup on Waxing Crescent only */
+    if (lunarState.phase.key === 'waxing-crescent') {
+      hsCup.classList.add('waxing-crescent');
+      hsCup.querySelector('.hs-label').textContent = 'the leaves are ready';
+    }
+
+    // ─── Floating motes ─────────────────────────────────────────────────────
+    var TEA_MOTE_INTERVAL = null;
+    var TEA_MOTE_COLORS = [
+      'rgba(220,185,95,',
+      'rgba(198,160,72,',
+      'rgba(168,198,112,',
+      'rgba(238,208,132,',
+      'rgba(155,182,98,',
+      'rgba(210,175,88,',
+    ];
+    function spawnTeaMote() {
+      if (!teaStage.classList.contains('open')) { stopTeaMotes(); return; }
+      var m = document.createElement('div');
+      m.className = 'tea-mote';
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      var x = w * 0.04 + Math.random() * w * 0.92;
+      var y = h * 0.70 + Math.random() * h * 0.22;
+      var size = 2 + Math.random() * 4.5;
+      var dur  = 15 + Math.random() * 10;
+      var delay = Math.random() * 1.5;
+      var dx1  = (Math.random() - 0.5) * 130;
+      var dy1  = -(h * 0.32 + Math.random() * h * 0.22);
+      var dx2  = dx1 + (Math.random() - 0.5) * 90;
+      var dy2  = -(h * 0.62 + Math.random() * h * 0.22);
+      var op   = 0.22 + Math.random() * 0.40;
+      var col  = TEA_MOTE_COLORS[Math.floor(Math.random() * TEA_MOTE_COLORS.length)];
+      m.style.cssText = [
+        'left:'+x+'px','top:'+y+'px',
+        'width:'+size+'px','height:'+size+'px',
+        'background:'+col+op+')',
+        'box-shadow:0 0 '+(size*2.5)+'px '+col+(op*0.55)+')',
+        '--md:'+dur+'s','--mdelay:'+delay+'s',
+        '--mdx:'+dx1+'px','--mdy:'+dy1+'px',
+        '--mdx2:'+dx2+'px','--mdy2:'+dy2+'px',
+        '--mop:'+op
+      ].join(';');
+      document.body.appendChild(m);
+      setTimeout(function(){ if (m.parentNode) m.remove(); }, (dur + delay + 0.5) * 1000);
+    }
+    function startTeaMotes() {
+      spawnTeaMote();
+      spawnTeaMote();
+      TEA_MOTE_INTERVAL = setInterval(spawnTeaMote, 2000);
+    }
+    function stopTeaMotes() {
+      if (TEA_MOTE_INTERVAL) { clearInterval(TEA_MOTE_INTERVAL); TEA_MOTE_INTERVAL = null; }
+      document.querySelectorAll('.tea-mote').forEach(function(m){ m.remove(); });
+    }
+
+    function openTeaReading() {
+      var intention = AETHERWOOD.getIntentionForCycle(lunarState.cycleId);
+      populateTeaStage(intention);
+      teaStage.classList.add('open');
+      teaScrim.classList.add('open');
+      bg.classList.add('dimmed');
+      setTimeout(startTeaMotes, 800);
+      updateReturnThumb();
+    }
+
+    function closeTeaReading() {
+      teaStage.classList.remove('open');
+      teaScrim.classList.remove('open');
+      bg.classList.remove('dimmed');
+      stopTeaMotes();
+      updateReturnThumb();
+    }
+
+    function setFade(el, delay) {
+      el.style.setProperty('--td', delay + 's');
+      /* Restart animation so re-opening works */
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    }
+
+    function populateTeaStage(intention) {
+      var lines, suggestLabel, teaName, teaDesc, crystalLabel, crystalName, crystalDesc, cta;
+
+      if (intention && intention.word) {
+        /* ── Has New Moon intention — run through the alchemy matching ── */
+        var words       = intention.word.split(' · ');
+        var wordDisplay = words.map(function(w){ return '‘' + w.trim() + '’'; }).join(', ');
+
+        var alchemy = (typeof ALCHEMY !== 'undefined') ? ALCHEMY.match(words) : null;
+        if (!alchemy) alchemy = { tea: 'Seedthread', crystal: 'Veilwhisper', readingThread: null, tender: false };
+
+        /* Look up the matched tea's description from the grimoire data */
+        var matchedRecipe = recipes.find(function(r){ return r.worldName === alchemy.tea; });
+        var matchedTeaDesc = matchedRecipe
+          ? (matchedRecipe.lunar || matchedRecipe.subtitle || '') + (matchedRecipe.blend ? ' · ' + matchedRecipe.blend : '')
+          : '';
+
+        /* Reading lines:
+           Line 1 — always echoes their words back
+           Line 2 — constant waxing crescent framing
+           Line 3 — personalised to their primary word (from READING_THREADS)
+           !! ANGE: Lines 1 and 2 are structural — rewrite in your voice !! */
+        var thread = alchemy.readingThread
+          || 'In the waxing crescent, what is named begins to breathe. This is not the time to pull at the threads, only to tend them.';
+
+        lines = [
+          'Your thread reads: ' + wordDisplay + '.',
+          'The leaves have held it through the dark and the first turning of light.',
+          thread
+        ];
+
+        suggestLabel = 'The Apothecary reaches for';
+        teaName      = alchemy.tea;
+        teaDesc      = matchedTeaDesc || 'Brewed for the waxing crescent. Tend it before the half moon rises.';
+        crystalLabel = alchemy.crystal + ' is here.';
+        crystalName  = alchemy.crystal;
+        crystalDesc  = ''; /* !! ANGE: crystal descs not yet in recipe data — add inline or pull from crystal lookup */
+        cta          = 'The leaves have spoken.\nThe half moon rises soon. Go prepared, the Library antechamber awaits.';
+
+      } else {
+        /* ── No intention set — invite them to the Hearthfire ── */
+        /* !! ANGE: Rewrite these lines in your voice !! */
+        lines = [
+          'The cup has been waiting.',
+          'The waxing crescent carries a question into every room: what are you tending?',
+          'Without a named thread, the leaves read only the season. The season says: the door at the Hearthfire is still warm.'
+        ];
+        suggestLabel = 'The Apothecary reaches for';
+        teaName      = 'Emberwake';
+        teaDesc      = 'For what builds toward light.';
+        crystalLabel = 'Veilwhisper is here.';
+        crystalName  = 'Veilwhisper';
+        crystalDesc  = 'Preparation and intuition. The stillness between readiness and beginning.';
+        cta          = 'The leaves have spoken.\nIf you find your thread at the Hearthfire, return here. It will remember.';
+      }
+
+      /* Populate reading lines */
+      var readingEl = document.getElementById('teaReading');
+      readingEl.innerHTML = '';
+      var lineDelay = 1.2;
+      lines.forEach(function(line, i) {
+        var p = document.createElement('p');
+        p.className = 'tea-line' + (i === 0 ? ' accent' : '');
+        p.textContent = line;
+        p.style.setProperty('--td', (lineDelay + i * 2.4) + 's');
+        readingEl.appendChild(p);
+      });
+
+      /* Tea suggestion */
+      var sd = lineDelay + lines.length * 2.4 + 1.2;
+      var sugEl   = document.getElementById('teaSuggestsLabel');
+      var nameEl  = document.getElementById('teaNameReveal');
+      var descEl  = document.getElementById('teaDescReveal');
+      sugEl.textContent  = suggestLabel;  setFade(sugEl,  sd);
+      nameEl.textContent = teaName;       setFade(nameEl, sd + 0.7);
+      descEl.textContent = teaDesc;       setFade(descEl, sd + 1.4);
+
+      /* Link tea name to the grimoire recipe */
+      var teaIdx = recipes.findIndex(function(r){ return r.worldName === teaName; });
+      nameEl.classList.remove('linkable');
+      nameEl.onclick = null;
+      if (teaIdx > -1) {
+        nameEl.classList.add('linkable');
+        nameEl.onclick = function() {
+          closeTeaReading();
+          /* Small delay so the tea stage fades before grimoire opens */
+          setTimeout(function(){
+            openGrimoire();
+            renderRecipe(teaIdx);
+            showResult();
+          }, 420);
+        };
+      }
+
+      /* Crystal */
+      var cd = sd + 4;
+      var clEl  = document.getElementById('teaCrystalLabel');
+      var cnEl  = document.getElementById('teaCrystalName');
+      var cdEl  = document.getElementById('teaCrystalDesc');
+      clEl.textContent  = crystalLabel; setFade(clEl, cd);
+      cnEl.textContent  = crystalName;  setFade(cnEl, cd + 0.7);
+      cdEl.textContent  = crystalDesc;  setFade(cdEl, cd + 1.4);
+
+      /* Link the crystal name to its full detail, mirroring the tea name */
+      var crystalRec = recipes.find(function(r){ return r.type === 'crystal' && r.worldName === crystalName; });
+      cnEl.classList.remove('linkable');
+      cnEl.onclick = null;
+      if (crystalRec) {
+        cnEl.classList.add('linkable');
+        cnEl.onclick = function() {
+          closeTeaReading();
+          setTimeout(function(){ openCrystalModal(crystalRec, crystalRec.image); updateReturnThumb(); }, 420);
+        };
+      }
+
+      /* CTA */
+      var ctaEl = document.getElementById('teaCta');
+      ctaEl.textContent = cta;
+      setFade(ctaEl, cd + 4);
+    }
+
+    /* Cup click — open reading on Waxing Crescent, whisper otherwise */
+    document.getElementById('hs-cup').addEventListener('click', function(){
+      if (lunarState.phase.key === 'waxing-crescent') {
+        openTeaReading();
+      } else {
+        showWhisper('Still steaming. Someone was just here.');
+      }
+    });
+    document.getElementById('hs-cup').addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); this.click(); }
+    });
+
+    document.getElementById('teaClose').addEventListener('click', closeTeaReading);
+    teaScrim.addEventListener('click', closeTeaReading);
+
+    /* Return to Hearthfire — visual doorway, bottom-left */
+    document.getElementById('hs-hearthfire').addEventListener('click', function(){ navigateTo('hearthfire.html'); });
+    document.getElementById('hs-hearthfire').addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); this.click(); }
+    });
+
+    /* Return to Apothecary — visual doorway, bottom-left, shown only while a
+       feature panel (grimoire / tea reading / crystal modal) is open */
+    var returnApothecaryEl = document.getElementById('returnApothecary');
+    function updateReturnThumb(){
+      var anyOpen = grimoirePanel.classList.contains('open')
+                 || teaStage.classList.contains('open')
+                 || crystalModal.classList.contains('open');
+      returnApothecaryEl.classList.toggle('show', anyOpen);
+    }
+    function closeAllApothecaryFeatures(){
+      closeGrimoire(); closeTeaReading(); closeCrystalModal();
+    }
+    returnApothecaryEl.addEventListener('click', closeAllApothecaryFeatures);
+    returnApothecaryEl.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); closeAllApothecaryFeatures(); }
+    });
+    returnApothecaryEl.addEventListener('touchstart', function(){ returnApothecaryEl.classList.add('active'); }, {passive:true});
+    returnApothecaryEl.addEventListener('touchend', function(){ setTimeout(function(){ returnApothecaryEl.classList.remove('active'); }, 800); });
+
+    /* ——— TOUCH FEEDBACK ——— */
+    [hsGrimoire, document.getElementById('hs-window'), document.getElementById('hs-cup'), document.getElementById('hs-hearthfire')].forEach(function(el){
+      el.addEventListener('touchstart', function(){ el.classList.add('active'); }, {passive:true});
+      el.addEventListener('touchend',   function(){ setTimeout(function(){ el.classList.remove('active'); }, 800); });
+    });
+
+    /* ——— KEYBOARD ——— */
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape'){ closeCrystalModal(); closeEfMenu(); closeGrimoire(); closeTeaReading(); }
+    });
+
+    /* ——— CALIBRATION AID (?calib=1) ———
+       Move the mouse (or drag a finger on the phone) and read the % position
+       off the corner readout, then set that hotspot's left/top or right/top
+       in the CSS above. Same tool as Hearthfire and Year Wheel. */
+    if (/[?&]calib=1/.test(location.search)) {
+      var calibBox = document.getElementById('calib');
+      calibBox.style.display = 'block';
+      function showCalib(x, y) {
+        var px = (x / window.innerWidth  * 100).toFixed(1);
+        var py = (y / window.innerHeight * 100).toFixed(1);
+        calibBox.textContent = 'x: ' + px + '%  y: ' + py + '%';
+      }
+      document.addEventListener('mousemove', function(e){ showCalib(e.clientX, e.clientY); });
+      document.addEventListener('touchmove', function(e){
+        if (e.touches && e.touches[0]) showCalib(e.touches[0].clientX, e.touches[0].clientY);
+      }, {passive:true});
+    }
+  </script>
+
+</body>
+</html>

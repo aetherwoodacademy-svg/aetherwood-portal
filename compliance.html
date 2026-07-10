@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Aetherwood · Compliance Office</title>
+
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/compliance">
+  <meta property="og:title"       content="Compliance Office · Aetherwood">
+  <meta property="og:description" content="Confessions received. Filed accordingly. Witnessed under the full moon.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
+
+  <style>
+    /*
+    ═══════════════════════════════════════════════════════════════
+    IMAGES NEEDED — Midjourney prompts
+    ───────────────────────────────────────────────────────────────
+
+    1. compliance-office.jpg  (room background, upload to Cloudinary)
+       "gothic academic office interior, candlelit, dark wood paneling,
+       towering filing cabinets overflowing with stamped papers and leather
+       ledgers, an enormous open ledger on an ancient desk, official rubber
+       stamps and ink pots, full moon light streaming through a tall narrow
+       window, scattered wax seals, deep indigo midnight atmosphere, warm
+       amber candlelight pools, no people, Aetherwood gothic academia
+       --ar 16:9"
+
+    2. maureen.jpg  (portrait — add when ready, slot is prepared in CSS)
+       "portrait of a woman in her sixties, theatrical expression of weary
+       academic amusement, wire spectacles, ink-stained fingers, holding
+       a rubber stamp, dark academic robes, deep indigo and silver moonlight,
+       slightly absurdist gravitas, gothic academia, painterly --ar 3:4"
+
+    When images are ready, in .room replace the gradient background with:
+       url('https://res.cloudinary.com/ds8pkprtb/image/upload/[ID]/compliance-office.jpg')
+       center 55% / cover no-repeat
+
+    Maureen portrait: uncomment #maureen block in CSS and HTML.
+    ═══════════════════════════════════════════════════════════════
+    */
+
+    :root {
+      --bg-deep:   #060309;
+      --ink-cream: rgba(238, 220, 175, 0.92);
+      --ink-muted: rgba(210, 185, 130, 0.6);
+      --ink-faint: rgba(190, 165, 110, 0.32);
+      --silver:    rgba(200, 212, 240, 0.88);
+      --violet:    rgba(140, 110, 180, 0.85);
+      --stamp-red: rgba(158, 44, 44, 0.92);
+      --serif:     "Cormorant Garamond", Georgia, serif;
+      --caps:      "Cinzel", serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— ROOM BACKGROUND ——— */
+    .room {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1782036279/compliance-office_v0827r.png')
+        center 55% / cover no-repeat;
+    }
+    .room-overlay {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg,
+          rgba(6,3,9,0.58) 0%,
+          rgba(6,3,9,0.06) 36%,
+          rgba(6,3,9,0.10) 66%,
+          rgba(6,3,9,0.65) 100%
+        );
+    }
+
+
+    /* ——— MAUREEN PORTRAIT — appears in stamp overlay after filing ——— */
+    #maureen {
+      position: absolute;
+      right: 0; bottom: 0;
+      height: min(78vh, 620px);
+      width: auto;
+      opacity: 0;
+      mix-blend-mode: luminosity;
+      filter: brightness(0.82) contrast(1.05);
+      pointer-events: none;
+      transition: opacity 1.4s ease;
+      animation: maureenBreath 14s ease-in-out infinite;
+    }
+    .stamp-overlay.actions-ready #maureen {
+      opacity: 0.68;
+    }
+    @keyframes maureenBreath {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-7px); }
+    }
+
+    /* ——— ROOM TITLE ——— */
+    .room-title {
+      position: fixed;
+      top: clamp(4rem, 8vmin, 6rem);
+      left: 50%; transform: translateX(-50%);
+      text-align: center; z-index: 20; pointer-events: none;
+    }
+    .room-title-main {
+      display: block; font-family: var(--caps);
+      font-size: clamp(0.65rem, 1.4vw, 0.82rem);
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(218, 195, 245, 0.72); white-space: nowrap;
+      text-shadow: 0 1px 14px rgba(0,0,0,0.98), 0 0 32px rgba(0,0,0,0.88);
+    }
+    .room-title-hint {
+      display: block; font-family: var(--serif); font-style: italic;
+      font-size: clamp(0.75rem, 1.3vw, 0.88rem);
+      color: rgba(175, 155, 205, 0.40);
+      margin-top: 0.35rem; letter-spacing: 0.06em;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.98);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg')
+                  center bottom / contain no-repeat;
+      mix-blend-mode: screen; filter: brightness(1.1);
+      z-index: 200; cursor: pointer;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+    @keyframes efLive {
+      0%,100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%     { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      52%     { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      82%     { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+    }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efMenu {
+      position: fixed; top: calc(3.5vmin + 14vmin + 18px); left: 3vmin;
+      z-index: 201; pointer-events: none;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+    #efMenu::before {
+      content: '';
+      position: absolute; top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%,
+        rgba(6,3,9,0.82) 0%, rgba(6,3,9,0.5) 45%, transparent 78%);
+      pointer-events: none; z-index: -1;
+    }
+    .ef-section-label {
+      display: block; font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(175, 140, 72, 0.35); margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block; background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(220, 180, 95, 0.72);
+      cursor: pointer; text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease; white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-link.ef-current { color: rgba(220, 180, 95, 0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160, 125, 55, 0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim { position: fixed; inset: 0; z-index: 199; pointer-events: none; }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——— HOTSPOT SYSTEM ——— */
+    .hotspot {
+      position: fixed; z-index: 10; cursor: pointer;
+    }
+
+    .hs-glow {
+      position: absolute; inset: -40%; border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(205, 215, 245, 0.5) 0%,
+        rgba(160, 132, 205, 0.24) 50%,
+        transparent 72%);
+      /* idle breath — genuinely visible without hover/touch, matches the
+         Whispered Archives jar standard (6 Jul, portal-wide consistency pass) */
+      animation: glowBreath 7s ease-in-out infinite;
+      transition: opacity 0.8s ease; pointer-events: none;
+    }
+    @keyframes glowBreath {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 0.78; }
+    }
+    .hotspot:not(.sealed):hover .hs-glow,
+    .hotspot.active .hs-glow { animation: none; opacity: 1; }
+
+    .hs-label {
+      position: absolute; left: 50%; bottom: -2.6em;
+      transform: translateX(-50%);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(195, 175, 225, 0.75);
+      white-space: nowrap; opacity: 0;
+      transition: opacity 0.7s ease 0.2s; pointer-events: none;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.8);
+    }
+    .hotspot:not(.sealed):hover .hs-label,
+    .hotspot.active .hs-label { opacity: 1; }
+
+    /* Ledger — center desk area */
+    #hs-ledger {
+      left: 50%; top: 62%;
+      transform: translateX(-50%);
+      width: 18vw; height: 18vh;
+      min-width: 95px; min-height: 72px;
+    }
+    /* Archive — left, filing cabinets */
+    #hs-archive {
+      left: 12%; top: 36%;
+      width: 14vw; height: 32vh;
+      min-width: 72px; min-height: 95px;
+    }
+
+    /* Full moon: ledger pulses with cold silver */
+    #hs-ledger.full-moon .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(210, 220, 248, 0.36) 0%,
+        rgba(140, 110, 185, 0.16) 45%,
+        transparent 72%);
+      animation: ledgerPulse 4.5s ease-in-out infinite;
+    }
+    @keyframes ledgerPulse {
+      0%, 100% { opacity: 0.30; }
+      50%       { opacity: 0.80; }
+    }
+    #hs-ledger.full-moon .hs-label { opacity: 0.42; }
+    #hs-ledger.full-moon:hover .hs-label { opacity: 1; }
+
+    /* ——— SEALED WHISPER ——— */
+    .sealed-whisper {
+      position: fixed; left: 50%; bottom: 12vh;
+      transform: translateX(-50%); z-index: 80;
+      font-size: clamp(12px, 1.1vw, 14px); font-style: italic;
+      letter-spacing: 0.08em; color: rgba(185, 160, 100, 0.62);
+      text-align: center; pointer-events: none;
+      opacity: 0; transition: opacity 0.8s ease;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      white-space: nowrap;
+    }
+    .sealed-whisper.show { opacity: 1; }
+
+    /* ——— MOONBEAM SPARKLES — ambient twinkle in the light beam ——— */
+    .moonbeam-sparkle {
+      position: fixed; border-radius: 50%;
+      width: var(--sz, 1.5px); height: var(--sz, 1.5px);
+      background: rgba(238, 230, 255, 0.92);
+      box-shadow: 0 0 calc(var(--sz, 1.5px) * 2.5) rgba(215, 200, 255, 0.55);
+      pointer-events: none; z-index: 2;
+      animation: sparkTwinkle var(--dur, 3s) var(--del, 0s) ease-in-out infinite;
+    }
+    @keyframes sparkTwinkle {
+      0%, 100% { opacity: 0;    transform: scale(0.3); }
+      38%       { opacity: 0.88; transform: scale(1.2); }
+      62%       { opacity: 0.65; transform: scale(1.0); }
+    }
+
+    /* ——— MOON MOTES — silver particles drifting at Full Moon ——— */
+    .moon-mote {
+      position: fixed; width: 2px; height: 2px; border-radius: 50%;
+      background: rgba(205, 215, 242, 0.5);
+      box-shadow: 0 0 4px rgba(185, 198, 235, 0.45);
+      pointer-events: none;
+      animation: moteDrift var(--dur) var(--delay) ease-in-out infinite;
+      z-index: 3;
+    }
+    @keyframes moteDrift {
+      0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+      8%   { opacity: 0.62; }
+      55%  { transform: translate(var(--drift), var(--lift)) scale(0.7); opacity: 0.28; }
+      100% { transform: translate(calc(var(--drift) * 1.5), calc(var(--lift) * 1.9)) scale(0.12); opacity: 0; }
+    }
+
+    /* ——— SIDE PANEL — shared base ——— */
+    .side-panel {
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: min(90vw, 410px); z-index: 60;
+      padding: max(9vh, 52px) 28px 8vh 32px;
+      overflow-y: auto;
+      transform: translateX(102%);
+      transition: transform 1s cubic-bezier(0.22, 0.1, 0.18, 1);
+      background:
+        linear-gradient(to left,
+          rgba(6,3,9,0.98) 0%,
+          rgba(8,5,14,0.96) 55%,
+          rgba(10,6,17,0.90) 100%);
+      border-left: 1px solid rgba(150, 130, 195, 0.08);
+    }
+    .side-panel.open { transform: translateX(0); }
+
+    .panel-scrim {
+      position: fixed; inset: 0; z-index: 55;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .panel-scrim.open { opacity: 1; pointer-events: all; cursor: pointer; }
+
+    .panel-close {
+      position: absolute; top: max(4vh, 22px); right: 22px;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-size: 18px; line-height: 1;
+      color: rgba(185, 150, 85, 0.38); padding: 8px;
+      transition: color 0.5s ease;
+    }
+    .panel-close:hover { color: rgba(215, 185, 110, 0.82); }
+
+    .panel-label {
+      display: block; margin-bottom: 4.5vh;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(160, 140, 195, 0.32);
+    }
+
+    /* ——— CONFESSION STAGE — full-screen, centred ——— */
+    .confession-stage {
+      position: fixed; inset: 0; z-index: 65;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      background: rgba(5, 2, 9, 0.94);
+      backdrop-filter: blur(3px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.9s ease;
+    }
+    .confession-stage.open { opacity: 1; pointer-events: all; }
+
+    /* Left column — content */
+    .stage-content-wrap {
+      flex: 0 1 auto;
+      width: min(52vw, 520px);
+      min-width: 280px;
+      padding: max(9vh, 52px) 4vw max(8vh, 44px) max(4.5vw, 38px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Right column — Maureen portrait */
+    .stage-maureen-wrap {
+      flex: 0 0 auto;
+      width: clamp(200px, 38vw, 500px);
+      position: relative;
+      overflow: hidden;
+      align-self: stretch;
+    }
+    .stage-maureen {
+      position: absolute;
+      bottom: 0; right: 0;
+      height: min(92vh, 760px); width: auto;
+      opacity: 0;
+      mix-blend-mode: luminosity;
+      filter: brightness(0.78) contrast(1.07);
+      pointer-events: none;
+      transition: opacity 1.8s ease 0.5s;
+      animation: maureenBreath 14s ease-in-out infinite;
+    }
+    .confession-stage.open .stage-maureen { opacity: 0.70; }
+
+    /* Stage close + label */
+    .stage-close {
+      position: absolute; top: max(3.5vh, 18px); right: max(3vw, 22px);
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-size: 18px; line-height: 1;
+      color: rgba(185, 150, 85, 0.38); padding: 8px; z-index: 2;
+      transition: color 0.5s ease;
+    }
+    .stage-close:hover { color: rgba(215, 185, 110, 0.82); }
+
+    .stage-label {
+      display: block; margin-bottom: 3vh;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(160, 140, 195, 0.28);
+    }
+
+    /* ——— AUDIO SPACE CLAIMER ——— */
+    .audio-space {
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 3.8vh;
+      padding: 10px 14px;
+      border: 1px solid rgba(175, 150, 220, 0.34);
+      background: rgba(20, 12, 34, 0.42);
+      cursor: pointer;
+      transition: border-color 0.4s ease, background 0.4s ease;
+    }
+    .audio-space:hover, .audio-space:active { border-color: rgba(200, 176, 244, 0.6); background: rgba(28, 18, 46, 0.52); }
+    .audio-btn {
+      flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(190, 165, 230, 0.6);
+      background: rgba(150, 120, 210, 0.12);
+      color: rgba(216, 194, 248, 0.95);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; padding-left: 2px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(158, 128, 220, 0.24);
+      transition: color 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+    }
+    .audio-space:hover .audio-btn, .audio-btn:hover, .audio-btn:active {
+      color: rgba(236, 218, 255, 1);
+      border-color: rgba(210, 186, 250, 0.85);
+      box-shadow: 0 0 22px rgba(178, 148, 238, 0.42);
+    }
+    .audio-meta { display: flex; flex-direction: column; gap: 3px; }
+    .audio-label-text {
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.14em;
+      color: rgba(206, 184, 240, 0.82);
+    }
+    .audio-status {
+      font-size: clamp(12px, 1vw, 13px); letter-spacing: 0.3em;
+      text-transform: uppercase; color: rgba(178, 156, 214, 0.55);
+    }
+
+    @media (max-width: 680px) {
+      /* Confession stage: single column on mobile. Content fills the width and
+         Maureen becomes a faint presence behind it, instead of a side column
+         that crushes the text off the page. */
+      .confession-stage { flex-direction: column; }
+      .stage-content-wrap { width: 100%; min-width: 0; max-width: none;
+        position: relative; z-index: 1; justify-content: flex-start;
+        padding: 8vh max(6vw, 22px) 11vh; }
+      .stage-maureen-wrap { position: absolute; inset: 0; width: auto; z-index: 0; overflow: hidden; }
+      .stage-maureen { height: min(60vh, 480px); right: -14%; bottom: 0; }
+      .confession-stage.open .stage-maureen { opacity: 0.30; }
+
+      /* Readable text on mobile (portal standard) */
+      .speech-line        { font-size: clamp(17px, 4.7vw, 20px); }
+      .ledger-instruction { font-size: clamp(17px, 4.4vw, 19px); color: rgba(192, 172, 130, 0.74); }
+      .confession-textarea{ font-size: 19px; }
+      .confession-anon    { font-size: 12px; color: rgba(172, 152, 206, 0.5); }
+      .confession-submit, .confession-alt { font-size: 13px; }
+      .filed-quote        { font-size: clamp(17px, 4.2vw, 19px); }
+      .filed-note         { font-size: clamp(13px, 3.4vw, 15px); }
+      /* Maureen recedes to a faint presence here so the words can hold */
+      .stamp-overlay.actions-ready #maureen { opacity: 0.2; }
+      .stamp-category, .stamp-note, .stamp-actions { position: relative; z-index: 3; }
+      .stamp-category {
+        font-size: 14px; letter-spacing: 0.22em; color: rgba(228, 208, 255, 1);
+        text-shadow: 0 1px 3px rgba(0,0,0,1);
+        background: rgba(8, 4, 16, 0.66); padding: 10px 18px; border-radius: 22px;
+        display: inline-block;
+      }
+      .stamp-note {
+        font-size: clamp(16px, 4.4vw, 19px); max-width: 88vw; color: rgba(238, 226, 202, 1);
+        text-shadow: 0 1px 3px rgba(0,0,0,1);
+        background: rgba(8, 4, 16, 0.68); padding: 12px 18px; border-radius: 10px;
+      }
+      .stamp-actions {
+        background: rgba(8, 4, 16, 0.7); padding: 14px 14px; border-radius: 12px;
+      }
+      .stamp-action { font-size: clamp(15px, 4.2vw, 18px); letter-spacing: 0.2em; color: rgba(240, 218, 150, 1);
+        text-shadow: 0 1px 3px rgba(0,0,0,1); }
+      .stamp-action.primary { color: rgba(232, 206, 255, 1); text-shadow: 0 1px 3px rgba(0,0,0,1); }
+
+      /* room-wide readable text on mobile (portal standard) */
+      .room-title-main { font-size: clamp(12px, 3vw, 14px); }
+      .room-title-hint { font-size: clamp(13px, 3.4vw, 15px); }
+      .hs-label        { font-size: clamp(13px, 3.4vw, 15px); }
+      .sealed-whisper  { font-size: clamp(15px, 4vw, 17px); }
+      .stage-label     { font-size: clamp(12px, 3.2vw, 14px); }
+    }
+
+    /* ——— CONFESSION PANEL ——— */
+    /* ——— MAUREEN'S ADDRESS — staggered reveal ——— */
+    .maureen-speech { margin-bottom: 3.5vh; }
+
+    .speech-line {
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      font-weight: 300; line-height: 1.88;
+      color: rgba(220, 198, 152, 0.90);
+      margin-bottom: 0.75em;
+      opacity: 0; transform: translateY(-10px);
+      animation: speechReveal 1.4s var(--sd, 0s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    @keyframes speechReveal {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Ledger form — reveals after speech settles */
+    .ledger-form {
+      opacity: 0;
+      animation: formReveal 1.2s 7.8s ease forwards;
+    }
+    @keyframes formReveal {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .ledger-rule {
+      width: 100%; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(150, 130, 195, 0.22), transparent);
+      margin-bottom: 2.8vh;
+    }
+
+    .ledger-instruction {
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      color: rgba(165, 145, 105, 0.45); line-height: 1.88;
+      letter-spacing: 0.02em; margin-bottom: 2.5vh;
+    }
+
+    /* Textarea styled as ledger parchment — lined paper feel */
+    .confession-textarea {
+      width: 100%; background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(150, 130, 195, 0.22);
+      padding: 4px 0 14px;
+      font-family: var(--serif);
+      font-size: clamp(18px, 1.85vw, 22px); font-style: italic;
+      color: rgba(225, 208, 165, 0.92);
+      letter-spacing: 0.01em;
+      line-height: 34px;
+      resize: none; outline: none; min-height: 170px;
+      /* Ruled ledger lines */
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 33px,
+        rgba(150, 130, 195, 0.07) 33px,
+        rgba(150, 130, 195, 0.07) 34px
+      );
+      transition: border-color 0.5s ease;
+    }
+    .confession-textarea::placeholder { color: rgba(155, 135, 100, 0.24); }
+    .confession-textarea:focus { border-bottom-color: rgba(185, 160, 220, 0.42); }
+
+    .confession-anon {
+      display: block; margin-top: 10px;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(140, 120, 175, 0.22);
+    }
+
+    .confession-submit {
+      display: block; margin-top: 26px;
+      background: transparent;
+      border: 1px solid rgba(175, 150, 215, 0.20);
+      color: rgba(195, 170, 232, 0.52);
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      padding: 10px 22px; cursor: pointer;
+      transition: border-color 0.5s ease, color 0.5s ease;
+    }
+    .confession-submit:hover {
+      border-color: rgba(195, 170, 232, 0.48);
+      color: rgba(218, 195, 248, 0.88);
+    }
+    .confession-submit:disabled { opacity: 0.28; cursor: default; }
+
+    .confession-alt {
+      display: inline-block; margin-top: 20px;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(148, 128, 175, 0.30); padding: 0;
+      transition: color 0.4s ease;
+    }
+    .confession-alt:hover { color: rgba(182, 162, 215, 0.68); }
+
+    /* Already confessed this cycle */
+    #confessionFiled { display: none; }
+    #confessionFiled.show { display: block; }
+
+    .filed-quote {
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      font-weight: 300; line-height: 1.88;
+      color: rgba(218, 198, 155, 0.75);
+      border-left: 1px solid rgba(150, 130, 195, 0.18);
+      padding-left: 14px; margin-bottom: 18px;
+    }
+    .filed-note {
+      font-size: clamp(12px, 1vw, 13px); font-style: italic;
+      letter-spacing: 0.04em; line-height: 1.82;
+      color: rgba(152, 132, 182, 0.38);
+    }
+
+    /* ——— ARCHIVE STAGE — full-screen immersive ——— */
+    .archive-stage {
+      position: fixed; inset: 0; z-index: 65;
+      overflow-y: auto;
+      background: rgba(4, 2, 8, 0.97);
+      opacity: 0; pointer-events: none;
+      transform: scale(0.985) translateY(10px);
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .archive-stage.open { opacity: 1; pointer-events: all; transform: scale(1) translateY(0); }
+
+    /* Fixed close button — boosted visibility against the dark archive overlay */
+    #archivePanel .panel-close {
+      position: fixed; top: max(3.5vh, 18px); right: max(3vw, 22px); z-index: 2;
+      color: rgba(218, 188, 115, 0.82);
+      font-size: 22px;
+      text-shadow: 0 0 14px rgba(0,0,0,0.98), 0 1px 8px rgba(0,0,0,0.95);
+    }
+    #archivePanel .panel-close:hover { color: rgba(248, 220, 145, 0.98); }
+
+    .archive-inner {
+      max-width: min(82vw, 700px);
+      margin: 0 auto;
+      padding: max(10vh, 64px) max(4vw, 28px) max(14vh, 88px);
+    }
+
+    /* ——— ARCHIVE HEADER ——— */
+    .archive-header {
+      font-size: clamp(13px, 1.28vw, 15px); font-style: italic;
+      font-weight: 300; line-height: 1.95;
+      color: rgba(185, 165, 122, 0.55);
+      border-left: 1px solid rgba(150, 130, 195, 0.18);
+      padding-left: 16px; margin-bottom: 5vh;
+      opacity: 0;
+      animation: archiveHeaderReveal 1.0s 0.5s ease forwards;
+    }
+    @keyframes archiveHeaderReveal {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* Reset animation when archive closes and reopens */
+    .archive-stage:not(.open) .archive-header { animation: none; opacity: 0; }
+
+    .archive-sig {
+      display: block; margin-top: 12px;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.35em; text-transform: uppercase;
+      color: rgba(140, 120, 170, 0.32);
+    }
+
+    /* ——— ARCHIVE ENTRIES — stagger in ——— */
+    .archive-list { display: flex; flex-direction: column; gap: 26px; }
+
+    .archive-entry {
+      position: relative;
+      padding: 16px 17px 18px;
+      background: rgba(10, 6, 18, 0.52);
+      border-left: 1px solid rgba(150, 130, 195, 0.12);
+      opacity: 0; transform: translateY(-8px);
+    }
+    .archive-entry.reveal {
+      animation: entryDrift 0.75s ease forwards;
+    }
+    @keyframes entryDrift {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .archive-entry::before {
+      content: '';
+      position: absolute; top: -5px; left: 19px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(155, 132, 200, 0.28);
+      box-shadow: 0 0 5px rgba(140, 118, 185, 0.18);
+    }
+    .archive-entry.yours { border-left-color: rgba(175, 150, 210, 0.28); }
+    .archive-entry.yours::before { background: rgba(185, 160, 225, 0.52); }
+
+    /* Marginal notes — gold-tinted */
+    .archive-entry.marginal { border-left-color: rgba(185, 158, 88, 0.26); background: rgba(12, 8, 3, 0.52); }
+    .archive-entry.marginal::before { background: rgba(200, 172, 108, 0.38); box-shadow: 0 0 5px rgba(185, 158, 88, 0.22); }
+
+    .archive-confession {
+      display: block;
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      font-weight: 300; line-height: 1.88;
+      color: rgba(218, 198, 155, 0.84); margin-bottom: 10px;
+    }
+    .archive-footnote {
+      display: block;
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      letter-spacing: 0.04em; line-height: 1.82;
+      color: rgba(152, 132, 182, 0.42);
+    }
+    .archive-footnote::before { content: '† '; color: rgba(140, 118, 178, 0.28); }
+    .archive-entry.marginal .archive-footnote { color: rgba(168, 148, 105, 0.40); }
+    .archive-entry.marginal .archive-footnote::before { color: rgba(185, 158, 88, 0.28); }
+
+    .archive-cta {
+      margin-top: 38px; padding-top: 22px;
+      border-top: 1px solid rgba(150, 130, 195, 0.10);
+      font-size: clamp(17px, 1.7vw, 19px); font-style: italic;
+      color: rgba(170, 150, 112, 0.38); line-height: 1.88;
+      letter-spacing: 0.02em;
+    }
+
+    /* ——— PER-ENTRY THREAD & REPLY ——— */
+
+    /* Thread of notes under a confession */
+    .entry-thread {
+      display: flex; flex-direction: column; gap: 7px;
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid rgba(140, 120, 175, 0.08);
+    }
+    .entry-note {
+      padding: 7px 10px 8px 12px;
+      background: rgba(7, 4, 14, 0.45);
+      border-left: 1px solid rgba(145, 118, 195, 0.16);
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(17px, 1.7vw, 19px); font-weight: 300;
+      line-height: 1.72; color: rgba(205, 185, 148, 0.70);
+    }
+    .entry-note::before { content: '↳ '; color: rgba(148, 122, 195, 0.30); }
+
+    /* "leave a note" link */
+    .entry-reply-btn {
+      display: inline-block; margin-top: 12px;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(130, 110, 170, 0.26); padding: 0;
+      transition: color 0.4s ease;
+    }
+    .entry-reply-btn:hover { color: rgba(168, 148, 210, 0.60); }
+
+    /* Inline reply form */
+    .entry-reply-form { display: none; margin-top: 12px; }
+    .entry-reply-form.open { display: block; }
+
+    .reply-textarea {
+      width: 100%; background: rgba(7, 4, 14, 0.30);
+      border: none; border-bottom: 1px solid rgba(140, 120, 175, 0.14);
+      padding: 4px 0 8px;
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(16px, 1.5vw, 18px);
+      color: rgba(218, 200, 158, 0.88);
+      letter-spacing: 0.02em; line-height: 1.68;
+      resize: none; outline: none;
+      transition: border-color 0.4s ease;
+    }
+    .reply-textarea::placeholder { color: rgba(128, 110, 85, 0.22); }
+    .reply-textarea:focus { border-bottom-color: rgba(168, 148, 205, 0.30); }
+
+    .reply-submit {
+      display: inline-block; margin-top: 10px;
+      background: none;
+      border: 1px solid rgba(140, 120, 175, 0.14);
+      color: rgba(148, 128, 188, 0.38);
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      padding: 7px 16px; cursor: pointer;
+      transition: border-color 0.4s ease, color 0.4s ease;
+    }
+    .reply-submit:hover { border-color: rgba(168, 148, 205, 0.32); color: rgba(188, 168, 222, 0.72); }
+
+    /* ——— STAMP STARS ——— */
+    .stamp-star {
+      position: absolute;
+      left: calc(50% + var(--ox, 0px));
+      top: calc(50% + var(--oy, 0px));
+      width: var(--sz, 2px); height: var(--sz, 2px);
+      margin-left: calc(var(--sz, 2px) / -2);
+      margin-top:  calc(var(--sz, 2px) / -2);
+      border-radius: 50%;
+      background: rgba(225, 200, 255, 0.92);
+      box-shadow: 0 0 calc(var(--sz, 2px) * 3.5) rgba(185, 148, 255, 0.72);
+      pointer-events: none;
+      opacity: 0;
+      animation: starTwinkle var(--dur, 2.5s) var(--del, 0s) ease-in-out infinite;
+    }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0;    transform: scale(0.25); }
+      35%       { opacity: 0.92; transform: scale(1.35); }
+      65%       { opacity: 0.68; transform: scale(1.0);  }
+    }
+
+    /* ——— STAMP OVERLAY ——— */
+    :root { --stamp-v: rgba(138, 68, 235, 0.92); }
+
+    .stamp-overlay {
+      position: fixed; inset: 0; z-index: 80;
+      background: rgba(5, 2, 10, 0.96);
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.85s ease;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .stamp-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* Maureen's categorisation — appears with stamp */
+    .stamp-category {
+      font-family: var(--caps);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(178, 138, 255, 0.52);
+      text-align: center; margin-bottom: 24px;
+      opacity: 0;
+      transition: opacity 1.0s ease 0.8s;
+    }
+    .stamp-overlay.slam .stamp-category { opacity: 1; }
+
+    /* Maureen's note — appears with actions */
+    .stamp-note {
+      max-width: min(60vw, 440px);
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(17px, 1.7vw, 19px); font-weight: 300;
+      line-height: 1.82; letter-spacing: 0.02em;
+      color: rgba(185, 165, 135, 0.42); text-align: center;
+      margin-bottom: 28px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.0s ease;
+    }
+    .stamp-overlay.actions-ready .stamp-note { opacity: 1; }
+
+    /* The stamp — CSS only */
+    .stamp-mark {
+      position: relative;
+      width: min(48vw, 320px); height: min(48vw, 320px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transform: scale(0.06) rotate(-15deg);
+      opacity: 0;
+      transition:
+        transform 0.38s cubic-bezier(0.18, 0.68, 0.36, 1.02),
+        opacity   0.15s ease;
+    }
+    .stamp-overlay.slam .stamp-mark {
+      transform: scale(1) rotate(-2.5deg);
+      opacity: 1;
+    }
+
+    /* Outer ring — violet */
+    .stamp-mark::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 3px solid var(--stamp-v);
+      box-shadow:
+        0 0 0 6px rgba(138, 68, 235, 0.06),
+        0 0 40px rgba(148, 78, 245, 0.50),
+        0 0 80px rgba(120, 55, 210, 0.22),
+        inset 0 0 10px rgba(168, 108, 255, 0.04);
+      transition: box-shadow 0.6s ease;
+    }
+    /* Magic corona pulses after slam — inset kept very light so text stays clear */
+    .stamp-overlay.actions-ready .stamp-mark::before {
+      box-shadow:
+        0 0 0 6px rgba(138, 68, 235, 0.08),
+        0 0 55px rgba(148, 78, 245, 0.62),
+        0 0 110px rgba(120, 55, 210, 0.28),
+        inset 0 0 12px rgba(168, 108, 255, 0.06);
+      animation: stampPulse 4s ease-in-out infinite;
+    }
+    @keyframes stampPulse {
+      0%, 100% { box-shadow: 0 0 0 6px rgba(138,68,235,0.08), 0 0 55px rgba(148,78,245,0.62), 0 0 110px rgba(120,55,210,0.28), inset 0 0 12px rgba(168,108,255,0.06); }
+      50%       { box-shadow: 0 0 0 6px rgba(138,68,235,0.12), 0 0 72px rgba(168,98,255,0.82), 0 0 140px rgba(140,70,230,0.38), inset 0 0 16px rgba(185,128,255,0.08); }
+    }
+    /* Inner ring */
+    .stamp-mark::after {
+      content: '';
+      position: absolute; inset: 9px;
+      border-radius: 50%;
+      border: 1px solid rgba(155, 88, 248, 0.28);
+    }
+
+    /* All text inside the stamp gets a dark shadow to stay readable above the glow */
+    .stamp-text {
+      font-family: var(--caps);
+      font-size: clamp(12px, 1.45vw, 18px);
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(215, 190, 255, 0.97);
+      text-align: center; line-height: 1.55;
+      padding: 0 18%; z-index: 1;
+      text-shadow:
+        0 0 16px rgba(4, 2, 10, 0.98),
+        0 1px 10px rgba(4, 2, 10, 0.95),
+        0 0 4px rgba(4, 2, 10, 0.90);
+    }
+
+    .stamp-rule {
+      width: 32%; height: 1px;
+      background: rgba(168, 128, 255, 0.38);
+      margin: 10px 0; z-index: 1;
+    }
+
+    .stamp-sub {
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(198, 168, 255, 0.88);
+      text-align: center; z-index: 1;
+      text-shadow: 0 0 14px rgba(4, 2, 10, 0.98), 0 1px 8px rgba(4, 2, 10, 0.95);
+    }
+
+    .stamp-sig {
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(12px, 1vw, 13px);
+      color: rgba(178, 148, 245, 0.72);
+      text-align: center; margin-top: 6px; z-index: 1;
+      text-shadow: 0 0 12px rgba(4, 2, 10, 0.98), 0 1px 8px rgba(4, 2, 10, 0.95);
+    }
+
+    /* Actions — appear after stamp settles */
+    .stamp-actions {
+      display: flex; gap: 28px; margin-top: 10px;
+      flex-wrap: wrap; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.0s ease;
+    }
+    .stamp-overlay.actions-ready .stamp-actions {
+      opacity: 1; pointer-events: all;
+    }
+
+    .stamp-action {
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(198, 172, 98, 0.46);
+      transition: color 0.4s ease;
+    }
+    .stamp-action:hover { color: rgba(228, 202, 128, 0.88); }
+    .stamp-action.primary {
+      color: rgba(185, 148, 255, 0.58);
+    }
+    .stamp-action.primary:hover { color: rgba(212, 180, 255, 0.92); }
+
+    /* ——— WORDMARK ——— */
+    .wordmark {
+      position: fixed; bottom: max(2.5vh, 14px); left: 50%;
+      transform: translateX(-50%); z-index: 5;
+      font-size: clamp(8px, 0.82vw, 10px);
+      letter-spacing: 0.55em; text-transform: uppercase;
+      color: rgba(150, 128, 80, 0.14); white-space: nowrap; pointer-events: none;
+    }
+
+    /* ——— MOBILE ——— */
+    @media (max-width: 600px) {
+      /* portrait-first: dedicated portrait crop + its own hotspot map */
+      .room { background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/portrait_compliance_office.png') center center / cover no-repeat; }
+      #hs-ledger { left: 44%; top: 54%; width: 26vw; height: 11vh; }
+      #hs-archive { left: 5%;  top: 36%; width: 18vw; height: 20vh; }
+      .side-panel { width: 92vw; }
+    }
+    /* ——— MOBILE TEXT OVERRIDES — placed LAST so they win over the base font
+       rules defined earlier in this stylesheet (the reason earlier bumps didn't
+       take: an equal-specificity base rule sat below the mid-file @media block). ——— */
+    @media (max-width: 680px) {
+      .speech-line        { font-size: clamp(17px, 4.7vw, 20px); }
+      .ledger-instruction { font-size: clamp(17px, 4.4vw, 19px); color: rgba(192, 172, 130, 0.78); }
+      .confession-textarea{ font-size: 19px; }
+      .confession-anon    { font-size: 12px; color: rgba(172, 152, 206, 0.5); }
+      .confession-submit, .confession-alt { font-size: 13px; }
+      .filed-quote        { font-size: clamp(17px, 4.2vw, 19px); }
+      .filed-note         { font-size: clamp(13px, 3.4vw, 15px); }
+      .stamp-overlay.actions-ready #maureen { opacity: 0.2; }
+      .stamp-category, .stamp-note, .stamp-actions { position: relative; z-index: 3; }
+      .stamp-category { font-size: 14px; letter-spacing: 0.22em; color: rgba(228, 208, 255, 1);
+        text-shadow: 0 1px 3px rgba(0,0,0,1); background: rgba(8, 4, 16, 0.66); padding: 10px 18px; border-radius: 22px; display: inline-block; }
+      .stamp-note { font-size: clamp(16px, 4.4vw, 19px); max-width: 88vw; color: rgba(238, 226, 202, 1);
+        text-shadow: 0 1px 3px rgba(0,0,0,1); background: rgba(8, 4, 16, 0.68); padding: 12px 18px; border-radius: 10px; }
+      .stamp-actions { background: rgba(8, 4, 16, 0.7); padding: 14px 14px; border-radius: 12px; }
+      .stamp-action { font-size: clamp(15px, 4.2vw, 18px); letter-spacing: 0.2em; color: rgba(240, 218, 150, 1); text-shadow: 0 1px 3px rgba(0,0,0,1); }
+      .stamp-action.primary { color: rgba(232, 206, 255, 1); text-shadow: 0 1px 3px rgba(0,0,0,1); }
+      .room-title-main { font-size: clamp(12px, 3vw, 14px); }
+      .room-title-hint { font-size: clamp(13px, 3.4vw, 15px); }
+      .hs-label        { font-size: clamp(13px, 3.4vw, 15px); }
+      .sealed-whisper  { font-size: clamp(15px, 4vw, 17px); }
+      .stage-label     { font-size: clamp(12px, 3.2vw, 14px); }
+    }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <div id="fadeCover"></div>
+
+  <div class="room"><div class="room-overlay"></div></div>
+
+
+  <!-- ——— ROOM TITLE ——— -->
+  <div class="room-title" aria-hidden="true">
+    <span class="room-title-main">Compliance Office</span>
+    <span class="room-title-hint">confessions received · filed accordingly</span>
+  </div>
+
+  <!-- ——— EVERFLAME ——— -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame"></div>
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- ——— HOTSPOTS ——— -->
+  <!-- NOTE: positions tuned to placeholder layout — adjust once room image is set -->
+  <div class="hotspot" id="hs-ledger" role="button" tabindex="0" aria-label="The confession ledger">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the ledger</span>
+  </div>
+
+  <div class="hotspot" id="hs-archive" role="button" tabindex="0" aria-label="The confession archive">
+    <div class="hs-glow"></div>
+    <span class="hs-label">the archive</span>
+  </div>
+
+  <!-- Sealed whisper -->
+  <div class="sealed-whisper" id="sealedWhisper"></div>
+
+  <!-- ——— SHARED PANEL SCRIM ——— -->
+  <div class="panel-scrim" id="panelScrim"></div>
+
+  <!-- ——— CONFESSION STAGE — full screen with Maureen ——— -->
+  <div class="confession-stage" id="confessionPanel" role="dialog" aria-modal="true" aria-label="The confession ledger">
+
+    <button class="stage-close" id="confessionClose" aria-label="Close">×</button>
+
+    <!-- Content column — left -->
+    <div class="stage-content-wrap">
+      <span class="stage-label">Confession Ledger</span>
+
+      <!-- Maureen's voice -->
+      <div class="audio-space" id="audioSpace">
+        <button class="audio-btn" id="maureenAudioBtn" aria-label="Play Maureen's introduction">&#9654;</button>
+        <div class="audio-meta">
+          <span class="audio-label-text">hear maureen speak</span>
+          <span class="audio-status" id="maureenAudioStatus">tap to listen</span>
+        </div>
+        <audio id="maureenVoice" src="https://res.cloudinary.com/ds8pkprtb/video/upload/v1783509658/01_address.mp3" preload="auto"></audio>
+      </div>
+
+      <!-- Form: new confession -->
+      <div id="confessionForm">
+
+        <!-- First visit: full staggered address -->
+        <div class="maureen-speech" id="speechFirst" aria-live="polite">
+          <p class="speech-line" style="--sd: 0.3s">Ah, so you've found your way into my office.</p>
+          <p class="speech-line" style="--sd: 1.5s">Were you sent here to confess or are you here from your own guilty conscience?</p>
+          <p class="speech-line" style="--sd: 3.1s">No matter, what's done is done, but the <em>why</em>, now that matters!</p>
+          <p class="speech-line" style="--sd: 4.6s">If it was the Full Moon that made you do it, then there's absolutely nothing to forgive!</p>
+          <p class="speech-line" style="--sd: 6.0s">Let's see what the ledger thinks shall we?</p>
+        </div>
+
+        <!-- Repeat visit: single line, swapped in by JS -->
+        <div class="maureen-speech" id="speechRepeat" style="display:none" aria-live="polite">
+          <p class="speech-line" id="repeatLine" style="--sd: 0.3s"></p>
+        </div>
+
+        <!-- Ledger form — fades in after speech settles -->
+        <div class="ledger-form" id="ledgerForm">
+          <div class="ledger-rule"></div>
+          <p class="ledger-instruction">The full moon is illuminating something previously unseen.
+          Write it here. It will be reviewed and filed without judgement or praise.
+          No matter how wild or outrageous.</p>
+          <textarea class="confession-textarea" id="confessionText"
+            placeholder="Your confession, in full…"
+            rows="6" maxlength="600" aria-label="Your confession"></textarea>
+          <span class="confession-anon">anonymous · witnessed and filed</span>
+          <button class="confession-submit" id="confessionSubmit">witnessed and filed</button>
+          <button class="confession-alt" id="openArchiveFromForm">read the archive instead</button>
+        </div>
+
+      </div>
+
+      <!-- Filed: already confessed this cycle -->
+      <div id="confessionFiled">
+        <p class="confession-intro">Your confession has been received.</p>
+        <blockquote class="filed-quote" id="confessionFiledText"></blockquote>
+        <p class="filed-note">
+          Witnessed and filed. The moon made you do it.
+          Professor Maureen has noted this. Her footnotes are, as always, illuminating.
+        </p>
+        <p class="archive-cta">
+          The moon descends. Memory Hall will be waiting.
+        </p>
+        <div style="display:flex; gap:28px; flex-wrap:wrap; margin-top:28px;">
+          <button class="confession-alt" id="confessAgainFromFiled">confess again</button>
+          <button class="confession-alt" id="openArchiveFromFiled">read the archive</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portrait column — right -->
+    <div class="stage-maureen-wrap">
+      <img class="stage-maureen"
+           src="https://res.cloudinary.com/ds8pkprtb/image/upload/v1782036485/maureen_fokm6q.png"
+           alt="">
+    </div>
+
+  </div>
+
+  <!-- ——— ARCHIVE STAGE — full-screen immersive ——— -->
+  <div class="archive-stage" id="archivePanel" role="dialog" aria-modal="true" aria-label="The confession archive">
+    <button class="panel-close" id="archiveClose" aria-label="Close">×</button>
+
+    <div class="archive-inner">
+
+      <blockquote class="archive-header">
+        The archive is open. What follows are the confessions of those who came
+        before you, as witnessed and filed during previous full moons.
+        I have added annotations where I felt it was appropriate.
+        <br><br>
+        Which was everywhere.
+        <span class="archive-sig">Professor Maureen</span>
+      </blockquote>
+
+      <div class="archive-list" id="archiveList"></div>
+
+      <p class="archive-cta">
+        Confession received. Filed accordingly.<br>
+        The moon descends. Memory Hall will be waiting.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ——— STAMP OVERLAY ——— -->
+  <div class="stamp-overlay" id="stampOverlay" role="dialog" aria-modal="true" aria-label="Witnessed and filed">
+
+    <!-- Star field — populated by JS on each stamp ceremony -->
+    <div id="stampStarsWrap" aria-hidden="true"></div>
+
+    <img id="maureen"
+         src="https://res.cloudinary.com/ds8pkprtb/image/upload/v1782036485/maureen_fokm6q.png"
+         alt="">
+
+    <!-- Maureen's categorisation — filled dynamically -->
+    <p class="stamp-category" id="stampCategory"></p>
+
+    <div class="stamp-mark" id="stampMark">
+      <span class="stamp-text">Full Moon<br>Madness</span>
+      <div class="stamp-rule"></div>
+      <span class="stamp-sub">Witnessed &amp; Filed</span>
+      <span class="stamp-sig">Compliance Office · Aetherwood</span>
+    </div>
+
+    <!-- Maureen's note — filled dynamically, appears with actions -->
+    <p class="stamp-note" id="stampNote"></p>
+
+    <div class="stamp-actions">
+      <button class="stamp-action primary" id="stampConfessAgain">confess again</button>
+      <button class="stamp-action" id="stampToArchive">read the archive</button>
+      <button class="stamp-action" id="stampToCorridor">return to the corridor</button>
+    </div>
+
+  </div>
+
+  <div class="wordmark">Aetherwood</div>
+
+  <script>
+    /* ════════════════════════════════════════════════════════════
+       COMPLIANCE OFFICE
+       Full Moon only. Confession ledger → stamp ceremony → archive.
+       Backend: localStorage stub now; Airtable wired later.
+    ════════════════════════════════════════════════════════════ */
+
+    /* ——— ARCHIVE CONTENT ——— */
+    /* ANGE: rewrite these in your voice when ready. Backend adds live entries later. */
+    var ARCHIVE = [
+      {
+        confession: 'I told three people they were wrong, argued until I was blue in the face, absolutely certain I was right. The truth is, I was wrong.',
+        footnote:   'Filed under dubious moon blame.'
+      },
+      {
+        confession: 'I ate an entire bar of chocolate to myself without sharing. Noone else in the house even knew it existed before I demolished it in five minutes.',
+        footnote:   'Filed under Confirmed Full Moon Energy.'
+      },
+      {
+        confession: 'I called my ex-boyfriend to tell him he was a pig. His new girlfriend answered so I pretended to be selling wine by the crate. She ordered three and gave me his credit card details. Obviously I didn\'t write it down.',
+        footnote:   'Filed under Confirmed Full Moon Mischief, subcategory Conscience Intact.'
+      },
+      {
+        confession: 'I signed up for another fitness program that I will never start let alone complete.',
+        footnote:   'Filed under Full Moon Disturbance, subcategory She\'s Done It Again.'
+      },
+      {
+        confession: 'I said yes, but I really meant no, and now I have three boxes of school library books to cover in protective plastic before the end of next week.',
+        footnote:   'Filed under Access to Moon Archives denied, who else would protect the books?'
+      },
+      {
+        confession: 'I couldn\'t help myself, and I hadn\'t even been drinking wine, but I had the sudden urge to dance naked beneath the moon in my back yard. Thankfully I left my clothes on as the neighbours definitely saw.',
+        footnote:   'Filed. Urgent follow up required. This one feels the Full Moon Mischief at the highest level. Streak imminent.'
+      },
+      {
+        confession: 'I watched Twilight and New Moon on repeat all weekend until I had no tears left to cry.',
+        footnote:   'Filed. Full Moon Emotional Cadence confirmed.'
+      }
+    ];
+
+    /* ——— MAUREEN'S CATEGORISATIONS — randomised on each stamp ——— */
+    var STAMP_CATEGORIES = [
+      'Filed under: Authentic Full Moon Chaos',
+      'Category: Certified Lunar Disturbance',
+      'Classification: Full Moon Compulsion · Confirmed',
+      'Filed: Unrepentant Full Moon Energy',
+      'Category: High Lunar Influence · Fully Justified',
+      'Filed under: Full Moon Madness, Grade A',
+      'Classification: Confirmed Moonlit Mischief',
+      'Category: The Moon. Obviously. Case closed.'
+    ];
+    var STAMP_NOTES = [
+      'I have reviewed this. The moon is entirely responsible. Case closed.',
+      'My professional assessment: the moon. My personal assessment: also the moon.',
+      'The Resonance has been noted. The confession is filed. All parties are satisfied.',
+      'I have added footnotes. There were many.',
+      'Textbook Full Moon behaviour. You should be quite pleased with yourself.',
+      'Unmoved, professionally speaking. Personally, I am rather entertained.',
+      'The files have been updated. The moon has been informed. All parties are satisfied.',
+      'A perfectly acceptable Full Moon outburst. Happens every cycle, I assure you.'
+    ];
+    var REPEAT_LINES = [
+      "Back again? The moon truly never runs out of excuses.",
+      "Another confession? I have unlimited filing space, so by all means.",
+      "Still here? The ledger doesn't judge. I do, naturally, but only academically.",
+      "A return visit. The moon has clearly not finished with you.",
+      "More? Excellent. The archive appreciates volume."
+    ];
+    var confessCount = 0;
+
+    /* ——— LUNAR STATE ——— */
+    var lunarState   = LUNAR.getLunarState();
+    /* DEV: add ?phase=full-moon to URL to force full moon state (portal-wide standard) */
+    var testPhase    = new URLSearchParams(window.location.search).get('phase');
+    if (testPhase) { lunarState = Object.assign({}, lunarState, { phase: Object.assign({}, lunarState.phase, { key: testPhase }) }); }
+    var isFullMoon   = lunarState.phase.key === 'full-moon';
+    var CONFESS_KEY  = 'aetherwood_confession';
+    var liveConfessions = [];   // this cycle's confessions, loaded from the backend
+
+    /* ——— ELEMENT REFERENCES ——— */
+    var cover            = document.getElementById('fadeCover');
+    var sealedWhisper    = document.getElementById('sealedWhisper');
+    var panelScrim       = document.getElementById('panelScrim');
+    var hsLedger         = document.getElementById('hs-ledger');
+    var hsArchive        = document.getElementById('hs-archive');
+    var confessionPanel  = document.getElementById('confessionPanel');
+    var confessionForm   = document.getElementById('confessionForm');
+    var confessionFiled  = document.getElementById('confessionFiled');
+    var confessionText   = document.getElementById('confessionText');
+    var confessionSubmit = document.getElementById('confessionSubmit');
+    var confessionFiledText = document.getElementById('confessionFiledText');
+    var archivePanel     = document.getElementById('archivePanel');
+    var archiveList      = document.getElementById('archiveList');
+    var stampOverlay     = document.getElementById('stampOverlay');
+    var stampMark        = document.getElementById('stampMark');
+    var efMenu           = document.getElementById('efMenu');
+    var efScrim          = document.getElementById('efScrim');
+    var efTrail          = document.getElementById('efTrail');
+    var efTrailList      = document.getElementById('efTrailList');
+    var whisperTimer     = null;
+    var efOpen           = false;
+
+    /* ——— FADE IN ——— */
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        cover.style.opacity = '0';
+        setTimeout(function() { cover.style.display = 'none'; }, 2600);
+      });
+    });
+    spawnMoonbeamSparkles();
+
+    /* ——— NAVIGATION ——— */
+    function navigateTo(href) {
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        cover.style.opacity = '1';
+        setTimeout(function() { window.location.href = href; }, 1500);
+      }); });
+    }
+
+    /* ——— TRAIL ——— */
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    function logTrail(name, href) {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e) { return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the compliance office', 'compliance.html');
+
+    /* ——— EVERFLAME MENU ——— */
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e) { return e.href !== 'compliance.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (trail.length === 0) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(e) {
+        var li = document.createElement('li'); li.className = 'ef-item';
+        var btn = document.createElement('button'); btn.className = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function() { closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn); efTrailList.appendChild(li);
+      });
+    }
+    function openEfMenu()  { buildTrail(); efMenu.classList.add('open'); efScrim.classList.add('open'); efOpen = true; }
+    function closeEfMenu() { efMenu.classList.remove('open'); efScrim.classList.remove('open'); efOpen = false; }
+
+    document.getElementById('everflame').addEventListener('click', function() {
+      efOpen ? closeEfMenu() : openEfMenu();
+    });
+    document.getElementById('everflame').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efArchives').addEventListener('click', function()  { closeEfMenu(); navigateTo('whispered-archives.html'); });
+    document.getElementById('efHearthfire').addEventListener('click', function(){ closeEfMenu(); navigateTo('hearthfire.html'); });
+    document.getElementById('efCorridor').addEventListener('click', function()  { closeEfMenu(); navigateTo('vestibule.html'); });
+    document.getElementById('efLeave').addEventListener('click', function()     { closeEfMenu(); navigateTo('index.html'); });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { closeEfMenu(); closePanels(); closeStamp(); }
+    });
+
+    /* ——— SEALED WHISPER ——— */
+    function showWhisper(text) {
+      sealedWhisper.textContent = text;
+      sealedWhisper.classList.add('show');
+      clearTimeout(whisperTimer);
+      whisperTimer = setTimeout(function() { sealedWhisper.classList.remove('show'); }, 4000);
+    }
+
+    /* ——— MOONBEAM SPARKLES — always-on ambient shimmer ——— */
+    function spawnMoonbeamSparkles() {
+      /* Scattered through the moonbeam zone: roughly centre of room */
+      var zones = [
+        { x: [38, 62], y: [18, 55] }, /* main beam column */
+        { x: [44, 58], y: [55, 72] }  /* pool on the desk */
+      ];
+      for (var i = 0; i < 10; i++) {
+        var z = zones[i % zones.length];
+        var s = document.createElement('div');
+        s.className = 'moonbeam-sparkle';
+        var sz = (0.8 + Math.random() * 1.8).toFixed(2);
+        s.style.setProperty('--sz',  sz + 'px');
+        s.style.setProperty('--dur', (2.4 + Math.random() * 5.2) + 's');
+        s.style.setProperty('--del', (Math.random() * 10) + 's');
+        s.style.left = (z.x[0] + Math.random() * (z.x[1] - z.x[0])) + 'vw';
+        s.style.top  = (z.y[0] + Math.random() * (z.y[1] - z.y[0])) + 'vh';
+        document.body.appendChild(s);
+      }
+    }
+
+    /* ——— FULL MOON MOTES ——— */
+    function spawnMotes() {
+      for (var i = 0; i < 14; i++) {
+        var m = document.createElement('div');
+        m.className = 'moon-mote';
+        m.style.setProperty('--dur',   (10 + Math.random() * 12) + 's');
+        m.style.setProperty('--delay', (Math.random() * 8) + 's');
+        m.style.setProperty('--lift',  '-' + (90 + Math.random() * 130) + 'px');
+        m.style.setProperty('--drift', ((Math.random() - 0.5) * 40) + 'px');
+        m.style.left = (12 + Math.random() * 76) + 'vw';
+        m.style.top  = (42 + Math.random() * 28) + 'vh';
+        document.body.appendChild(m);
+      }
+    }
+
+    /* ——— PANEL MANAGEMENT ——— */
+    function closePanels() {
+      confessionPanel.classList.remove('open');
+      archivePanel.classList.remove('open');
+      panelScrim.classList.remove('open');
+    }
+
+    function openConfessionPanel() {
+      closePanels();
+      var stored = getStoredConfession();
+      /* Show “already filed” view only if no in-session confessions yet */
+      if (confessCount === 0 && stored) {
+        confessionForm.style.display = 'none';
+        confessionFiled.classList.add('show');
+        confessionFiledText.textContent = '”' + stored.text + '”';
+        confessionPanel.classList.add('open');
+        return;
+      }
+      /* New or repeat confession */
+      confessionForm.style.display = '';
+      confessionFiled.classList.remove('show');
+      confessionText.value = '';
+      confessionSubmit.disabled = false;
+
+      var isRepeat = confessCount > 0;
+      var speechFirst  = document.getElementById('speechFirst');
+      var speechRepeat = document.getElementById('speechRepeat');
+      var ledgerForm   = document.getElementById('ledgerForm');
+
+      if (isRepeat) {
+        /* Swap speech, pick a random one-liner */
+        speechFirst.style.display  = 'none';
+        speechRepeat.style.display = '';
+        var rl = document.getElementById('repeatLine');
+        rl.textContent = REPEAT_LINES[Math.floor(Math.random() * REPEAT_LINES.length)];
+        rl.style.animation = 'none'; void rl.offsetWidth; rl.style.animation = '';
+        /* Quicker form reveal on repeat */
+        ledgerForm.style.animation = 'none';
+        void ledgerForm.offsetWidth;
+        ledgerForm.style.animation = 'formReveal 0.9s 1.8s ease forwards';
+      } else {
+        speechFirst.style.display  = '';
+        speechRepeat.style.display = 'none';
+        /* Replay all speech lines */
+        document.querySelectorAll('#speechFirst .speech-line').forEach(function(el) {
+          el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+        });
+        ledgerForm.style.animation = 'none';
+        void ledgerForm.offsetWidth;
+        ledgerForm.style.animation = 'formReveal 1.2s 7.8s ease forwards';
+      }
+
+      confessionPanel.classList.add('open');
+    }
+
+    /* Close confession stage when clicking the backdrop (outside content) */
+    confessionPanel.addEventListener('click', function(e) {
+      if (e.target === confessionPanel) closePanels();
+    });
+
+    function revealEntries(initialDelay) {
+      setTimeout(function() {
+        document.querySelectorAll('#archiveList .archive-entry').forEach(function(el, i) {
+          setTimeout(function() { el.classList.add('reveal'); }, i * 110);
+        });
+      }, initialDelay || 0);
+    }
+
+    function openArchivePanel() {
+      closePanels();
+      buildArchive();
+      archivePanel.classList.add('open');
+      /* Stagger entries in after the overlay transition (0.8s) */
+      revealEntries(750);
+      /* Fetch the live archive; when it arrives, re-render with it included. */
+      refreshLiveConfessions();
+    }
+
+    function refreshLiveConfessions() {
+      if (typeof PortalData === 'undefined') return;
+      PortalData.read('confessions', { cycle_id: lunarState.cycleId }).then(function(data) {
+        if (!data || !data.items) return;
+        liveConfessions = data.items;
+        if (archivePanel.classList.contains('open')) {
+          buildArchive();
+          revealEntries(0);
+        }
+      });
+    }
+
+    /* Close archive when clicking outside the inner content */
+    archivePanel.addEventListener('click', function(e) {
+      if (e.target === archivePanel) closePanels();
+    });
+
+    function closeStamp() {
+      stampOverlay.classList.remove('open', 'slam', 'actions-ready');
+    }
+
+    panelScrim.addEventListener('click', closePanels);
+    document.getElementById('confessionClose').addEventListener('click', closePanels);
+    document.getElementById('archiveClose').addEventListener('click', closePanels);
+
+    // Maureen's voice — tap to listen. The tap is the gesture that lets audio
+    // play on mobile, so no autoplay is attempted.
+    (function () {
+      var space = document.getElementById('audioSpace');
+      var btn  = document.getElementById('maureenAudioBtn');
+      var aud  = document.getElementById('maureenVoice');
+      var stat = document.getElementById('maureenAudioStatus');
+      if (!space || !aud) return;
+      space.addEventListener('click', function () {
+        if (aud.paused) {
+          var p = aud.play();
+          if (p && p.catch) p.catch(function () {});
+          btn.innerHTML = '&#10073;&#10073;';
+          if (stat) stat.textContent = 'Maureen is speaking…';
+        } else {
+          aud.pause();
+          btn.innerHTML = '&#9654;';
+          if (stat) stat.textContent = 'tap to listen';
+        }
+      });
+      aud.addEventListener('ended', function () {
+        btn.innerHTML = '&#9654;';
+        if (stat) stat.textContent = 'hear it again';
+      });
+    })();
+    document.getElementById('openArchiveFromForm').addEventListener('click', function() { closePanels(); openArchivePanel(); });
+    document.getElementById('openArchiveFromFiled').addEventListener('click', function() { closePanels(); openArchivePanel(); });
+
+    /* ——— CONFESSION STORAGE — localStorage stub (Airtable wired later) ——— */
+    function getStoredConfession() {
+      try {
+        var stored = JSON.parse(localStorage.getItem(CONFESS_KEY));
+        if (!stored || stored.cycleId !== lunarState.cycleId) {
+          localStorage.removeItem(CONFESS_KEY);
+          return null;
+        }
+        return stored;
+      } catch (e) { return null; }
+    }
+
+    function storeConfession(text) {
+      var entry = { text: text, cycleId: lunarState.cycleId, filedAt: new Date().toISOString() };
+      localStorage.setItem(CONFESS_KEY, JSON.stringify(entry));
+      /* Send to the archive (Airtable) through the proxy. Fire-and-forget so the
+         stamp ceremony never waits on the network. Kept locally too, so the
+         visitor sees their own confession as "yours" straight away. */
+      if (typeof PortalData !== 'undefined') {
+        PortalData.submit('confession', { confession: text, cycle_id: lunarState.cycleId });
+      }
+      return entry;
+    }
+
+    /* ——— STAMP CEREMONY ——— */
+    function runStampCeremony() {
+      var cat  = STAMP_CATEGORIES[Math.floor(Math.random() * STAMP_CATEGORIES.length)];
+      var note = STAMP_NOTES[Math.floor(Math.random() * STAMP_NOTES.length)];
+      document.getElementById('stampCategory').textContent = cat;
+      document.getElementById('stampNote').textContent     = note;
+      spawnStampStars();
+      closeStamp();
+      stampOverlay.classList.add('open');
+      setTimeout(function() { stampOverlay.classList.add('slam'); }, 80);
+      setTimeout(function() { stampOverlay.classList.add('actions-ready'); }, 2400);
+    }
+
+    document.getElementById('stampConfessAgain').addEventListener('click', function() {
+      closeStamp();
+      setTimeout(openConfessionPanel, 320);
+    });
+    document.getElementById('stampToArchive').addEventListener('click', function() {
+      closeStamp(); openArchivePanel();
+    });
+    document.getElementById('stampToCorridor').addEventListener('click', function() {
+      closeStamp(); navigateTo('vestibule.html');
+    });
+
+    /* ——— CONFESSION SUBMISSION ——— */
+    confessionSubmit.addEventListener('click', function() {
+      var text = confessionText.value.trim();
+      if (!text) return;
+      confessionSubmit.disabled = true;
+      storeConfession(text);
+      confessCount++;
+      closePanels();
+      setTimeout(runStampCeremony, 380);
+    });
+
+    /* Confess again from the "already filed" view */
+    document.getElementById('confessAgainFromFiled').addEventListener('click', function() {
+      if (confessCount === 0) confessCount = 1;
+      openConfessionPanel();
+    });
+
+    /* ——— MARGINAL NOTES — legacy read-only (keeps old data rendering) ——— */
+    var MARGINAL_KEY = 'aetherwood_marginals';
+    function getMarginals() {
+      try { return JSON.parse(localStorage.getItem(MARGINAL_KEY)) || []; }
+      catch (e) { return []; }
+    }
+
+    /* ——— ENTRY THREAD NOTES ——— */
+    var NOTES_KEY = 'aetherwood_entry_notes';
+    function getEntryNotes() {
+      try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+      catch (e) { return {}; }
+    }
+    function addEntryNote(key, text) {
+      var all = getEntryNotes();
+      if (!all[key]) all[key] = [];
+      all[key].push({ text: text, at: new Date().toISOString() });
+      localStorage.setItem(NOTES_KEY, JSON.stringify(all));
+    }
+
+    /* ——— BUILD ARCHIVE ——— */
+    function buildArchive() {
+      archiveList.innerHTML = '';
+      var entryNotes = getEntryNotes();
+      var allEntries = [];
+
+      /* User's confession this cycle */
+      var stored = getStoredConfession();
+      if (stored) allEntries.push({
+        confession: stored.text,
+        footnote:   'Received this cycle. Your file is in order.',
+        yours: true, key: 'yours'
+      });
+
+      /* Live community confessions for this cycle (from the backend, via the
+         proxy). Maureen's note becomes the footnote wherever she's added one. */
+      liveConfessions.forEach(function(c, i) {
+        allEntries.push({
+          confession: c.confession,
+          footnote:   c.maureen_note ? c.maureen_note : 'Received this cycle. Filed accordingly.',
+          key:        'live-' + i
+        });
+      });
+
+      /* Legacy marginal notes (gold, read-only) */
+      getMarginals().slice(-5).reverse().forEach(function(m) {
+        allEntries.push({
+          confession: m.text,
+          footnote:   'Your marginal note. Added to the record under the full moon.',
+          marginal: true, key: null
+        });
+      });
+
+      /* Hardcoded archive entries */
+      ARCHIVE.forEach(function(a, i) {
+        allEntries.push({ confession: a.confession, footnote: a.footnote, key: 'arc-' + i });
+      });
+
+      allEntries.forEach(function(entry) {
+        var div = document.createElement('div');
+        var cls = 'archive-entry';
+        if (entry.yours)    cls += ' yours';
+        if (entry.marginal) cls += ' marginal';
+        div.className = cls;
+
+        var q = document.createElement('span');
+        q.className = 'archive-confession';
+        q.textContent = entry.confession;
+        div.appendChild(q);
+
+        var fn = document.createElement('span');
+        fn.className = 'archive-footnote';
+        fn.textContent = entry.footnote;
+        div.appendChild(fn);
+
+        /* Existing note thread */
+        if (entry.key && entryNotes[entry.key] && entryNotes[entry.key].length) {
+          var thread = document.createElement('div');
+          thread.className = 'entry-thread';
+          entryNotes[entry.key].forEach(function(note) {
+            var n = document.createElement('div');
+            n.className = 'entry-note';
+            n.textContent = note.text;
+            thread.appendChild(n);
+          });
+          div.appendChild(thread);
+        }
+
+        /* Reply button + inline form (keyed entries only) */
+        if (entry.key) {
+          var replyBtn = document.createElement('button');
+          replyBtn.className = 'entry-reply-btn';
+          replyBtn.textContent = 'leave a note';
+          div.appendChild(replyBtn);
+
+          var replyForm = document.createElement('div');
+          replyForm.className = 'entry-reply-form';
+
+          var ta = document.createElement('textarea');
+          ta.className = 'reply-textarea';
+          ta.placeholder = 'Your note for the record…';
+          ta.maxLength = 200; ta.rows = 2;
+
+          var sub = document.createElement('button');
+          sub.className = 'reply-submit';
+          sub.textContent = 'add to thread';
+
+          replyForm.appendChild(ta);
+          replyForm.appendChild(sub);
+          div.appendChild(replyForm);
+
+          replyBtn.addEventListener('click', function() {
+            var open = replyForm.classList.toggle('open');
+            if (open) { setTimeout(function() { ta.focus(); }, 50); }
+          });
+
+          /* IIFE captures entry key + elements */
+          (function(k, taEl) {
+            sub.addEventListener('click', function() {
+              var text = taEl.value.trim();
+              if (!text) return;
+              addEntryNote(k, text);
+              buildArchive();
+              revealEntries();
+            });
+          })(entry.key, ta);
+        }
+
+        archiveList.appendChild(div);
+      });
+    }
+
+    /* ——— STAMP STARS ——— */
+    function spawnStampStars() {
+      var wrap = document.getElementById('stampStarsWrap');
+      wrap.innerHTML = '';
+      /* Two loose rings — inner tight, outer scattered */
+      var rings = [
+        { minR: 185, maxR: 240, count: 10 },
+        { minR: 252, maxR: 340, count: 10 }
+      ];
+      rings.forEach(function(ring) {
+        for (var i = 0; i < ring.count; i++) {
+          var angle  = Math.random() * Math.PI * 2;
+          var radius = ring.minR + Math.random() * (ring.maxR - ring.minR);
+          var sz     = (0.9 + Math.random() * 2.2).toFixed(2);
+          var star   = document.createElement('div');
+          star.className = 'stamp-star';
+          star.style.setProperty('--ox',  (Math.cos(angle) * radius).toFixed(1) + 'px');
+          star.style.setProperty('--oy',  (Math.sin(angle) * radius).toFixed(1) + 'px');
+          star.style.setProperty('--sz',  sz + 'px');
+          star.style.setProperty('--dur', (1.8 + Math.random() * 4.5) + 's');
+          star.style.setProperty('--del', (Math.random() * 1.4) + 's');
+          wrap.appendChild(star);
+        }
+      });
+    }
+
+    /* ——— HOTSPOT WIRING ———
+       Compliance is always open (Phase 0 0.6: Full Moon is its slot, not a gate).
+       The ledger and archive always open; the full-moon flourishes (silver pulse,
+       moon motes) still only appear at the actual full moon. */
+    if (isFullMoon) {
+      hsLedger.classList.add('full-moon');
+      spawnMotes();
+      hsLedger.addEventListener('click', openConfessionPanel);
+    } else {
+      hsLedger.addEventListener('click', function() {
+        showWhisper('The ledger opens only at the full moon. Return then, and Professor Maureen will receive your confession.');
+      });
+    }
+    // The archive stays open on every night, regardless of the moon.
+    hsArchive.addEventListener('click', openArchivePanel);
+
+    [hsLedger, hsArchive].forEach(function(hs) {
+      hs.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hs.click(); }
+      });
+      hs.addEventListener('touchstart', function() { hs.classList.add('active'); }, { passive: true });
+      hs.addEventListener('touchend',   function() { setTimeout(function() { hs.classList.remove('active'); }, 800); });
+    });
+  </script>
+
+  <!-- Return to the corridor — visual doorway, bottom-left (portal nav standard) -->
+  <div id="returnCorridor" role="button" tabindex="0" aria-label="Return to the corridor"></div>
+  <style>
+  #returnCorridor{position:fixed;left:5%;bottom:5%;width:12vmin;height:12vmin;min-width:64px;min-height:64px;border-radius:50%;overflow:hidden;background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/compliance_office_1.png') center / cover no-repeat;opacity:0.6;box-shadow:0 0 0 1px rgba(200,160,80,0.25),0 0 18px rgba(200,150,70,0.25);cursor:pointer;z-index:45;transition:opacity .6s ease,box-shadow .6s ease;}
+  #returnCorridor:hover,#returnCorridor.active{opacity:1;box-shadow:0 0 0 2px rgba(220,180,100,0.55),0 0 26px rgba(220,170,90,0.45);}
+  </style>
+  <script>
+  (function(){var r=document.getElementById('returnCorridor');if(!r)return;function go(){window.location.href='vestibule.html';}
+  r.addEventListener('click',go);
+  r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  r.addEventListener('touchstart',function(){r.classList.add('active');},{passive:true});
+  r.addEventListener('touchend',function(){setTimeout(function(){r.classList.remove('active');},700);});})();
+  </script>
+
+</body>
+</html>

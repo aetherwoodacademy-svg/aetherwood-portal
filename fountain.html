@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Fountain · Aetherwood</title>
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
+  <style>
+    /* ——————————————————————————————————————
+       FONTS & BASE
+    —————————————————————————————————————— */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --caps:  'Cinzel', serif;
+      --bg-deep: #03050c;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+    }
+
+    /* ——————————————————————————————————————
+       BACKGROUND — dark still water
+       Replace with Cloudinary URL when image is ready:
+       url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/fountain.jpg')
+    —————————————————————————————————————— */
+    #bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/waterfall_ox5s4k') center 40% / cover no-repeat;
+      transition: filter 0.8s ease;
+    }
+
+    /* Moonlight shimmer on the water surface */
+    #waterShimmer {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 48%, rgba(185, 205, 235, 0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 100%, rgba(140, 165, 210, 0.12) 0%, transparent 50%);
+      animation: shimmerBreath 8s ease-in-out infinite;
+    }
+    @keyframes shimmerBreath {
+      0%, 100% { opacity: 0.6; }
+      50%       { opacity: 1.0; }
+    }
+
+    /* Vignette */
+    #vignette {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 46%, transparent 28%, rgba(2, 4, 12, 0.52) 62%, rgba(2, 4, 12, 0.88) 100%),
+        linear-gradient(to bottom, rgba(2, 4, 12, 0.72) 0%, transparent 22%, transparent 68%, rgba(2, 4, 12, 0.96) 100%),
+        linear-gradient(to right, rgba(2, 4, 12, 0.45) 0%, transparent 20%, transparent 72%, rgba(2, 4, 12, 0.55) 100%);
+    }
+
+    /* ——————————————————————————————————————
+       FADE COVER
+    —————————————————————————————————————— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——————————————————————————————————————
+       EVERFLAME NAV
+    —————————————————————————————————————— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(0.9);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.6) saturate(1.1); }
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-1deg)  scaleX(1.02); }
+      82%  { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+
+    /* ——————————————————————————————————————
+       EVERFLAME MENU
+    —————————————————————————————————————— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%,
+        rgba(4,6,18,0.85) 0%,
+        rgba(4,6,18,0.52) 45%,
+        transparent 78%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .ef-section-label {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(165, 185, 220, 0.32);
+      margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block;
+      background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(9px, 0.85vw, 11px);
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(195, 212, 235, 0.68);
+      cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease;
+      white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(220, 232, 248, 0.96); }
+    .ef-link.ef-current { color: rgba(160, 185, 220, 0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(140, 165, 210, 0.18);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim {
+      position: fixed; inset: 0;
+      z-index: 199; pointer-events: none;
+    }
+    #efScrim.open { pointer-events: all; }
+
+    /* ——————————————————————————————————————
+       ROOM LABEL
+    —————————————————————————————————————— */
+    #roomLabel {
+      position: fixed; bottom: 3vmin; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(8px, 0.68vw, 10px);
+      letter-spacing: 0.58em;
+      text-transform: uppercase;
+      color: rgba(165, 185, 220, 0.22);
+      z-index: 10; pointer-events: none;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      font-family: var(--caps);
+    }
+
+    /* ——————————————————————————————————————
+       ARRIVAL LINE
+    —————————————————————————————————————— */
+    #arrivalLine {
+      position: fixed; left: 50%; top: 42%;
+      transform: translate(-50%, -50%);
+      z-index: 20; text-align: center;
+      pointer-events: none; opacity: 0;
+      transition: opacity 2s ease;
+      white-space: nowrap;
+    }
+    #arrivalLine span {
+      font-size: clamp(22px, 2.4vw, 34px);
+      font-weight: 300; font-style: italic;
+      color: rgba(200, 218, 240, 0.94);
+      letter-spacing: 0.06em;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 20px rgba(0,0,0,0.95),
+        0 0 50px rgba(0,0,0,0.85);
+    }
+
+    /* ——————————————————————————————————————
+       MAIN RITUAL SPACE
+    —————————————————————————————————————— */
+    #ritualWrap {
+      position: fixed; left: 50%; bottom: 10%;
+      transform: translateX(-50%);
+      z-index: 20; width: min(92vw, 500px);
+      text-align: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 1.8s ease;
+      background: rgba(2, 5, 16, 0.58);
+      padding: clamp(18px, 3vw, 32px) clamp(20px, 4vw, 40px);
+      backdrop-filter: blur(3px);
+    }
+    #ritualWrap.visible {
+      opacity: 1; pointer-events: all;
+    }
+
+    #ritualPrompt {
+      font-size: clamp(14px, 1.3vw, 18px);
+      font-weight: 300; font-style: italic;
+      color: rgba(232, 220, 190, 0.90);
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+      margin-bottom: 1.4em;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 8px rgba(0,0,0,1),
+        0 0 20px rgba(0,0,0,0.9);
+    }
+
+    #releaseInput {
+      width: 100%;
+      background: rgba(4, 8, 22, 0.70);
+      border: 1px solid rgba(200, 185, 140, 0.18);
+      border-radius: 1px;
+      padding: 0.88em 1em;
+      color: rgba(232, 220, 190, 0.88);
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.2vw, 17px);
+      font-style: italic;
+      font-weight: 300;
+      resize: none;
+      min-height: 80px;
+      margin-bottom: 0.9em;
+      transition: border-color 0.4s ease, background 0.4s ease;
+      outline: none;
+      display: block;
+      text-align: center;
+      letter-spacing: 0.03em;
+      line-height: 1.6;
+    }
+    #releaseInput::placeholder {
+      color: rgba(200, 185, 140, 0.28);
+      font-style: italic;
+    }
+    #releaseInput:focus {
+      border-color: rgba(200, 185, 140, 0.38);
+      background: rgba(4, 8, 22, 0.82);
+    }
+
+    #releaseBtn {
+      display: inline-block;
+      padding: 0.68em 2.4em;
+      background: none;
+      border: 1px solid rgba(200, 185, 140, 0.24);
+      color: rgba(220, 205, 165, 0.78);
+      font-family: var(--caps);
+      font-size: clamp(8px, 0.72vw, 10px);
+      letter-spacing: 0.50em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.4s ease;
+    }
+    #releaseBtn:hover {
+      background: rgba(200, 185, 140, 0.08);
+      border-color: rgba(200, 185, 140, 0.46);
+      color: rgba(238, 224, 182, 0.95);
+    }
+
+    #leaveWater {
+      display: none;
+      margin-top: 1.4em;
+      font-family: var(--caps);
+      font-size: clamp(7px, 0.65vw, 9px);
+      letter-spacing: 0.50em;
+      text-transform: uppercase;
+      color: rgba(185, 170, 130, 0.38);
+      background: none; border: none;
+      cursor: pointer;
+      transition: color 0.4s ease;
+    }
+    #leaveWater:hover { color: rgba(220, 205, 165, 0.75); }
+
+    /* ——————————————————————————————————————
+       COMPLETION STATE
+    —————————————————————————————————————— */
+    #completionWrap {
+      position: fixed; left: 50%; bottom: 10%;
+      transform: translateX(-50%);
+      z-index: 20; width: min(92vw, 480px);
+      text-align: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 2s ease;
+      background: rgba(2, 5, 16, 0.58);
+      padding: clamp(24px, 4vw, 40px) clamp(20px, 4vw, 40px);
+      backdrop-filter: blur(3px);
+    }
+    #completionWrap.visible {
+      opacity: 1; pointer-events: all;
+    }
+    #completionText {
+      font-size: clamp(16px, 1.6vw, 22px);
+      font-weight: 300; font-style: italic;
+      color: rgba(232, 220, 190, 0.88);
+      letter-spacing: 0.05em;
+      line-height: 1.7;
+      margin-bottom: 2.4em;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 8px rgba(0,0,0,1),
+        0 0 24px rgba(0,0,0,0.9);
+    }
+
+    /* ——————————————————————————————————————
+       SINKING WORD ANIMATION
+    —————————————————————————————————————— */
+    .release-word {
+      position: fixed;
+      pointer-events: none;
+      z-index: 50;
+      font-family: var(--serif);
+      font-size: clamp(16px, 1.6vw, 22px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(195, 212, 235, 0.82);
+      text-align: center;
+      white-space: nowrap;
+      text-shadow:
+        0 0 2px rgba(0,0,0,0.8),
+        0 1px 6px rgba(0,0,0,0.8);
+      --sink: 100px; /* desktop default; JS raises this on tall/portrait screens */
+      animation: wordSink var(--wd, 4s) ease-in forwards;
+    }
+    @keyframes wordSink {
+      0%   { transform: translate(calc(var(--wx) - 50%), var(--wy)); opacity: 0.85; filter: blur(0px); }
+      30%  { transform: translate(calc(var(--wx) - 50%), calc(var(--wy) + var(--sink) * 0.24)); opacity: 0.6; filter: blur(0.5px); }
+      70%  { transform: translate(calc(var(--wx) - 50%), calc(var(--wy) + var(--sink) * 0.6)); opacity: 0.22; filter: blur(2px); }
+      100% { transform: translate(calc(var(--wx) - 50%), calc(var(--wy) + var(--sink))); opacity: 0; filter: blur(4px); }
+    }
+
+    /* Water ripple rings */
+    .ripple-ring {
+      position: fixed;
+      pointer-events: none;
+      z-index: 49;
+      border-radius: 50%;
+      border: 1px solid rgba(165, 190, 225, 0.35);
+      animation: rippleExpand var(--rd, 3s) ease-out forwards;
+    }
+    @keyframes rippleExpand {
+      0%   { width: 0;     height: 0;     opacity: 0.5; transform: translate(calc(var(--rx) - 0px), calc(var(--ry) - 0px)); }
+      100% { width: 280px; height: 90px;  opacity: 0;   transform: translate(calc(var(--rx) - 140px), calc(var(--ry) - 45px)); }
+    }
+
+    /* ——————————————————————————————————————
+       MOBILE
+    —————————————————————————————————————— */
+    @media (max-aspect-ratio: 3/4) {
+      #ritualWrap { width: 96vw; padding: 0 4vw; }
+      #completionWrap { width: 96vw; padding: 0 4vw; }
+    }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec; placed last so it wins over the base + media rules.
+       #roomLabel is left as atmospheric mood-dressing.
+    —————————————————————————————————————— */
+    /* reading + prompts (17px floor) */
+    #ritualPrompt   { font-size: clamp(17px, 1.4vw, 19px); }
+    #completionText { font-size: clamp(17px, 1.6vw, 22px); }
+    /* text input (16px floor keeps iOS from zooming on focus) */
+    #releaseInput   { font-size: clamp(16px, 1.3vw, 18px); }
+    /* ritual buttons + CTAs (12–14px, tracking trimmed) */
+    #releaseBtn     { font-size: clamp(12px, 1.05vw, 14px); letter-spacing: 0.3em; }
+    #leaveWater     { font-size: clamp(12px, 1vw, 13px); letter-spacing: 0.3em; }
+    .ef-link        { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
+    /* small-caps label (12–13px floor) */
+    .ef-section-label { font-size: clamp(12px, 1vw, 13px); }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <div id="bg"></div>
+  <div id="waterShimmer"></div>
+  <div id="vignette"></div>
+  <div id="fadeCover"></div>
+
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efArchives">the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <div id="roomLabel">The Fountain</div>
+
+  <!-- Arrival line -->
+  <div id="arrivalLine"><span>The water is still. It is waiting.</span></div>
+
+  <!-- Ritual space -->
+  <div id="ritualWrap">
+    <p id="ritualPrompt">
+      The full moon illuminated what you carried, now we approach the dark moon. Release what you no longer need to hold.
+    </p>
+    <textarea id="releaseInput"
+      placeholder="Write what you are releasing…"
+      maxlength="280" rows="3"></textarea>
+    <button id="releaseBtn" type="button">Release it to the water</button>
+    <button id="leaveWater" type="button">I am done. Leave the water.</button>
+  </div>
+
+  <!-- Completion -->
+  <div id="completionWrap">
+    <p id="completionText">
+      The water has received it.<br>
+      Go forward lighter.
+    </p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var LUNAR_PHASE = 'last-quarter';
+
+    /* ——— Boot ——— */
+    function init() {
+      // Fade room in
+      setTimeout(function () {
+        document.getElementById('fadeCover').style.opacity = '0';
+      }, 120);
+
+      // Lunar phase
+      if (typeof LUNAR !== 'undefined') {
+        try {
+          var ls = LUNAR.getLunarState();
+          if (ls && ls.phase) LUNAR_PHASE = ls.phase;
+        } catch (e) {}
+      }
+
+      // Cross-room memory: if something was once released here (device-local
+      // count, never shown), the water acknowledges the return.
+      // Returning line is Ange's (9 Jul 2026).
+      try {
+        var fr = JSON.parse(localStorage.getItem('aetherwood.fountain_released') || 'null');
+        if (fr && fr.n > 0) {
+          var alSpan = document.querySelector('#arrivalLine span');
+          if (alSpan) alSpan.textContent = 'The water has felt your ripple. She remembers you.';
+        }
+      } catch (e) {}
+
+      // Arrival line — shows, holds, then fades
+      setTimeout(function () {
+        var al = document.getElementById('arrivalLine');
+        al.style.opacity = '1';
+        setTimeout(function () { al.style.opacity = '0'; }, 4800);
+      }, 1400);
+
+      // Ritual space — waits for arrival to fully clear before appearing.
+      // Buttons wired here, not inline (JS rule: no onclick attributes).
+      var relBtn = document.getElementById('releaseBtn');
+      var lvBtn  = document.getElementById('leaveWater');
+      if (relBtn) relBtn.onclick = doRelease;
+      if (lvBtn)  lvBtn.onclick  = doLeave;
+      setTimeout(function () {
+        document.getElementById('ritualWrap').classList.add('visible');
+      }, 7200);
+    }
+
+    /* ——— Release ritual ——— */
+    var releaseCount = 0;
+    var releasing    = false;
+
+    function doRelease() {
+      if (releasing) return;
+      var input = document.getElementById('releaseInput');
+      var text  = input ? input.value.trim() : '';
+      if (!text) return;
+
+      releasing = true;
+      releaseCount++;
+
+      // The water carries it: store the release privately (counted, never
+      // shown to anyone). Fire-and-forget so the ritual never stalls.
+      try {
+        var lsRel = LUNAR.getLunarState();
+        PortalData.submit('release', {
+          release_text:  text,
+          session_token: (typeof AETHERWOOD !== 'undefined' && AETHERWOOD.getFountainToken) ? AETHERWOOD.getFountainToken() : '',
+          cycle_id:      lsRel.cycleId
+        });
+      } catch (e) {}
+
+      // Remember (device-local only) that a release has happened here,
+      // so the water can acknowledge them next visit.
+      try {
+        var fr = JSON.parse(localStorage.getItem('aetherwood.fountain_released') || '{"n":0}');
+        fr.n = (fr.n || 0) + 1; fr.t = Date.now();
+        localStorage.setItem('aetherwood.fountain_released', JSON.stringify(fr));
+      } catch (e) {}
+
+      var ritual = document.getElementById('ritualWrap');
+
+      // Capture position before fading
+      var rect = input.getBoundingClientRect();
+      var cx = rect.left + rect.width  / 2;
+      var cy = rect.top  + rect.height / 2;
+
+      // 1. Fade the box out
+      ritual.classList.remove('visible');
+
+      // 2. Spawn the sinking word once box starts fading
+      setTimeout(function () {
+        spawnSinkingWord(text, cx, cy);
+      }, 400);
+
+      // 3. After word has travelled, clear and bring box back
+      setTimeout(function () {
+        if (input) input.value = '';
+
+        // Show "leave the water" after first release
+        if (releaseCount === 1) {
+          var leaveBtn = document.getElementById('leaveWater');
+          if (leaveBtn) leaveBtn.style.display = 'block';
+        }
+
+        ritual.classList.add('visible');
+        releasing = false;
+
+        // Return focus to textarea
+        setTimeout(function () {
+          if (input) input.focus();
+        }, 300);
+      }, 5200);
+    }
+
+    function doLeave() {
+      var ritual     = document.getElementById('ritualWrap');
+      var completion = document.getElementById('completionWrap');
+
+      ritual.style.opacity = '0';
+      ritual.style.pointerEvents = 'none';
+
+      setTimeout(function () {
+        completion.classList.add('visible');
+      }, 1800);
+
+      // After completion text has settled, carry them back
+      setTimeout(function () {
+        navigateTo('whispered-archives.html');
+      }, 5500);
+    }
+
+    function spawnSinkingWord(text, x, y) {
+      // Clip text so it doesn't sprawl
+      var display = text.length > 48 ? text.slice(0, 46) + '…' : text;
+
+      // On tall/portrait screens the pool sits well below the box, so the word
+      // must travel proportionally further to reach the water, not the rocks.
+      // Desktop keeps its approved 100px drop.
+      var portrait = !!(window.matchMedia && window.matchMedia('(max-aspect-ratio: 3/4)').matches);
+      var sink;
+      if (portrait) {
+        // Aim the word at where the still pool sits near the bottom of a tall
+        // screen (a fraction of viewport height), whatever the box height. Raise
+        // POOL_FRAC toward 1 if it still lands high; lower it if it overshoots.
+        var POOL_FRAC = 0.90;
+        sink = Math.max(140, Math.round(window.innerHeight * POOL_FRAC - y));
+      } else {
+        sink = 100;
+      }
+
+      var word = document.createElement('div');
+      word.className = 'release-word';
+      word.textContent = display;
+      word.style.setProperty('--wx', x + 'px');
+      word.style.setProperty('--wy', y + 'px');
+      word.style.setProperty('--wd', '4.2s');
+      word.style.setProperty('--sink', sink + 'px');
+      document.body.appendChild(word);
+      word.addEventListener('animationend', function () { word.remove(); });
+
+      // Ripples bloom where the word meets the water. On desktop that is right at
+      // the box (over the pool); on portrait it is near the end of the longer sink,
+      // and timed to when the word actually arrives there.
+      var rippleY  = portrait ? (y + Math.round(sink * 0.9)) : (y + 30);
+      var rDelays  = portrait ? [3000, 3600] : [0, 600];
+      rDelays.forEach(function (delay, i) {
+        setTimeout(function () {
+          var ring = document.createElement('div');
+          ring.className = 'ripple-ring';
+          ring.style.setProperty('--rx', x + 'px');
+          ring.style.setProperty('--ry', (rippleY + i * 10) + 'px');
+          ring.style.setProperty('--rd', (3 + i * 0.8) + 's');
+          document.body.appendChild(ring);
+          ring.addEventListener('animationend', function () { ring.remove(); });
+        }, delay);
+      });
+    }
+
+    /* ——— Navigation ——— */
+    function navigateTo(href) {
+      var cover = document.getElementById('fadeCover');
+      cover.style.transition = 'opacity 1.4s ease';
+      cover.style.opacity = '1';
+      setTimeout(function () { window.location.href = href; }, 1500);
+    }
+
+    /* ——— Trail ——— */
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    function logTrail(name, href) {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function (e) { return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the fountain', 'fountain.html');
+
+    /* ——— Everflame menu ——— */
+    var efOpen = false;
+
+    function buildTrail() {
+      var efTrail     = document.getElementById('efTrail');
+      var efTrailList = document.getElementById('efTrailList');
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function (e) { return e.href !== 'fountain.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (!trail.length) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function (e) {
+        var li  = document.createElement('li');
+        li.className = 'ef-item';
+        var btn = document.createElement('button');
+        btn.className   = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function () { closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn);
+        efTrailList.appendChild(li);
+      });
+    }
+
+    function openEfMenu()  {
+      buildTrail();
+      document.getElementById('efMenu').classList.add('open');
+      document.getElementById('efScrim').classList.add('open');
+      efOpen = true;
+    }
+    function closeEfMenu() {
+      document.getElementById('efMenu').classList.remove('open');
+      document.getElementById('efScrim').classList.remove('open');
+      efOpen = false;
+    }
+
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function () { efOpen ? closeEfMenu() : openEfMenu(); });
+    ef.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    document.getElementById('efScrim').addEventListener('click', closeEfMenu);
+    document.getElementById('efArchives').addEventListener('click', function ()  { closeEfMenu(); navigateTo('whispered-archives.html'); });
+    document.getElementById('efHearthfire').addEventListener('click', function () { closeEfMenu(); navigateTo('hearthfire.html'); });
+    document.getElementById('efCorridor').addEventListener('click', function () {
+      closeEfMenu(); navigateTo('vestibule.html?walk=1');
+    });
+    document.getElementById('efLeave').addEventListener('click', function () {
+      closeEfMenu(); navigateTo('index.html');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeEfMenu();
+    });
+
+    /* ——— Globals ——— */
+    window.doRelease   = doRelease;
+    window.doLeave     = doLeave;
+    window.navigateTo  = navigateTo;
+
+    /* ——— Start ——— */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+  </script>
+</body>
+</html>

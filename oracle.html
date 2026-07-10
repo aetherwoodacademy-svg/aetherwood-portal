@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood · The Oracle</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep:   #060e07;
+      --ink-cream: rgba(238, 220, 175, 0.92);
+      --ink-muted: rgba(210, 190, 138, 0.62);
+      --ink-faint: rgba(188, 165, 108, 0.34);
+      --gold:      rgba(195, 155, 72, 0.88);
+      --serif:     "Cormorant Garamond", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--bg-deep);
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+      color: var(--ink-cream);
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— BACKGROUND ——— */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse at 22% 18%, rgba(34, 78, 38, 0.52) 0, transparent 42%),
+        radial-gradient(ellipse at 78% 28%, rgba(18, 54, 24, 0.44) 0, transparent 38%),
+        radial-gradient(ellipse at 50% 88%, rgba(42, 88, 28, 0.36) 0, transparent 40%),
+        linear-gradient(160deg, #040c05 0%, #081408 38%, #0c1e0a 68%, #050c04 100%);
+    }
+
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 30%, transparent 28%, rgba(4,10,4,0.38) 62%, rgba(2,6,2,0.72) 100%),
+        linear-gradient(to bottom, rgba(2,6,2,0.28) 0%, transparent 18%, transparent 74%, rgba(2,6,2,0.88) 100%);
+    }
+
+    /* ——— MOTES ——— */
+    .motes {
+      position: fixed; inset: 0; overflow: hidden;
+      pointer-events: none; z-index: 2;
+    }
+    .motes span {
+      position: absolute;
+      left: var(--x); top: var(--y);
+      width: var(--s); height: var(--s);
+      border-radius: 50%;
+      opacity: var(--o);
+      background: #fff4c6;
+      box-shadow: 0 0 6px rgba(255,244,198,0.8), 0 0 14px rgba(160,130,65,0.38);
+      animation: floatMote var(--d) ease-in-out infinite alternate;
+    }
+    @keyframes floatMote {
+      from { transform: translate3d(0,0,0) scale(0.85); }
+      to   { transform: translate3d(calc(var(--r) * 14px), -28px, 0) scale(1.15); }
+    }
+
+    /* ——— RETURN TO APOTHECARY — visual doorway, bottom-left ———
+       A small round window back to the room this was entered from, not a
+       written nav link (the Everflame menu already has one, this is the
+       same visual pattern as Hearthfire/Apothecary's own return doorways). */
+    #returnApothecary {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/apothecary_1.png') center 38% / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 200;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnApothecary:hover,
+    #returnApothecary.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+
+    /* ——— EVERFLAME ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(1.1);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-0.8deg) scaleX(1.01);}
+      84%  { transform: translateY(-3px) rotate(1.2deg) scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1.4deg) scaleX(1);   }
+    }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efScrim {
+      position: fixed; inset: 0; z-index: 195;
+      display: none; cursor: default;
+    }
+    #efMenu {
+      position: fixed; top: calc(3.5vmin + 90px + 8px); left: 3.5vmin;
+      z-index: 201;
+      background: rgba(12, 28, 14, 0.82);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(160, 130, 65, 0.22);
+      border-radius: 14px;
+      padding: 14px 0 10px;
+      min-width: 200px;
+      opacity: 0; pointer-events: none;
+      transform: translateY(-6px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    #efMenu.open { opacity: 1; pointer-events: all; transform: none; }
+    .ef-section {
+      font-size: clamp(7px, 0.65vw, 8px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.45);
+      padding: 0 18px 6px;
+    }
+    .ef-link {
+      display: block; width: 100%;
+      background: none; border: none; cursor: pointer;
+      font-family: var(--serif);
+      font-size: clamp(14px, 1.4vw, 16px);
+      font-weight: 300;
+      color: rgba(225, 205, 155, 0.88);
+      text-align: left;
+      padding: 7px 18px;
+      letter-spacing: 0.04em;
+      transition: color 0.25s ease, background 0.25s ease;
+    }
+    .ef-link:hover { color: var(--ink-cream); background: rgba(255,255,255,0.06); }
+    .ef-divider { border: none; border-top: 1px solid rgba(160,130,65,0.15); margin: 8px 0; }
+    #efTrail { padding-top: 4px; }
+
+    /* ——— MAIN CONTENT ——— */
+    .wrap {
+      position: relative; z-index: 10;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 28px 60px;
+    }
+
+    /* ——— HEADER ——— */
+    header { text-align: center; padding-bottom: 36px; }
+
+    .oracle-eyebrow {
+      display: block;
+      font-size: clamp(8px, 0.75vw, 9px);
+      letter-spacing: 0.58em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.5);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(238, 218, 168, 0.96);
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 40px rgba(120,170,80,0.2), 0 4px 24px rgba(0,0,0,0.7);
+      margin-bottom: 14px;
+    }
+
+    .oracle-tagline {
+      font-size: clamp(14px, 1.4vw, 17px);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--ink-muted);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.75;
+    }
+
+    /* ——— CONTROLS ——— */
+    .controls {
+      background: rgba(16, 38, 18, 0.52);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(160, 130, 65, 0.16);
+      border-radius: 18px;
+      padding: 22px 24px;
+      margin-bottom: 28px;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    select {
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.15vw, 14px);
+      letter-spacing: 0.08em;
+      background: rgba(12, 28, 14, 0.68);
+      border: 1px solid rgba(160, 130, 65, 0.3);
+      border-radius: 24px;
+      color: var(--ink-cream);
+      padding: 10px 22px 9px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      flex: 1; min-width: 200px; max-width: 340px;
+    }
+
+    .pull-btn {
+      font-family: var(--serif);
+      font-size: clamp(11px, 1.1vw, 13px);
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      background: rgba(12, 28, 14, 0.68);
+      border: 1px solid rgba(160, 130, 65, 0.28);
+      border-radius: 24px;
+      color: rgba(210, 185, 128, 0.85);
+      padding: 10px 22px 9px;
+      cursor: pointer;
+      transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+      white-space: nowrap;
+    }
+    .pull-btn:hover {
+      color: var(--ink-cream);
+      background: rgba(22, 50, 24, 0.82);
+      border-color: rgba(160, 130, 65, 0.52);
+    }
+    .pull-btn.primary {
+      background: rgba(120, 155, 72, 0.22);
+      border-color: rgba(160, 130, 65, 0.45);
+      color: rgba(238, 215, 155, 0.98);
+    }
+    .pull-btn.primary:hover {
+      background: rgba(120, 155, 72, 0.35);
+    }
+    .pull-btn.ghost {
+      border-color: rgba(160, 130, 65, 0.15);
+      color: var(--ink-muted);
+    }
+
+    /* ——— CARD GRID ——— */
+    .reading {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 22px;
+      min-height: 120px;
+    }
+
+    .reading-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--ink-muted);
+      font-style: italic;
+      font-size: clamp(15px, 1.4vw, 18px);
+      padding: 40px 20px;
+      opacity: 0.7;
+    }
+
+    .card {
+      background: rgba(12, 32, 14, 0.72);
+      border: 1px solid rgba(160, 130, 65, 0.26);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.44);
+      animation: cardRise 0.5s ease both;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 22px 58px rgba(0,0,0,0.52), 0 0 22px rgba(120,170,60,0.08);
+    }
+    @keyframes cardRise {
+      from { opacity: 0; transform: translateY(14px) scale(0.988); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .card img {
+      display: block; width: 100%; height: auto;
+      border-radius: 18px 18px 0 0;
+    }
+
+    .card-body { padding: 18px 20px 22px; }
+
+    .card-kicker {
+      display: block;
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.55);
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(238, 218, 168, 0.96);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-size: clamp(13px, 1.2vw, 15px);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--ink-muted);
+      margin-bottom: 0;
+    }
+
+    .card-hint {
+      font-size: clamp(11px, 1vw, 13px);
+      color: rgba(175, 145, 80, 0.5);
+      margin-top: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ——— HISTORY ——— */
+    .history {
+      text-align: center;
+      margin-top: 28px;
+      color: var(--ink-muted);
+      font-size: clamp(12px, 1.1vw, 14px);
+    }
+    .history-tag {
+      display: inline-block;
+      margin: 4px;
+      padding: 5px 12px;
+      border: 1px solid rgba(160, 130, 65, 0.2);
+      border-radius: 24px;
+      font-size: clamp(11px, 1vw, 13px);
+    }
+
+    /* ——— MODAL ——— */
+    .modal {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+      background: rgba(2, 8, 2, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 300;
+    }
+    .modal.open { display: flex; }
+
+    .modal-inner {
+      width: min(100%, 980px);
+      max-height: 90vh;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: minmax(240px, 380px) 1fr;
+      gap: 24px;
+      padding: 24px;
+      border-radius: 22px;
+      background: rgba(10, 26, 12, 0.96);
+      border: 1px solid rgba(160, 130, 65, 0.32);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.68);
+    }
+
+    .modal-inner img {
+      display: block; width: 100%; height: auto;
+      border-radius: 14px;
+    }
+
+    .modal-content { padding: 4px 4px 4px 0; }
+
+    .modal-close {
+      float: right;
+      background: none;
+      border: 1px solid rgba(160, 130, 65, 0.22);
+      border-radius: 20px;
+      font-family: var(--serif);
+      font-size: clamp(10px, 0.95vw, 12px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      padding: 6px 16px 5px;
+      cursor: pointer;
+      margin: 0 0 14px 14px;
+      transition: color 0.25s ease, border-color 0.25s ease;
+    }
+    .modal-close:hover { color: var(--ink-cream); border-color: rgba(160, 130, 65, 0.5); }
+
+    .modal-kicker {
+      display: block;
+      font-size: clamp(7px, 0.68vw, 8px);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 80, 0.55);
+      margin-bottom: 10px;
+      clear: both;
+    }
+
+    .modal-title {
+      font-size: clamp(2rem, 3.2vw, 3rem);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(238, 218, 168, 0.96);
+      line-height: 1.08;
+      margin-bottom: 6px;
+    }
+
+    .modal-subtitle {
+      font-size: clamp(14px, 1.3vw, 16px);
+      font-style: italic;
+      color: var(--ink-muted);
+      margin-bottom: 18px;
+    }
+
+    .modal-prompt {
+      font-size: clamp(15px, 1.5vw, 18px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(238, 218, 168, 0.9);
+      line-height: 1.75;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.04);
+      border-left: 2px solid rgba(160, 130, 65, 0.35);
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 16px;
+    }
+
+    .modal-meaning {
+      font-size: clamp(14px, 1.3vw, 16px);
+      font-weight: 300;
+      color: rgba(210, 185, 128, 0.88);
+      line-height: 1.82;
+      letter-spacing: 0.02em;
+    }
+
+    @media (max-width: 720px) {
+      .modal-inner { grid-template-columns: 1fr; }
+      .modal-content { padding: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .wrap { padding: 88px 16px 48px; }
+      .controls { padding: 16px; }
+      .controls-row { flex-direction: column; }
+      select, .pull-btn { width: 100%; max-width: 100%; }
+    }
+
+    /* ——————————————————————————————————————
+       LEGIBLE-TEXT STANDARD (locked 8 Jul 2026)
+       Floors lifted to spec; placed last so it wins over the base + media rules.
+    —————————————————————————————————————— */
+    /* reading (17px floor) */
+    .modal-prompt   { font-size: clamp(17px, 1.5vw, 18px); }
+    .modal-meaning  { font-size: clamp(17px, 1.4vw, 18px); }
+    /* subtitles / taglines / empty states (16px floor) */
+    .oracle-tagline { font-size: clamp(16px, 1.4vw, 18px); }
+    .card-subtitle  { font-size: clamp(16px, 1.2vw, 17px); }
+    .modal-subtitle { font-size: clamp(16px, 1.3vw, 17px); }
+    .reading-empty  { font-size: clamp(16px, 1.4vw, 18px); }
+    /* select / input (16px floor keeps iOS from zooming on focus) */
+    select          { font-size: clamp(16px, 1.15vw, 17px); }
+    /* ritual buttons + CTAs (12–14px) */
+    .pull-btn       { font-size: clamp(12px, 1.05vw, 14px); }
+    .modal-close    { font-size: clamp(12px, 1.05vw, 14px); }
+    /* names, eyebrows, small-caps labels (12–13px floor) */
+    .ef-section     { font-size: clamp(12px, 1vw, 13px); }
+    .oracle-eyebrow { font-size: clamp(12px, 1vw, 13px); }
+    .card-kicker    { font-size: clamp(12px, 1vw, 13px); }
+    .modal-kicker   { font-size: clamp(12px, 1vw, 13px); }
+    .card-hint      { font-size: clamp(12px, 1vw, 13px); }
+    .history-tag    { font-size: clamp(12px, 1vw, 13px); }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <div id="fadeCover"></div>
+
+  <div class="bg"></div>
+  <div class="bg-vignette"></div>
+
+  <div class="motes" aria-hidden="true">
+    <span style="--x:7vw;  --y:12vh; --s:2px; --o:0.26; --d:19s; --r:1.1;"></span>
+    <span style="--x:17vw; --y:68vh; --s:3px; --o:0.20; --d:25s; --r:-0.5;"></span>
+    <span style="--x:28vw; --y:32vh; --s:2px; --o:0.32; --d:22s; --r:0.8;"></span>
+    <span style="--x:38vw; --y:80vh; --s:1px; --o:0.28; --d:28s; --r:-1.0;"></span>
+    <span style="--x:46vw; --y:14vh; --s:3px; --o:0.18; --d:27s; --r:0.4;"></span>
+    <span style="--x:54vw; --y:58vh; --s:2px; --o:0.30; --d:20s; --r:-0.6;"></span>
+    <span style="--x:62vw; --y:40vh; --s:1px; --o:0.24; --d:29s; --r:1.3;"></span>
+    <span style="--x:71vw; --y:84vh; --s:3px; --o:0.17; --d:33s; --r:-0.9;"></span>
+    <span style="--x:78vw; --y:24vh; --s:2px; --o:0.28; --d:24s; --r:0.5;"></span>
+    <span style="--x:86vw; --y:52vh; --s:1px; --o:0.22; --d:26s; --r:-1.2;"></span>
+    <span style="--x:93vw; --y:74vh; --s:2px; --o:0.19; --d:31s; --r:0.3;"></span>
+    <span style="--x:14vw; --y:44vh; --s:1px; --o:0.21; --d:30s; --r:-0.7;"></span>
+    <span style="--x:50vw; --y:50vh; --s:3px; --o:0.14; --d:35s; --r:0.6;"></span>
+    <span style="--x:72vw; --y:8vh;  --s:1px; --o:0.25; --d:23s; --r:-0.3;"></span>
+    <span style="--x:24vw; --y:90vh; --s:2px; --o:0.16; --d:34s; --r:0.9;"></span>
+  </div>
+
+  <!-- Return to Apothecary — visual doorway, bottom-left -->
+  <div id="returnApothecary" role="button" tabindex="0" aria-label="Return to the Apothecary"></div>
+
+  <!-- Everflame -->
+  <div id="everflame" role="button" tabindex="0" aria-label="Everflame navigation"></div>
+  <div id="efScrim"></div>
+  <div id="efMenu" aria-label="Navigation menu">
+    <span class="ef-section">find your way</span>
+    <button class="ef-link" id="efApothecary">the apothecary</button>
+    <button class="ef-link" id="efHearthfire">the hearthfire</button>
+    <hr class="ef-divider">
+    <div id="efTrail" style="display:none">
+      <span class="ef-section">recently visited</span>
+      <div id="efTrailList"></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="wrap">
+    <header>
+      <span class="oracle-eyebrow">the aetherwood oracle</span>
+      <h1>What does the day ask of you?</h1>
+      <p class="oracle-tagline">Choose a section, draw a card, and let the world meet you with a little magic.</p>
+    </header>
+
+    <div class="controls">
+      <div class="controls-row">
+        <button class="pull-btn primary" id="drawCore">draw a core card</button>
+        <select id="categorySelect" aria-label="Choose a section"></select>
+        <button class="pull-btn" id="drawActivity">draw from this section</button>
+        <button class="pull-btn" id="drawReading">draw both</button>
+        <button class="pull-btn ghost" id="clearCards">clear</button>
+      </div>
+    </div>
+
+    <div id="reading" class="reading">
+      <p class="reading-empty">Your cards will appear here.</p>
+    </div>
+
+    <div id="history" class="history"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="cardModal" role="dialog" aria-modal="true">
+    <div class="modal-inner" id="modalInner"></div>
+  </div>
+
+  <script>
+    var CDN = 'https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/oracle/';
+
+    var decks = {
+      core: { label: 'Core Cards', cards: [
+        { id:'threadsinger',  title:'The Threadsinger',  subtitle:'Steward of Possibility',          prompt:'What thread will you strengthen?',          image: CDN+'core/threadsinger.jpg',  meaning:'You are surrounded by many possibilities, but not all paths require your attention. This card invites you to consciously strengthen one thread in your life. Choose where you wish to invest your energy, focus and devotion.' },
+        { id:'raven_keeper',  title:'The Raven Keeper',  subtitle:'Watcher of Hidden Truths',        prompt:'What have you refused to see?',              image: CDN+'core/raven_keeper.jpg',  meaning:'A truth, pattern, feeling or opportunity may have been ignored because it felt uncomfortable, inconvenient or uncertain. This card invites gentle honesty. Look again at what keeps returning to your thoughts.' },
+        { id:'veilwalker',    title:'The Veilwalker',    subtitle:'Between What Was and What Will Be', prompt:'What am I becoming?',                      image: CDN+'core/veilwalker.jpg',    meaning:'This card appears during times of transition. You may no longer fully belong to an old version of yourself, yet the next chapter has not completely revealed itself. Walk forward with curiosity rather than certainty.' },
+        { id:'everflame',     title:'The Everflame',     subtitle:'Light That Endures',              prompt:'Where does hope still live?',                image: CDN+'core/everflame.jpg',     meaning:'Beneath disappointment, uncertainty or exhaustion, a steady flame continues to burn. Look for what is still working, still growing, still calling you forward.' },
+        { id:'guardian',      title:'The Guardian',      subtitle:'Protector of What Matters',       prompt:'What deserves your protection today?',       image: CDN+'core/guardian.jpg',      meaning:'Something valuable requires your attention and stewardship. This may be your energy, your peace, a relationship, a dream, a boundary or a growing part of yourself.' },
+        { id:'cartographer',  title:'The Cartographer',  subtitle:'Weaver of Paths and Possibilities', prompt:'What path is calling you?',               image: CDN+'core/cartographer.jpg',  meaning:'Multiple paths lie before you. Listen for the direction that feels most alive, most aligned and most meaningful. Clarity often arrives through movement.' },
+        { id:'keykeeper',     title:'The Keykeeper',     subtitle:'Guardian of Hidden Doors',        prompt:'What wants to be unlocked?',                image: CDN+'core/keykeeper.jpg',     meaning:'A new possibility is waiting at the edge of awareness. Notice where curiosity, excitement or repeated opportunities are appearing. The key often arrives through courage and attention.' },
+        { id:'heartwood',     title:'The Heartwood',     subtitle:'Keeper of Emotional Truth',       prompt:'What feeling is asking to be heard?',        image: CDN+'core/heartwood.jpg',     meaning:'Emotions seek acknowledgment rather than correction. Listen with gentleness and curiosity. What is felt can be understood. What is understood can be integrated.' },
+        { id:'lantern_bearer',title:'The Lantern Bearer',subtitle:'Guide Through Uncertainty',       prompt:'What is the next small step?',               image: CDN+'core/lantern_bearer.jpg',meaning:'You do not need to see the entire journey to move forward. The lantern illuminates only the next few steps, and that is enough.' },
+        { id:'silver_beast',  title:'The Silver Beast',  subtitle:'Instinct. Loyalty. Wild Wisdom.', prompt:'What truth does my instinct already know?', image: CDN+'core/silver_beast.jpg',  meaning:'Beneath analysis, fear and overthinking, instinct carries ancient wisdom. Pay attention to what feels aligned, what feels wrong and what keeps calling to you.' },
+        { id:'dawnkeeper',    title:'The Dawnkeeper',    subtitle:'Welcomer of New Beginnings',      prompt:'What new beginning is calling me forward?',  image: CDN+'core/dawnkeeper.jpg',    meaning:'A new chapter is ready to begin. Focus less on what is ending and more on what is emerging. Every sunrise arrives because the night was willing to release its hold.' },
+        { id:'loom',          title:'The Loom',          subtitle:'Keeper of Connection and Possibility', prompt:'What connections am I being asked to notice?', image: CDN+'core/loom.jpg',  meaning:'Seemingly separate threads are ready to reveal their relationship to one another. Pause and notice the connections weaving through your life.' }
+      ]},
+      water_ocean: { label: 'Water & Ocean', cards: [
+        { id:'ocean_wander',       title:'Ocean Wander',        invitation:'Follow the shoreline and see what finds you.',    reflection:'What is the tide bringing in today?',           image: CDN+'water-ocean/ocean_wander.jpg' },
+        { id:'saltwater_renewal',  title:'Saltwater Renewal',   invitation:'Swim, float, wade or simply watch.',             reflection:'What am I ready to wash away?',                 image: CDN+'water-ocean/saltwater_renewal.jpg' },
+        { id:'tidepool_treasure',  title:'Tidepool Treasure',   invitation:'Explore the small worlds hidden in plain sight.', reflection:'What beauty have I been overlooking?',          image: CDN+'water-ocean/tidepool_treasure.jpg' },
+        { id:'sunrise_by_water',   title:'Sunrise By Water',    invitation:'Meet the day where the sky touches the sea.',    reflection:'What wants to awaken?',                         image: CDN+'water-ocean/sunrise_by_water.jpg' },
+        { id:'listen_to_the_waves',title:'Listen To The Waves', invitation:'Do nothing but listen.',                         reflection:'What becomes quieter when I stop speaking?',    image: CDN+'water-ocean/listen_to_the_waves.jpg' }
+      ]},
+      nature_grounding: { label: 'Nature & Grounding', cards: [
+        { id:'start_the_morning',  title:'Start the Morning With Purpose', invitation:'How you begin sets the tone for everything.',         reflection:'What kind of morning routine nourishes my mind and soul?', image: CDN+'nature-grounding/start_the_morning_with_purpose.jpg' },
+        { id:'pause_and_breathe',  title:'Pause & Breathe',               invitation:'Sometimes the most productive thing is nothing at all.', reflection:'How can I create more space to simply be?',            image: CDN+'nature-grounding/pause_and_breathe.jpg' },
+        { id:'barefoot_earth',     title:'Barefoot Earth',                invitation:'Feel the ground beneath your feet.',                  reflection:'What is supporting me right now?',                        image: CDN+'nature-grounding/barefoot_earth.jpg' },
+        { id:'sit_with_a_tree',    title:'Sit With A Tree',               invitation:'Choose a tree and share its company.',               reflection:'What can stillness teach me?',                            image: CDN+'nature-grounding/sit_with_a_tree.jpg' },
+        { id:'garden_time',        title:'Garden Time',                   invitation:'Plant, weed, water or simply wander.',               reflection:'What is growing quietly?',                                image: CDN+'nature-grounding/garden_time.jpg' },
+        { id:'follow_a_bird',      title:'Follow A Bird',                 invitation:'Allow curiosity to guide your path.',                 reflection:'Where does wonder want to lead me?',                      image: CDN+'nature-grounding/follow_a_bird.jpg' },
+        { id:'trust_your_timing',  title:'Trust Your Timing',             invitation:'Everything unfolds in its own perfect time.',         reflection:'Where could I let go of the rush and trust the process?', image: CDN+'nature-grounding/trust_your_timing.jpg' },
+        { id:'watch_the_sunset',   title:'Watch The Sunset',              invitation:'Let the day close and the mind soften.',             reflection:'What am I ready to release today?',                       image: CDN+'nature-grounding/watch_the_sunset.jpg' }
+      ]},
+      movement_energy: { label: 'Movement & Energy', cards: [
+        { id:'wander_further',        title:'Wander Further',         invitation:'Take the longer route.',                      reflection:'What happens if I keep going?',            image: CDN+'movement-energy/wander_further.jpg' },
+        { id:'dance_in_the_kitchen',  title:'Dance In The Kitchen',   invitation:'Joy counts as movement.',                     reflection:'What feels playful today?',               image: CDN+'movement-energy/dance_in_the_kitchen.jpg' },
+        { id:'stretch_toward_the_sun',title:'Stretch Toward The Sun', invitation:'Move gently and intentionally.',              reflection:'What needs more space?',                  image: CDN+'movement-energy/stretch_toward_the_sun.jpg' },
+        { id:'the_explorers_walk',    title:"The Explorer's Walk",    invitation:"Choose a path you've never taken.",           reflection:'What lies beyond the familiar?',          image: CDN+'movement-energy/the_explorers_walk.jpg' },
+        { id:'follow_your_energy',    title:'Follow Your Energy',     invitation:'Move however feels right.',                   reflection:'What does my body need?',                 image: CDN+'movement-energy/follow_your_energy.jpg' }
+      ]},
+      reflection_journaling: { label: 'Reflection & Journalling', cards: [
+        { id:'morning_pages',          title:'Morning Pages',          invitation:'Write before the world arrives.',              reflection:'What is waiting beneath the surface?',       image: CDN+'reflection-journaling/morning_pages.jpg' },
+        { id:'letter_to_future_me',    title:'Letter To Future Me',    invitation:'Leave a message across time.',                 reflection:'What do I hope to remember?',               image: CDN+'reflection-journaling/letter_to_future_me.jpg' },
+        { id:'gratitude_inventory',    title:'Gratitude Inventory',    invitation:'Notice what is already here.',                 reflection:'What feels abundant?',                      image: CDN+'reflection-journaling/gratitude_inventory.jpg' },
+        { id:'presence_page',          title:'Presence Page',          invitation:'Anchor yourself in the now.',                  reflection:'What is true in this moment right now?',    image: CDN+'reflection-journaling/presence_page.jpg' },
+        { id:'reflection_journalling', title:'Reflection & Journalling',invitation:'Clarity grows when we write it out.',         reflection:'What am I discovering about myself?',       image: CDN+'reflection-journaling/reflection_and_journalling.jpg' }
+      ]},
+      creativity_play: { label: 'Creativity & Play', cards: [
+        { id:'creativity_and_play',   title:'Creativity & Play',       invitation:'Make space for joy. Follow curiosity.',        reflection:'What sparks my imagination right now?',     image: CDN+'creativity-play/creativity_and_play.jpg' },
+        { id:'story_fragments',       title:'Story Fragments',         invitation:'Write without judgement.',                     reflection:'What wants to be expressed?',               image: CDN+'creativity-play/story_fragments.jpg' },
+        { id:'sketch_the_moment',     title:'Sketch the Moment',       invitation:'Capture what you see. No rules, just notice.', reflection:'What details catch my eye right now?',      image: CDN+'creativity-play/sketch_the_moment.jpg' },
+        { id:'create_something_tiny', title:'Create Something Tiny',   invitation:'Small creations, big happiness.',              reflection:'What can I create just for the joy of it?', image: CDN+'creativity-play/create_something_tiny.jpg' },
+        { id:'collect_beautiful_things',title:'Collect Beautiful Things',invitation:'Gather what inspires you.',                  reflection:'What lifts my spirit and fills me with wonder?', image: CDN+'creativity-play/collect_beautiful_things.jpg' }
+      ]},
+      rest_restoration: { label: 'Rest & Restoration', cards: [
+        { id:'afternoon_nest',      title:'Afternoon Nest',        invitation:'Rest. Recharge. Be still.',                        reflection:'What would it feel like to give myself permission to rest?', image: CDN+'rest-restoration/afternoon_nest.jpg' },
+        { id:'tea_and_silence',     title:'Tea and Silence',       invitation:'Savour the quiet. Let stillness restore you.',    reflection:'What becomes clear when I slow down?',                      image: CDN+'rest-restoration/tea_and_silence.jpg' },
+        { id:'listen_to_your_soul', title:'Listen to Your Soul',   invitation:'You already know the way. Trust what feels true.', reflection:'What does my soul need more of right now?',                 image: CDN+'rest-restoration/listen_to_your_soul.jpg' },
+        { id:'cloud_watching',      title:'Cloud Watching',        invitation:'Look up and drift.',                               reflection:'What can I release?',                                       image: CDN+'rest-restoration/cloud_watching.jpg' },
+        { id:'early_night',         title:'Early Night',           invitation:'Treat sleep as a sacred practice.',               reflection:'What is ready to restore?',                                 image: CDN+'rest-restoration/early_night.jpg' },
+        { id:'the_sanctuary_hour',  title:'The Sanctuary Hour',    invitation:'Protect an hour for yourself.',                   reflection:'What nourishes me?',                                        image: CDN+'rest-restoration/the_sanctuary_hour.jpg' }
+      ]},
+      adventure_discovery: { label: 'Adventure & Discovery', cards: [
+        { id:'the_unknown_turn', title:'The Unknown Turn',  invitation:"Take a turn you've never taken.",         reflection:'What might be waiting just beyond the bend?', image: CDN+'adventure-discovery/the_unknown_turn.jpg' },
+        { id:'local_explorer',   title:'Local Explorer',   invitation:'Discover wonder close to home.',           reflection:'What hidden gems are waiting nearby?',        image: CDN+'adventure-discovery/local_explorer.jpg' },
+        { id:'scenic_detour',    title:'Scenic Detour',    invitation:'Take the longer route.',                   reflection:'What am I rushing past?',                     image: CDN+'adventure-discovery/scenic_detour.jpg' },
+        { id:'treasure_hunt',    title:'Treasure Hunt',    invitation:'Find beauty in the unexpected.',           reflection:'What treasures are already around me?',       image: CDN+'adventure-discovery/treasure_hunt.jpg' },
+        { id:'follow_the_thread',title:'Follow The Thread',invitation:'Follow curiosity. See where it leads.',    reflection:'What is trying to get my attention?',         image: CDN+'adventure-discovery/follow_the_thread.jpg' }
+      ]},
+      connection: { label: 'Connection', cards: [
+        { id:'share_a_meal',            title:'Share a Meal',            invitation:"Good food. Great company.",                reflection:'Who nourishes me in ways that matter most?',                          image: CDN+'connection/share_a_meal.jpg' },
+        { id:'send_a_message',          title:'Send A Message',          invitation:'A few kind words can travel further than we know.', reflection:'Who would feel more connected if they heard from me today?',  image: CDN+'connection/send_a_message.jpg' },
+        { id:'meaningful_conversation', title:'Meaningful Conversation', invitation:'Ask a deeper question.',                  reflection:'What would I like to understand?',                                    image: CDN+'connection/meaningful_conversation.jpg' },
+        { id:'family_adventure',        title:'Family Adventure',        invitation:'Make time for wonder together.',           reflection:'How can I deepen connection through shared experience?',               image: CDN+'connection/family_adventure.jpg' },
+        { id:'acts_of_kindness',        title:'Acts of Kindness',        invitation:'Choose kindness. Share light.',            reflection:'How can I bring more kindness into my day today?',                    image: CDN+'connection/acts_of_kindness.jpg' }
+      ]}
+    };
+
+    /* populate select */
+    var select = document.getElementById('categorySelect');
+    Object.keys(decks).filter(function(k){ return k !== 'core'; }).forEach(function(key) {
+      var opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = decks[key].label;
+      select.appendChild(opt);
+    });
+
+    var pullHistory = [];
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function buildCard(card, label, isCore) {
+      var subtitle  = isCore ? card.subtitle   : card.invitation;
+      var el = document.createElement('article');
+      el.className = 'card';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', 'Open ' + card.title);
+
+      var img = document.createElement('img');
+      img.src = card.image;
+      img.alt = card.title;
+      img.loading = 'lazy';
+      el.appendChild(img);
+
+      var body = document.createElement('div');
+      body.className = 'card-body';
+
+      var kicker = document.createElement('span');
+      kicker.className = 'card-kicker';
+      kicker.textContent = label;
+      body.appendChild(kicker);
+
+      var title = document.createElement('h2');
+      title.className = 'card-title';
+      title.textContent = card.title;
+      body.appendChild(title);
+
+      var sub = document.createElement('p');
+      sub.className = 'card-subtitle';
+      sub.textContent = subtitle;
+      body.appendChild(sub);
+
+      if (isCore) {
+        var hint = document.createElement('p');
+        hint.className = 'card-hint';
+        hint.textContent = 'Open to reveal the deeper meaning.';
+        body.appendChild(hint);
+      }
+
+      el.appendChild(body);
+
+      function open() { openModal(card, label, isCore); }
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }});
+      return el;
+    }
+
+    function openModal(card, label, isCore) {
+      var modal   = document.getElementById('cardModal');
+      var inner   = document.getElementById('modalInner');
+      inner.innerHTML = '';
+
+      var imgEl = document.createElement('img');
+      imgEl.src = card.image;
+      imgEl.alt = card.title;
+      inner.appendChild(imgEl);
+
+      var content = document.createElement('div');
+      content.className = 'modal-content';
+
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-close';
+      closeBtn.textContent = 'close';
+      closeBtn.addEventListener('click', closeModal);
+      content.appendChild(closeBtn);
+
+      var kicker = document.createElement('span');
+      kicker.className = 'modal-kicker';
+      kicker.textContent = label;
+      content.appendChild(kicker);
+
+      var title = document.createElement('h2');
+      title.className = 'modal-title';
+      title.textContent = card.title;
+      content.appendChild(title);
+
+      var subtitle = document.createElement('p');
+      subtitle.className = 'modal-subtitle';
+      subtitle.textContent = isCore ? card.subtitle : card.invitation;
+      content.appendChild(subtitle);
+
+      var prompt = document.createElement('div');
+      prompt.className = 'modal-prompt';
+      prompt.textContent = isCore ? card.prompt : card.reflection;
+      content.appendChild(prompt);
+
+      if (isCore && card.meaning) {
+        var meaning = document.createElement('p');
+        meaning.className = 'modal-meaning';
+        meaning.textContent = card.meaning;
+        content.appendChild(meaning);
+      } else if (!isCore) {
+        var meaning = document.createElement('p');
+        meaning.className = 'modal-meaning';
+        meaning.textContent = 'Let this activity meet you gently. Notice what it invites, what it loosens, and what it makes possible today.';
+        content.appendChild(meaning);
+      }
+
+      inner.appendChild(content);
+      modal.classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('cardModal').classList.remove('open');
+    }
+
+    document.getElementById('cardModal').addEventListener('click', function(e){
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
+
+    function showCards(items) {
+      var reading = document.getElementById('reading');
+      reading.innerHTML = '';
+      items.forEach(function(item) {
+        reading.appendChild(buildCard(item.card, item.label, item.isCore));
+      });
+      var titles = items.map(function(i){ return i.card.title; }).join(' · ');
+      pullHistory.unshift(titles);
+      if (pullHistory.length > 6) pullHistory.pop();
+      var hist = document.getElementById('history');
+      if (pullHistory.length) {
+        hist.innerHTML = 'recent draws<br>';
+        pullHistory.forEach(function(h) {
+          var tag = document.createElement('span');
+          tag.className = 'history-tag';
+          tag.textContent = h;
+          hist.appendChild(tag);
+        });
+      }
+    }
+
+    document.getElementById('drawActivity').addEventListener('click', function() {
+      var key = select.value;
+      showCards([{ card: pick(decks[key].cards), label: decks[key].label, isCore: false }]);
+    });
+    document.getElementById('drawCore').addEventListener('click', function() {
+      showCards([{ card: pick(decks.core.cards), label: 'Core Card', isCore: true }]);
+    });
+    document.getElementById('drawReading').addEventListener('click', function() {
+      var key = select.value;
+      showCards([
+        { card: pick(decks.core.cards), label: 'Core Card', isCore: true },
+        { card: pick(decks[key].cards), label: decks[key].label, isCore: false }
+      ]);
+    });
+    document.getElementById('clearCards').addEventListener('click', function() {
+      document.getElementById('reading').innerHTML = '<p class="reading-empty">Your cards will appear here.</p>';
+      document.getElementById('history').innerHTML = '';
+      pullHistory.length = 0;
+    });
+
+    /* ——— FADE NAVIGATION ——— */
+    var cover = document.getElementById('fadeCover');
+    function navigateTo(href) {
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        cover.style.opacity = '1';
+        setTimeout(function(){ window.location.href = href; }, 1500);
+      }); });
+    }
+
+    /* ——— FADE IN ——— */
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      cover.style.opacity = '0';
+      setTimeout(function(){ cover.style.display = 'none'; }, 2600);
+    }); });
+
+    /* ——— TRAIL LOGGING ——— */
+    function logTrail(name, href) {
+      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== href; });
+      trail.unshift({ name: name, href: href });
+      if (trail.length > 5) trail = trail.slice(0, 5);
+      localStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    }
+    logTrail('the oracle', 'oracle.html');
+
+    /* Return to Apothecary — visual doorway, bottom-left */
+    document.getElementById('returnApothecary').addEventListener('click', function(){ navigateTo('apothecary.html'); });
+    document.getElementById('returnApothecary').addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); this.click(); }
+    });
+    document.getElementById('returnApothecary').addEventListener('touchstart', function(){ this.classList.add('active'); }, {passive:true});
+    document.getElementById('returnApothecary').addEventListener('touchend', function(){ var el = this; setTimeout(function(){ el.classList.remove('active'); }, 800); });
+
+    /* ——— EVERFLAME MENU ——— */
+    var efMenu  = document.getElementById('efMenu');
+    var efScrim = document.getElementById('efScrim');
+    var efOpen  = false;
+
+    function buildTrail() {
+      var trail = JSON.parse(localStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'oracle.html'; });
+      var efTrail = document.getElementById('efTrail');
+      var efTrailList = document.getElementById('efTrailList');
+      if (!trail.length) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(e) {
+        var btn = document.createElement('button');
+        btn.className = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(e.href); });
+        efTrailList.appendChild(btn);
+      });
+    }
+
+    function openEfMenu()  { buildTrail(); efMenu.classList.add('open'); efScrim.style.display = 'block'; efOpen = true; }
+    function closeEfMenu() { efMenu.classList.remove('open'); efScrim.style.display = 'none'; efOpen = false; }
+
+    document.getElementById('everflame').addEventListener('click', function(){ efOpen ? closeEfMenu() : openEfMenu(); });
+    efScrim.addEventListener('click', closeEfMenu);
+    document.getElementById('efApothecary').addEventListener('click', function(){ closeEfMenu(); navigateTo('apothecary.html'); });
+    document.getElementById('efHearthfire').addEventListener('click', function(){ closeEfMenu(); navigateTo('hearthfire.html'); });
+  </script>
+</body>
+</html>

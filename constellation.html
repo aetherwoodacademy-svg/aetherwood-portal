@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Constellation · Memory Hall · Aetherwood</title>
+  <script src="lunar.js"></script>
+  <script src="portal-data.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@300;400&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --serif: 'Cormorant Garamond', Georgia, serif; --caps: 'Cinzel', serif; --bg-deep: #05070d;
+      --pearl: #ecebe4; --silver: #c8cdd2; --birch: #aeb6bb; --star: #fff7e6;
+      --accent: #b9a3e8; --accent-hot: #d9c8ff;
+    }
+    html, body { width: 100%; height: 100%; background: var(--bg-deep); overflow: hidden; font-family: var(--serif); color: var(--pearl); }
+
+    #bg { position: fixed; inset: 0; z-index: 0; background-color: var(--bg-deep); background-position: center center; background-size: cover; background-repeat: no-repeat;
+      transform: scale(1.07); transition: transform 3.2s ease, filter 1.2s ease; }
+    #bg.settle { transform: scale(1.0); }
+    #vignette { position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 46%, transparent 32%, rgba(4,6,12,0.42) 68%, rgba(4,6,12,0.84) 100%),
+        linear-gradient(to bottom, rgba(4,6,12,0.42) 0%, transparent 26%, transparent 62%, rgba(4,6,12,0.9) 100%); }
+
+    #motes { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+    .mote { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--accent-hot);
+      box-shadow: 0 0 7px 2px rgba(200,180,255,0.45); opacity: 0; animation: moteFloat var(--md,9s) ease-in-out var(--mdl,0s) infinite; }
+    @keyframes moteFloat { 0%{opacity:0;transform:translateY(0) translateX(0) scale(.7)} 20%{opacity:.85} 80%{opacity:.55} 100%{opacity:0;transform:translateY(-64px) translateX(var(--mdx,8px)) scale(1.1)} }
+
+    /* connecting line — a constellation (sky) or a bunting string (laughter) */
+    #constLines { position: fixed; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+    #constLines polyline { fill: none; stroke: var(--accent); stroke-opacity: .42; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* the tokens a memory becomes, per room */
+    #tokenLayer { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+    .tok { pointer-events: auto; cursor: default; }
+    /* not yet approved by the keeper — still visible to its own poster, dimmer */
+    .tok.pending { opacity: .5; }
+
+    /* SKY — star */
+    .star { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--star);
+      box-shadow: 0 0 8px 2px rgba(255,232,186,0.7); animation: starTwinkle var(--st,5s) ease-in-out infinite; }
+    .star:hover { transform: scale(1.7); }
+    @keyframes starTwinkle { 0%,100%{opacity:.4;transform:scale(.8)} 50%{opacity:1;transform:scale(1.12)} }
+    .star.ascending { animation: starRise 2.6s cubic-bezier(.2,.7,.25,1) forwards, starTwinkle var(--st,5s) ease-in-out 2.6s infinite; }
+    @keyframes starRise { 0%{opacity:0;transform:translate(var(--fromX,0),var(--fromY,0)) scale(2.6);box-shadow:0 0 22px 8px rgba(255,232,186,0.9)} 12%{opacity:1} 100%{opacity:1;transform:translate(0,0) scale(1)} }
+
+    /* HEARTH — a sprig of herbs hung to dry */
+    .herb { position: absolute; transform-origin: 50% 0; animation: sway var(--sw,5s) ease-in-out infinite; }
+    .herb i { display: block; width: 1px; height: 16px; background: rgba(170,150,100,0.75); margin: 0 auto; }
+    .herb b { display: block; width: 11px; height: 15px; margin: -3px auto 0; border-radius: 0 72% 0 72%;
+      background: radial-gradient(circle at 40% 30%, rgba(168,196,140,0.95), rgba(95,125,75,0.55)); box-shadow: 0 0 8px 2px rgba(150,180,120,0.28); }
+    @keyframes sway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+
+    /* LAUGHTER — a bunting pennant */
+    .flag { position: absolute; width: 14px; height: 18px; transform-origin: 50% 0; clip-path: polygon(0 0, 100% 0, 50% 100%);
+      box-shadow: 0 0 8px rgba(255,224,160,0.35); animation: flutter var(--sw,4s) ease-in-out infinite; }
+    @keyframes flutter { 0%,100%{transform:rotate(-4deg) skewX(-2deg)} 50%{transform:rotate(4deg) skewX(2deg)} }
+
+    /* KEEPERS — a book spine on the shelf */
+    .book { position: absolute; width: 7px; height: 30px; border-radius: 1px;
+      background: linear-gradient(to right, rgba(0,0,0,0.35), var(--bookcol,#8a6b4a)); box-shadow: 0 1px 6px rgba(0,0,0,0.5); transition: transform .3s ease; }
+    .book:hover { transform: translateY(-3px); }
+
+    /* LAUGHTER — a warm glow that catches the tree (no bunting drawn) */
+    .glowtok { width: 16px; height: 16px; border-radius: 50%; transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255,230,160,0.7) 0%, rgba(244,190,110,0.25) 48%, transparent 76%);
+      box-shadow: 0 0 12px 4px rgba(244,190,110,0.32); animation: glowTokPulse var(--gp, 4s) ease-in-out infinite; }
+    .glowtok:hover { filter: brightness(1.2); }
+
+    /* KEEPERS — static motes to stumble upon (tap to read) */
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--star);
+      box-shadow: 0 0 7px 2px rgba(255,232,186,0.5); animation: starTwinkle var(--st, 5s) ease-in-out infinite; }
+    .dot:hover { transform: scale(1.8); }
+    @keyframes glowTokPulse { 0%,100% { opacity: .5; transform: translate(-50%,-50%) scale(.9); } 50% { opacity: .95; transform: translate(-50%,-50%) scale(1.12); } }
+
+    #header { position: fixed; top: 5vh; left: 50%; transform: translateX(-50%); z-index: 8; text-align: center; pointer-events: none; width: min(40rem,90vw); opacity: 0; transition: opacity 2s ease; }
+    #header.show { opacity: 1; }
+    #header .eyebrow { font-family: var(--caps); letter-spacing: .34em; text-transform: uppercase; font-size: .68rem; color: var(--silver); opacity: .85; }
+    #header h1 { font-family: var(--caps); font-weight: 300; letter-spacing: .2em; font-size: 1.5rem; color: var(--pearl); margin-top: .5rem; text-shadow: 0 2px 26px rgba(0,0,0,0.85); }
+    #header .question { font-style: italic; font-size: 1.22rem; color: var(--accent-hot); margin-top: .9rem; text-shadow: 0 2px 22px rgba(0,0,0,0.9); }
+    #header .count { font-style: italic; font-size: .82rem; color: var(--silver); opacity: .8; margin-top: .7rem; text-shadow: 0 2px 20px rgba(0,0,0,0.85); }
+
+    .btm { position: fixed; bottom: 6vh; z-index: 9; opacity: 0; transition: opacity 1.2s ease; }
+    .btm.show { opacity: 1; }
+    #addMemory { left: 50%; transform: translateX(-50%); font-family: var(--caps); letter-spacing: .24em; text-transform: uppercase; font-size: .76rem; color: var(--accent-hot); background: transparent; border: 1px solid rgba(217,200,255,0.35); padding: .85rem 2rem; border-radius: 2px; cursor: pointer; backdrop-filter: blur(2px); transition: all .5s ease, opacity 1.2s ease; }
+    #addMemory:hover { border-color: var(--accent-hot); box-shadow: 0 0 28px rgba(185,163,232,0.3); letter-spacing: .3em; }
+    #backLink { left: 3.5vmin; background: none; border: none; cursor: pointer; font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--silver); transition: color .4s ease; }
+    #backLink:hover { color: var(--pearl); }
+
+    /* the memory-orb — a mysterious, mischievous wisp you have to catch */
+    #memoryOrb {
+      position: fixed; z-index: 9; left: 50%; top: 62%; width: 28px; height: 28px; border-radius: 50%;
+      transform: translate(-50%, -50%); cursor: pointer; opacity: 0; will-change: left, top;
+      transition: opacity 1.2s ease, width .5s ease, height .5s ease, box-shadow .5s ease;
+      background: radial-gradient(circle at 42% 38%, rgba(255,255,255,0.7) 0%, var(--accent-hot) 46%, var(--accent) 76%, transparent 84%);
+      box-shadow: 0 0 14px 4px rgba(200,180,255,0.28);
+    }
+    /* wanders on a JS path; flickers like a wisp; steadies & brightens when you reach for it */
+    #memoryOrb.show { animation: orbFlicker 4.4s ease-in-out infinite; }
+    #memoryOrb.calm { width: 36px; height: 36px; box-shadow: 0 0 28px 9px rgba(222,206,255,0.6); animation-play-state: paused; opacity: .96 !important; }
+    @keyframes orbFlicker { 0%,100%{opacity:.5} 18%{opacity:.92} 33%{opacity:.36} 52%{opacity:.85} 68%{opacity:.44} 84%{opacity:.95} }
+    #orbLabel {
+      position: fixed; z-index: 9; left: 50%; top: calc(62% + 36px); transform: translateX(-50%);
+      font-family: var(--serif); font-style: italic; font-size: .96rem; color: var(--pearl); white-space: nowrap;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 2px 16px rgba(0,0,0,0.95); opacity: 0; transition: opacity 1.6s ease; pointer-events: none;
+    }
+    #orbLabel.show { opacity: .42; }
+
+    /* a little doorway back to the grove — fades and breathes, atmospheric not UI.
+       Reshaped from an arch to a circle (6 Jul) to match the return-doorway
+       standard used everywhere else in the portal (Hearthfire/Apothecary/
+       Oracle/the grove's own return-to-Hearthfire). One file, all five
+       chapter rooms (Wonder/Hearth/Laughter/Keepers/Legacy) share it. */
+    #grovePortal {
+      position: fixed; z-index: 9; left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin; min-width: 64px; min-height: 64px; cursor: pointer;
+      border-radius: 50%; overflow: hidden; border: 1px solid rgba(236,235,228,0.25);
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733043/Memory_hall_f1mtnx.png') center / cover; opacity: 0; transition: opacity 1.4s ease, transform .5s ease;
+    }
+    #grovePortal.show { animation: portalBreath 6.5s ease-in-out infinite; }
+    #grovePortal::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 125%, rgba(244,190,110,0.28), transparent 62%); }
+    #grovePortal:hover { transform: translateY(-5px) scale(1.06); }
+    @keyframes portalBreath {
+      0%,100% { opacity: .4;  filter: drop-shadow(0 0 4px rgba(244,190,110,0.04)); }
+      50%     { opacity: .9;  filter: drop-shadow(0 0 15px rgba(244,190,110,0.36)); }
+    }
+
+    /* the words you wrote lift away and rise into the constellation when released */
+    .flyletter {
+      position: fixed; z-index: 70; font-family: var(--serif); font-size: 1.5rem; color: #fff;
+      -webkit-text-stroke: 0.6px rgba(0,0,0,0.55);
+      text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 7px rgba(0,0,0,0.85), 0 0 14px var(--accent);
+      pointer-events: none; opacity: 0; animation: flyAway var(--fd,1.2s) ease-out forwards;
+    }
+    @keyframes flyAway {
+      0% { opacity: 0; transform: translate(0,0) scale(1); }
+      12% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--fx,0), var(--fy,-150px)) scale(1.3) rotate(6deg); }
+    }
+
+    /* the grove rushes up and pulls you back through */
+    #portalWipe { position: fixed; inset: 0; z-index: 80; background: var(--bg-deep) url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733043/Memory_hall_f1mtnx.png') center / cover; opacity: 0; transform: scale(1.18); pointer-events: none; }
+    #portalWipe.go { opacity: 1; transform: scale(1); transition: opacity 1.05s ease, transform 1.2s cubic-bezier(.3,.7,.3,1); }
+
+    .ritual { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .8s ease; background: radial-gradient(ellipse at 50% 58%, rgba(10,8,18,0.55) 0%, rgba(4,5,10,0.88) 68%); }
+    .ritual.open { opacity: 1; pointer-events: auto; }
+    .ritual-inner { text-align: center; width: min(560px,88vw); transform: translateY(10px); transition: transform .9s ease; }
+    .ritual.open .ritual-inner { transform: translateY(0); }
+    /* the caught orb, glowing above your words — they flow from its light */
+    .ritual-orb {
+      width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 1.5rem;
+      background: radial-gradient(circle at 42% 38%, rgba(255,255,255,0.88) 0%, var(--accent-hot) 44%, var(--accent) 74%, transparent 84%);
+      box-shadow: 0 0 34px 11px rgba(200,180,255,0.45); animation: ritualOrbPulse 3.4s ease-in-out infinite;
+    }
+    @keyframes ritualOrbPulse {
+      0%,100% { transform: scale(1);    box-shadow: 0 0 30px 9px rgba(200,180,255,0.4); }
+      50%     { transform: scale(1.09); box-shadow: 0 0 46px 15px rgba(200,180,255,0.62); }
+    }
+    .ritual-whisper { font-family: var(--serif); font-style: italic; font-size: 1.5rem; line-height: 1.5; color: var(--pearl); margin-bottom: 1.8rem; text-shadow: 0 2px 30px rgba(0,0,0,0.85); }
+    .ritual-area, .ritual-line { width: 100%; background: transparent; border: none; outline: none; text-align: center; font-family: var(--serif); letter-spacing: .02em; caret-color: var(--accent); }
+    .ritual-area { color: var(--pearl); font-size: 1.44rem; min-height: 92px; resize: none; line-height: 1.6; margin-bottom: 1rem;
+      caret-color: var(--accent-hot); text-shadow: 0 0 14px rgba(217,200,255,0.5), 0 1px 2px rgba(0,0,0,0.55); transition: text-shadow .3s ease; }
+    .ritual-area:focus { text-shadow: 0 0 20px rgba(217,200,255,0.7), 0 1px 2px rgba(0,0,0,0.55); }
+    .ritual-line { color: var(--accent-hot); font-size: 1.18rem; border: none; padding: .4rem 0; caret-color: var(--accent-hot);
+      text-shadow: 0 0 12px rgba(217,200,255,0.45), 0 1px 2px rgba(0,0,0,0.55); }
+    .ritual-area::placeholder, .ritual-line::placeholder { color: rgba(200,205,210,0.4); font-style: italic; }
+    .ritual-act { display: inline-block; margin-top: 1.8rem; background: none; border: none; cursor: pointer; font-family: var(--caps); letter-spacing: .24em; text-transform: uppercase; font-size: .8rem; color: var(--accent); text-shadow: 0 0 18px rgba(185,163,232,0.4); transition: all .5s ease; }
+    .ritual-act:hover { color: var(--accent-hot); text-shadow: 0 0 30px rgba(185,163,232,0.7); letter-spacing: .3em; }
+    .ritual-dismiss { display: block; margin: 1.4rem auto 0; background: none; border: none; cursor: pointer; font-family: var(--serif); font-style: italic; font-size: 1.02rem; color: var(--birch); transition: color .4s ease; }
+    .ritual-dismiss:hover { color: var(--pearl); }
+    .ritual-confirm { margin-top: 1rem; font-style: italic; color: var(--accent-hot); opacity: 0; transition: opacity .6s ease; min-height: 1.3em; }
+    .ritual-confirm.show { opacity: 1; }
+
+    #starTip { position: fixed; z-index: 20; pointer-events: none; max-width: 260px; background: rgba(8,10,18,0.82); border: none; border-radius: 7px; padding: .6rem .9rem; opacity: 0; transition: opacity .45s ease; font-size: 1.08rem; font-style: italic; line-height: 1.45; color: var(--pearl); text-shadow: 0 1px 6px rgba(0,0,0,0.8); backdrop-filter: blur(3px); }
+    #starTip.show { opacity: 1; }
+    #starTip .who { display: block; font-style: normal; font-size: .82rem; color: var(--accent-hot); margin-top: .3rem; }
+
+    #everflame { position: fixed; top: 3.5vmin; left: 3.5vmin; width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen; filter: brightness(1.1); z-index: 45; cursor: pointer; animation: efLive 8s ease-in-out infinite; }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+    @keyframes efLive { 0%{transform:translateY(0) rotate(-1deg) scaleX(1)} 35%{transform:translateY(-6px) rotate(-1deg) scaleX(1.02)} 68%{transform:translateY(-7px) rotate(-1deg) scaleX(1.02)} 100%{transform:translateY(0) rotate(-1deg) scaleX(1)} }
+    #efMenu { position: fixed; top: calc(3.5vmin + 14vmin + 14px); left: 3.5vmin; z-index: 46; background: linear-gradient(160deg, rgba(18,20,34,0.97), rgba(8,10,18,0.98)); border: 1px solid rgba(236,235,228,0.14); border-radius: 6px; padding: 1.1rem 1.2rem; min-width: 230px; opacity: 0; pointer-events: none; transform: translateY(-10px); transition: opacity .5s ease, transform .5s ease; }
+    #efMenu.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .ef-section-label { font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: .75rem; color: var(--birch); display: block; margin: .2rem 0 .5rem; }
+    .ef-links { list-style: none; } .ef-item { margin: .15rem 0; }
+    .ef-link { width: 100%; text-align: left; background: none; border: none; cursor: pointer; font-family: var(--serif); font-size: 1.06rem; color: var(--silver); padding: .3rem .3rem; transition: color .35s ease; }
+    .ef-link:hover { color: var(--accent-hot); }
+    .ef-divider { border: none; border-top: 1px solid rgba(236,235,228,0.12); margin: .6rem 0; }
+    #efScrim { position: fixed; inset: 0; z-index: 44; opacity: 0; pointer-events: none; } #efScrim.open { pointer-events: auto; }
+
+    /* the room starts dark over the (already-loaded) painting, then reveals — no image-load blink */
+    #reveal { position: fixed; inset: 0; z-index: 60; background: var(--bg-deep); transition: opacity 1s ease; }
+    #reveal.gone { opacity: 0; pointer-events: none; }
+    #cover { position: fixed; inset: 0; z-index: 90; background: #05070d; opacity: 0; pointer-events: none; display: none; }
+    .startrail { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff7e6;
+      box-shadow: 0 0 8px 2px rgba(255,232,186,0.7); pointer-events: none; z-index: 95; opacity: 0; animation: trailFly var(--tf,1.1s) ease-out forwards; }
+    @keyframes trailFly { 0%{opacity:0;transform:translate(0,0) scale(.4)} 15%{opacity:1} 100%{opacity:0;transform:translate(var(--tx,0),var(--ty,-80px)) scale(1.1)} }
+
+    @media (prefers-reduced-motion: reduce) { .mote, .star, .herb, .flag, #everflame, #bg { animation: none !important; transition: none !important; } }
+    @media (max-width: 640px) { #header h1 { font-size: 1.2rem; } #header .question { font-size: 1.06rem; } }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+  <div id="bg"></div>
+  <div id="vignette"></div>
+  <svg id="constLines" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline id="constPath" points=""/></svg>
+  <div id="motes"></div>
+  <div id="tokenLayer"></div>
+  <div id="starTip"></div>
+
+  <div id="header">
+    <span class="eyebrow" id="hEyebrow"></span>
+    <h1 id="hName"></h1>
+    <p class="question" id="hQuestion"></p>
+    <p class="count" id="hCount"></p>
+  </div>
+
+  <!-- catch the drifting memory-orb to fill it with your words -->
+  <div id="memoryOrb" role="button" tabindex="0" aria-label="Catch a memory"></div>
+  <!-- a little doorway back through to the grove -->
+  <div id="grovePortal" role="button" tabindex="0" aria-label="Back through to the grove" title="back to the grove"></div>
+  <div id="portalWipe"></div>
+
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've wandered</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link" id="efHall">the grove</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <div class="ritual" id="ritual">
+    <div class="ritual-inner">
+      <div class="ritual-orb"></div>
+      <p class="ritual-whisper" id="ritualQuestion"></p>
+      <textarea id="memText" class="ritual-area" maxlength="1000" placeholder="your memory&#8230;"></textarea>
+      <input type="text" id="memWho" class="ritual-line" maxlength="120" autocomplete="off" placeholder="whose memory is this? (optional)">
+      <button class="ritual-act" id="placeBtn">let it rise</button>
+      <p class="ritual-confirm" id="memConfirm"></p>
+      <button class="ritual-dismiss" data-close>not now</button>
+    </div>
+  </div>
+
+  <div id="reveal"></div>
+  <div id="cover"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var ROOMS = {
+      wonder:   { name: 'Wonder',   place: 'the Observatory',       img: 'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733022/Memory_hall_wonder_yv2wlm.png',  mode: 'sky',   bgPos: 'center',
+                  question: 'What made you believe the world held magic?', accent: '#b9a3e8', accentHot: '#d9c8ff' },
+      hearth:   { name: 'Hearth',   place: 'the Cottage',           img: 'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733047/Memory_hall_hearth_ucrawp.png',  mode: 'herbs', bgPos: '32% center',
+                  question: 'Where did your soul learn to exhale?', accent: '#e6b873', accentHot: '#ffd79a' },
+      laughter: { name: 'Laughter', place: 'the Gathering Tree',    img: 'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733474/Memory_hall_laughter_web_zjxwaa.png', mode: 'glow',  bgPos: 'center',
+                  question: "Which story still makes you smile before you've even finished telling it?", accent: '#f0c06e', accentHot: '#ffe0a0' },
+      keepers:  { name: 'Keepers',  place: "the Archivist's Study", img: 'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733030/Memory_hall_keepers_ipmsmy.png', mode: 'dot',  bgPos: 'center',
+                  question: 'Who still helps you find your way?', accent: '#cdb88a', accentHot: '#ecd9ad' },
+      legacy:   { name: 'Legacy',   place: 'the Hall of Threads',   img: 'https://res.cloudinary.com/ds8pkprtb/image/upload/v1782733053/Memory_hall_legacy_fzvxb6.png', mode: 'sky',   bgPos: 'center',
+                  question: 'What part of another life now lives within yours?', accent: '#e8c87a', accentHot: '#ffe9af' }
+    };
+    var ORDER = ['wonder', 'hearth', 'laughter', 'keepers', 'legacy'];
+    /* !! ANGE: add more lines to any list and a different question is asked each time the orb is
+       caught. Plain JS — no Airtable needed (Airtable only if you later want to edit these
+       without touching the file). */
+    var QUESTIONS = {
+      wonder: [
+        'What made you believe the world held magic?',
+        'When did you last feel the world was larger than you imagined?',
+        'What did you believe in, before the world grew complicated?',
+        'Where did wonder find you when you weren’t looking?'
+      ],
+      hearth: [
+        'Where did your soul learn to exhale?',
+        'Where did you feel safe enough to become yourself?',
+        'Whose “tea?” still means home to you?',
+        'What ordinary ritual became sacred simply because it was shared?'
+      ],
+      laughter: [
+        "Which story still makes you smile before you've even finished telling it?",
+        'What tiny, ridiculous moment do you hope no one ever forgets?',
+        "Which disaster somehow became everyone's favourite story?",
+        'What running joke makes no sense to anyone but you?'
+      ],
+      keepers: [
+        'Who still helps you find your way?',
+        'Whose voice do you still hear when you need it?',
+        'Whose influence walks beside you, long after the moment passed?',
+        'When you wonder “what would they say?”, who do you mean?'
+      ],
+      legacy: [
+        'What part of another life now lives within yours?',
+        'When did you catch yourself becoming someone who shaped you?',
+        'What do you carry forward without realising it isn’t your own?',
+        'Whose laugh, or words, or hands have become yours?'
+      ]
+    };
+
+    var key = new URLSearchParams(window.location.search).get('room');
+    if (!ROOMS[key]) key = 'wonder';
+    var cfg = ROOMS[key];
+    var mode = cfg.mode;
+
+    document.documentElement.style.setProperty('--accent', cfg.accent);
+    document.documentElement.style.setProperty('--accent-hot', cfg.accentHot);
+    document.getElementById('bg').style.backgroundImage = "url('" + cfg.img + "')";
+    document.getElementById('bg').style.backgroundPosition = cfg.bgPos || 'center';
+    document.getElementById('bg').style.backgroundSize = cfg.bgSize || 'cover';
+    document.title = cfg.name + ' · Memory Hall · Aetherwood';
+    document.getElementById('hEyebrow').textContent = cfg.place;
+    document.getElementById('hName').textContent = cfg.name;
+    document.getElementById('hQuestion').textContent = cfg.question;
+
+    var LS = 'aetherwood_stars_' + key;
+    function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { return []; } }
+    function lsSet(v) { try { localStorage.setItem(LS, JSON.stringify(v)); } catch (e) {} }
+
+    (function () {
+      var wrap = document.getElementById('motes');
+      for (var i = 0; i < 22; i++) {
+        var m = document.createElement('div'); m.className = 'mote';
+        m.style.left = (Math.random() * 100) + '%'; m.style.top = (40 + Math.random() * 55) + '%';
+        m.style.setProperty('--md', (7 + Math.random() * 7) + 's'); m.style.setProperty('--mdl', (Math.random() * 8) + 's');
+        m.style.setProperty('--mdx', (Math.random() * 24 - 12) + 'px'); wrap.appendChild(m);
+      }
+    })();
+
+    var layer = document.getElementById('tokenLayer');
+    var starTip = document.getElementById('starTip');
+    var constPath = document.getElementById('constPath');
+    var spots = [];
+    var FESTIVE = ['#e06b6b', '#e0b357', '#6fb6c9', '#9bbf6a', '#c98fc0'];
+
+    /* where a memory lands, per room */
+    function spot() {
+      if (mode === 'herbs')   return { x: 18 + Math.random() * 64, y: 12 + Math.random() * 7 };
+      if (mode === 'glow')    return { x: 28 + Math.random() * 44, y: 30 + Math.random() * 26 };
+      if (mode === 'dot')     return { x: 12 + Math.random() * 76, y: 28 + Math.random() * 46 };
+      if (mode === 'bunting') { var x = 12 + Math.random() * 76, t = (x - 12) / 76; return { x: x, y: 14 + 13 * Math.sin(Math.PI * t) }; }
+      if (mode === 'shelf')   { var rows = [42, 52, 62]; return { x: 30 + Math.random() * 38, y: rows[Math.floor(Math.random() * rows.length)] + (Math.random() * 2 - 1) }; }
+      /* sky — Wonder's telescope silhouette reaches up to about 45% of the frame height
+         (Ange, 6 Jul 2026: "the wish lands on the telescope, upper left of the image"),
+         so its stars stay in a narrower band clearly above it. Legacy's sky is unobstructed. */
+      if (key === 'wonder') return { x: 8 + Math.random() * 84, y: 8 + Math.random() * 22 };
+      return { x: 8 + Math.random() * 84, y: 8 + Math.random() * 38 }; /* sky */
+    }
+    function spotOf(st) {
+      var x = (typeof st.sx === 'number') ? st.sx : parseFloat(st.sx);
+      var y = (typeof st.sy === 'number') ? st.sy : parseFloat(st.sy);
+      if (isNaN(x) || isNaN(y)) return spot();
+      return { x: x, y: y };
+    }
+
+    function showTip(el, data) {
+      starTip.innerHTML = ''; starTip.appendChild(document.createTextNode(data.text || ''));
+      if (data.pending) {
+        var p = document.createElement('span'); p.className = 'who'; p.textContent = 'awaiting the keeper’s blessing'; starTip.appendChild(p);
+      } else if (data.who) { var w = document.createElement('span'); w.className = 'who'; w.textContent = data.who; starTip.appendChild(w); }
+      var r = el.getBoundingClientRect();
+      starTip.style.left = Math.min(window.innerWidth - 280, Math.max(8, r.left - 120)) + 'px';
+      starTip.style.top  = Math.min(window.innerHeight - 92, r.top + 18) + 'px';
+      starTip.classList.add('show');
+    }
+    function hideTip() { starTip.classList.remove('show'); }
+    var tipTimer = null;
+    function attachTip(el, data) {
+      el.addEventListener('mouseenter', function () { showTip(el, data); });
+      el.addEventListener('mouseleave', hideTip);
+      /* tap to hear what it said, as a whisper (mobile + desktop) */
+      el.addEventListener('click', function (e) { e.stopPropagation(); showTip(el, data); clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 4500); });
+    }
+    document.addEventListener('click', hideTip);
+
+    function makeToken(sp, data, isNew) {
+      var el = document.createElement('div');
+      el.className = 'tok' + (data.pending ? ' pending' : '');
+      el.style.position = 'absolute'; el.style.left = sp.x + '%'; el.style.top = sp.y + '%';
+      if (mode === 'sky') {
+        el.classList.add('star'); el.style.setProperty('--st', (3.5 + Math.random() * 4).toFixed(2) + 's');
+        if (isNew) {
+          el.style.setProperty('--fromX', ((50 - sp.x) / 100 * window.innerWidth).toFixed(0) + 'px');
+          el.style.setProperty('--fromY', ((92 - sp.y) / 100 * window.innerHeight).toFixed(0) + 'px');
+          el.classList.add('ascending');
+        }
+      } else if (mode === 'herbs') {
+        el.classList.add('herb'); el.style.setProperty('--sw', (4 + Math.random() * 3).toFixed(2) + 's');
+        el.innerHTML = '<i></i><b></b>';
+      } else if (mode === 'glow') {
+        el.classList.add('glowtok'); el.style.setProperty('--gp', (3.5 + Math.random() * 2.5).toFixed(2) + 's');
+      } else if (mode === 'dot') {
+        el.classList.add('dot'); el.style.setProperty('--st', (3.5 + Math.random() * 4).toFixed(2) + 's');
+      } else if (mode === 'bunting') {
+        el.classList.add('flag'); el.style.setProperty('--sw', (3 + Math.random() * 2.5).toFixed(2) + 's');
+        el.style.background = FESTIVE[Math.floor(Math.random() * FESTIVE.length)];
+      } else if (mode === 'shelf') {
+        el.classList.add('book');
+        el.style.setProperty('--bookcol', 'hsl(' + Math.floor(20 + Math.random() * 40) + ',35%,' + Math.floor(28 + Math.random() * 22) + '%)');
+        el.style.height = (26 + Math.random() * 8) + 'px';
+      }
+      if (isNew && mode !== 'sky') { el.style.opacity = '0'; el.style.transition = 'opacity 1.1s ease';
+        requestAnimationFrame(function () { requestAnimationFrame(function () { el.style.opacity = ''; }); }); }
+      attachTip(el, data); layer.appendChild(el);
+    }
+
+    function drawLines() {
+      if (mode === 'sky') {
+        constPath.setAttribute('points', spots.length < 2 ? '' : spots.map(function (s) { return s.x.toFixed(2) + ',' + s.y.toFixed(2); }).join(' '));
+      } else if (mode === 'bunting') {
+        var sorted = spots.slice().sort(function (a, b) { return a.x - b.x; });
+        var pts = ['6,9'].concat(sorted.map(function (s) { return s.x.toFixed(2) + ',' + (s.y - 1).toFixed(2); })).concat(['94,9']);
+        constPath.setAttribute('points', pts.join(' '));
+      } else { constPath.setAttribute('points', ''); }
+    }
+
+    var countEl = document.getElementById('hCount');
+    function renderCount(n) { countEl.textContent = n ? (n === 1 ? 'one memory kept here' : n + ' memories kept here') : ''; }
+
+    function renderList(list) {
+      layer.innerHTML = ''; spots = [];
+      list.forEach(function (st) { var sp = spotOf(st); makeToken(sp, st, false); spots.push(sp); });
+      drawLines(); renderCount(list.length);
+    }
+
+    renderList(lsGet());
+    (async function loadCollective() {
+      /* Memories are moderated (6 Jul) — a fresh star only becomes visible to
+         other visitors once display=true in Supabase. This device still sees
+         its own pending stars (dimmer, "awaiting the keeper's blessing"),
+         merged with whatever's already been approved, instead of the
+         approved-only list silently replacing and hiding them. */
+      var res = await PortalData.read('memory_stars', { room: key });
+      var approved = (res && res.items) ? res.items.map(function (it) {
+        return { text: it.text, who: it.for_whom, sx: it.sx, sy: it.sy };
+      }) : [];
+      var approvedTexts = approved.map(function (a) { return a.text; });
+      var pending = lsGet()
+        .filter(function (l) { return approvedTexts.indexOf(l.text) === -1; })
+        .map(function (l) { return { text: l.text, who: l.who, sx: l.sx, sy: l.sy, pending: true }; });
+      renderList(pending.concat(approved));
+    })();
+
+    function confirmText() {
+      return mode === 'herbs'   ? 'hung above the hearth to keep.'
+           : mode === 'bunting' ? 'strung on the bunting.'
+           : mode === 'shelf'   ? 'shelved, and logged in the archive.'
+           : 'your memory rises, a star in ' + cfg.name + '.';
+    }
+
+    var ritual = document.getElementById('ritual');
+    var memoryOrb = document.getElementById('memoryOrb');
+    function orbShow() { memoryOrb.classList.add('show'); }
+    function orbHide() { memoryOrb.classList.remove('show'); }
+    function openRitual() {
+      var qs = QUESTIONS[key] || [cfg.question];
+      document.getElementById('ritualQuestion').textContent = qs[Math.floor(Math.random() * qs.length)];
+      ritual.classList.add('open'); orbHide(); setTimeout(function () { document.getElementById('memText').focus(); }, 220);
+    }
+    function closeRitual() { ritual.classList.remove('open'); orbShow(); }
+    memoryOrb.addEventListener('click', openRitual);
+    memoryOrb.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openRitual(); } });
+    ritual.addEventListener('click', function (e) { if (e.target === ritual) closeRitual(); });
+    document.querySelectorAll('[data-close]').forEach(function (el) { el.addEventListener('click', closeRitual); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeRitual(); });
+    /* Enter lets the memory rise (Shift+Enter for a new line) */
+    document.getElementById('memText').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('placeBtn').click(); }
+    });
+
+    /* the orb wanders on a living, non-repeating path, steadies when you reach for it,
+       and — left alone for 5 minutes — breaks into the DVD-screensaver bounce. 🤣 */
+    (function () {
+      var ox = 50, oy = 62, tx = 50, ty = 62, calm = false;
+      var bouncing = false, bx = 0, by = 0, vx = 0, vy = 0, lastActive = Date.now();
+      var IDLE = 5 * 60 * 1000, SZ = 28;
+      function newTarget() { tx = 37 + Math.random() * 26; ty = 53 + Math.random() * 16; }
+      newTarget();
+      function steady() { calm = true; memoryOrb.classList.add('calm'); }
+      function release() { calm = false; memoryOrb.classList.remove('calm'); }
+      memoryOrb.addEventListener('mouseenter', steady);
+      memoryOrb.addEventListener('mouseleave', release);
+      memoryOrb.addEventListener('touchstart', steady, { passive: true });
+      function stopBounce() { if (!bouncing) return; bouncing = false; ox = bx / window.innerWidth * 100; oy = by / window.innerHeight * 100; newTarget(); }
+      function wake() { lastActive = Date.now(); stopBounce(); }
+      ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(function (ev) { window.addEventListener(ev, wake, { passive: true }); });
+      function startBounce() {
+        bouncing = true; bx = ox / 100 * window.innerWidth; by = oy / 100 * window.innerHeight;
+        var a = Math.random() * Math.PI * 2; vx = Math.cos(a) * 3.4; vy = Math.sin(a) * 3.4;
+      }
+      function cornerSparkle(x, y) {
+        for (var i = 0; i < 12; i++) {
+          var s = document.createElement('span'); s.className = 'flyletter'; s.textContent = '✦';
+          s.style.left = x + 'px'; s.style.top = y + 'px';
+          s.style.setProperty('--fx', (Math.random() * 90 - 45).toFixed(0) + 'px');
+          s.style.setProperty('--fy', (Math.random() * 90 - 45).toFixed(0) + 'px');
+          s.style.setProperty('--fd', (0.6 + Math.random() * 0.6).toFixed(2) + 's');
+          document.body.appendChild(s);
+          (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1500); })(s);
+        }
+      }
+      function tick() {
+        if (!bouncing && memoryOrb.classList.contains('show') && Date.now() - lastActive > IDLE) startBounce();
+        if (bouncing) {
+          bx += vx; by += vy;
+          var hx = false, hy = false;
+          if (bx < SZ / 2) { bx = SZ / 2; vx = Math.abs(vx); hx = true; }
+          if (bx > window.innerWidth - SZ / 2) { bx = window.innerWidth - SZ / 2; vx = -Math.abs(vx); hx = true; }
+          if (by < SZ / 2) { by = SZ / 2; vy = Math.abs(vy); hy = true; }
+          if (by > window.innerHeight - SZ / 2) { by = window.innerHeight - SZ / 2; vy = -Math.abs(vy); hy = true; }
+          if (hx && hy) cornerSparkle(bx, by);
+          memoryOrb.style.left = bx.toFixed(1) + 'px'; memoryOrb.style.top = by.toFixed(1) + 'px';
+        } else if (!calm) {
+          ox += (tx - ox) * 0.016; oy += (ty - oy) * 0.016;
+          if (Math.abs(tx - ox) < 0.7 && Math.abs(ty - oy) < 0.7) newTarget();
+          memoryOrb.style.left = ox.toFixed(2) + '%'; memoryOrb.style.top = oy.toFixed(2) + '%';
+        }
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+
+    /* the words you wrote lift off the screen and rise into the constellation */
+    function disperseWords(text) {
+      var cx = window.innerWidth / 2, cy = window.innerHeight * 0.42;
+      var chars = text.split(''), shown = 0;
+      chars.forEach(function (ch, i) {
+        if (!ch.trim()) return;
+        var s = document.createElement('span'); s.className = 'flyletter'; s.textContent = ch;
+        s.style.left = (cx + (i - chars.length / 2) * 11 + (Math.random() * 18 - 9)) + 'px';
+        s.style.top  = (cy + (Math.random() * 34 - 17)) + 'px';
+        s.style.setProperty('--fx', (Math.random() * 130 - 65).toFixed(0) + 'px');
+        s.style.setProperty('--fy', (-130 - Math.random() * 170).toFixed(0) + 'px');
+        s.style.setProperty('--fd', (0.9 + Math.random() * 0.9).toFixed(2) + 's');
+        s.style.animationDelay = (shown * 0.02).toFixed(2) + 's'; shown++;
+        document.body.appendChild(s);
+        (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2400); })(s);
+      });
+    }
+
+    document.getElementById('placeBtn').addEventListener('click', function () {
+      var text = document.getElementById('memText').value.trim();
+      var who = document.getElementById('memWho').value.trim();
+      var confirm = document.getElementById('memConfirm');
+      if (!text) { confirm.textContent = 'the orb waits for a memory.'; confirm.classList.add('show'); return; }
+      confirm.classList.remove('show');
+      disperseWords(text);
+      var sp = spot();
+      var data = { text: text, who: who, sx: sp.x, sy: sp.y, at: Date.now() };
+      var saved = lsGet(); saved.push(data); lsSet(saved);
+      document.getElementById('memText').value = ''; document.getElementById('memWho').value = '';
+      closeRitual();
+      /* the token settles a beat after the words have lifted away */
+      setTimeout(function () { makeToken(sp, data, true); spots.push(sp); drawLines(); renderCount(spots.length); }, 900);
+      var payload = { room: key, text: text, sx: String(sp.x.toFixed(2)), sy: String(sp.y.toFixed(2)) };
+      if (who) payload.for_whom = who;
+      PortalData.submit('memory_star', payload);
+    });
+
+    function reveal() {
+      starTrail();
+      document.getElementById('reveal').classList.add('gone');
+      document.getElementById('bg').classList.add('settle');
+      setTimeout(function () { document.getElementById('header').classList.add('show'); }, 500);
+      setTimeout(function () { orbShow(); document.getElementById('grovePortal').classList.add('show'); }, 850);
+    }
+    if (document.readyState === 'complete') reveal(); else window.addEventListener('load', reveal);
+    setTimeout(reveal, 1300);
+
+    function starTrail() {
+      for (var i = 0; i < 26; i++) {
+        var s = document.createElement('div'); s.className = 'startrail';
+        s.style.left = (Math.random() * 100) + 'vw'; s.style.top = (Math.random() * 100) + 'vh';
+        s.style.setProperty('--tx', (Math.random() * 60 - 30).toFixed(0) + 'px');
+        s.style.setProperty('--ty', (-60 - Math.random() * 50).toFixed(0) + 'px');
+        s.style.setProperty('--tf', (0.8 + Math.random() * 0.8).toFixed(2) + 's');
+        document.body.appendChild(s);
+        (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1900); })(s);
+      }
+    }
+
+    var cover = document.getElementById('cover');
+    function navigateTo(href) {
+      starTrail();
+      cover.style.display = ''; cover.style.transition = 'opacity 1.2s ease';
+      requestAnimationFrame(function () { requestAnimationFrame(function () { cover.style.opacity = '1'; setTimeout(function () { window.location.href = href; }, 1300); }); });
+    }
+    /* the grove-portal pulls you back through */
+    var grovePortal = document.getElementById('grovePortal');
+    function returnToGrove() {
+      starTrail();
+      cover.style.display = ''; cover.style.transition = 'opacity .7s ease';
+      requestAnimationFrame(function () { requestAnimationFrame(function () { cover.style.opacity = '1'; }); });
+      setTimeout(function () { window.location.href = 'memory-hall.html?in=1'; }, 720);
+    }
+    grovePortal.addEventListener('click', returnToGrove);
+    grovePortal.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); returnToGrove(); } });
+
+    /* log this visit to the shared trail */
+    (function () {
+      try {
+        var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+        var href = 'constellation.html?room=' + key;
+        trail = trail.filter(function (e) { return e.href !== href; });
+        trail.unshift({ name: cfg.name + ' · ' + cfg.place, href: href });
+        if (trail.length > 8) trail = trail.slice(0, 8);
+        sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+      } catch (e) {}
+    })();
+
+    /* Everflame = where you've wandered (a trail), not a formal chamber list */
+    var efTrail = document.getElementById('efTrail'), efTrailList = document.getElementById('efTrailList');
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function (e) { return e.href !== 'constellation.html?room=' + key; });
+      if (!trail.length) { efTrail.style.display = 'none'; return; }
+      efTrail.style.display = ''; efTrailList.innerHTML = '';
+      trail.slice(0, 5).forEach(function (e) {
+        var li = document.createElement('li'); li.className = 'ef-item';
+        var b = document.createElement('button'); b.className = 'ef-link'; b.textContent = e.name;
+        b.addEventListener('click', function () { closeEf(); navigateTo(e.href); });
+        li.appendChild(b); efTrailList.appendChild(li);
+      });
+    }
+
+    var efMenu = document.getElementById('efMenu'), efScrim = document.getElementById('efScrim'), efOpen = false;
+    function openEf() { buildTrail(); efMenu.classList.add('open'); efScrim.classList.add('open'); efOpen = true; }
+    function closeEf() { efMenu.classList.remove('open'); efScrim.classList.remove('open'); efOpen = false; }
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function () { efOpen ? closeEf() : openEf(); });
+    ef.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); efOpen ? closeEf() : openEf(); } });
+    efScrim.addEventListener('click', closeEf);
+    document.getElementById('efHall').addEventListener('click', function () { closeEf(); navigateTo('memory-hall.html'); });
+    document.getElementById('efLeave').addEventListener('click', function () { closeEf(); navigateTo('index.html'); });
+
+  })();
+  </script>
+</body>
+</html>

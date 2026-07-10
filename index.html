@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a12" />
+  <link rel="preload" as="image" href="https://res.cloudinary.com/ds8pkprtb/image/upload/corridor_nebula.png" />
   <title>Aetherwood</title>
 
   <!--
@@ -382,6 +383,18 @@
     .name-input:focus { outline: none; border-bottom-color: var(--amber-warm); }
     .name-input::placeholder { color: var(--ink-faint); font-style: italic; }
 
+    /* Sound notice — crossing arms the audio (see armAudio) */
+    .sound-note {
+      margin-top: 22px;
+      font-style: italic;
+      font-size: clamp(13px, 1.1vw, 14px);
+      letter-spacing: 0.06em;
+      line-height: 1.6;
+      color: var(--ink-faint);
+      opacity: 0.9;
+    }
+    .sound-note::before { content: "\1F509\00A0"; font-style: normal; opacity: 0.7; }
+
     .name-actions { display: flex; gap: 12px; }
     .name-actions .door-button { padding: 14px 20px; font-size: clamp(14px, 3.8vw, 16px); }
     .name-actions .ghost { background: transparent; border-color: rgba(232, 220, 196, 0.22); color: var(--ink-muted); }
@@ -401,6 +414,12 @@
       filter: blur(2px);
     }
     body.crossing .crossing-bloom { animation: bloom 1600ms cubic-bezier(0.5, 0, 0.5, 1) forwards; }
+    /* the forest nebula rises over the crossing so the transfer never falls to black */
+    .crossing-nebula { position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/corridor_nebula.png') center center / cover no-repeat; }
+    body.crossing .crossing-nebula { animation: crossNeb 1450ms ease-in forwards; }
+    @keyframes crossNeb { 0% { opacity: 0; } 45% { opacity: 0; } 100% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { body.crossing .crossing-nebula { animation: none; opacity: 1; } }
     body.crossing .threshold-image { transform: scale(1.06); filter: brightness(1.15); }
     body.crossing .stage > *,
     body.crossing .element-band,
@@ -412,7 +431,7 @@
       0%   { width: 1px; height: 1px; opacity: 0; }
       30%  { width: 80vw; height: 80vh; opacity: 1; }
       70%  { width: 220vw; height: 220vh; opacity: 1; }
-      100% { width: 320vw; height: 320vh; opacity: 1; background: radial-gradient(circle, rgba(7,7,12,1) 60%, rgba(243, 176, 92, 0.4) 100%); }
+      100% { width: 320vw; height: 320vh; opacity: 1; background: radial-gradient(circle, rgba(10,22,15,1) 58%, rgba(70,160,110,0.42) 82%, rgba(243,176,92,0.35) 100%); }
     }
 
     @keyframes fadeInDown        { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
@@ -531,6 +550,7 @@
   <button class="door-hotspot" id="door-hotspot" aria-label="Step through the doors"></button>
 
   <div class="crossing-bloom" aria-hidden="true"></div>
+  <div class="crossing-nebula" aria-hidden="true"></div>
 
   <div class="stage">
     <header class="wordmark">
@@ -563,6 +583,8 @@
           <button type="button" class="door-button" id="btn-name-cross">cross</button>
         </div>
       </div>
+
+      <p class="sound-note" id="sound-note">This experience is best with sound.</p>
     </main>
   </div>
 
@@ -737,10 +759,28 @@
       } catch (e) {}
     }
 
+    // Crossing is a user gesture, so use it to unlock audio for the session and
+    // record that the visitor opted into sound. The portal is multi-page, so this
+    // is expectation + first unlock; each room re-arms on the tap that enters it.
+    function armAudio() {
+      try {
+        localStorage.setItem("aetherwood.sound", "on");
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          if (!window.__aetherAC) window.__aetherAC = new AC();
+          if (window.__aetherAC.state === "suspended") window.__aetherAC.resume();
+          const b = window.__aetherAC.createBuffer(1, 1, 22050);
+          const s = window.__aetherAC.createBufferSource();
+          s.buffer = b; s.connect(window.__aetherAC.destination); s.start(0);
+        }
+      } catch (e) {}
+    }
+
     let crossingInFlight = false;
     function cross(status, name = null) {
       if (crossingInFlight) return;
       crossingInFlight = true;
+      armAudio();
       storeVisitor(status, name);
       document.body.classList.add("crossing");
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -780,6 +820,7 @@
     btnPass.addEventListener("click", () => {
       if (crossingInFlight) return;
       crossingInFlight = true;
+      armAudio();
       document.body.classList.add("crossing");
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       setTimeout(() => { window.location.href = VESTIBULE_URL; }, reduced ? 300 : 600);

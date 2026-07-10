@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aetherwood · The Whispered Archives</title>
+
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://aetherwood.au/whispered-archives">
+  <meta property="og:title"       content="Aetherwood · The Whispered Archives">
+  <meta property="og:description" content="Every visitor leaves a trace. Every whisper is held.">
+  <meta property="og:image"       content="https://res.cloudinary.com/ds8pkprtb/image/upload/v1781960368/whispered_archives_xaotge.jpg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="lunar.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #050308;
+      --ink-cream: rgba(235, 215, 165, 0.92);
+      --ink-muted: rgba(210, 185, 130, 0.6);
+      --ink-faint: rgba(190, 165, 110, 0.32);
+      --serif: "Cormorant Garamond", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      overflow: hidden;
+      font-family: var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ——— FADE COVER ——— */
+    #fadeCover {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--bg-deep);
+      pointer-events: none;
+      transition: opacity 2.4s ease;
+    }
+
+    /* ——— BACKGROUND ——— */
+    .bg {
+      position: fixed; inset: 0;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1781960368/whispered_archives_xaotge.jpg') center 52% / cover no-repeat;
+      z-index: 0;
+      transition: filter 1.4s ease;
+    }
+    .bg.dimmed { filter: brightness(0.42) blur(2px); }
+
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 46%, transparent 28%, rgba(5,3,8,0.58) 66%, rgba(5,3,8,0.88) 100%),
+        linear-gradient(to bottom, rgba(5,3,8,0.55) 0%, transparent 18%, transparent 70%, rgba(5,3,8,0.94) 100%);
+    }
+
+    /* ——— EVERFLAME NAV ——— */
+    #everflame {
+      position: fixed; top: 3.5vmin; left: 3.5vmin;
+      width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      mix-blend-mode: screen;
+      filter: brightness(1.1);
+      z-index: 200; cursor: pointer; pointer-events: all;
+      animation: efLive 8s ease-in-out infinite;
+      transition: filter 0.7s ease;
+    }
+    #everflame:hover { filter: brightness(1.8) saturate(1.2); }
+
+    /* ——— EVERFLAME MENU ——— */
+    #efMenu {
+      position: fixed;
+      top: calc(3.5vmin + 14vmin + 18px);
+      left: 3vmin;
+      z-index: 201;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    #efMenu.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+    #efMenu::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -40px; right: -50px; bottom: -30px;
+      background: radial-gradient(ellipse at 22% 0%, rgba(6,3,9,0.82) 0%, rgba(6,3,9,0.5) 45%, transparent 78%);
+      pointer-events: none; z-index: -1;
+    }
+    .ef-section-label {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(175, 140, 72, 0.35);
+      margin-bottom: 0.85em;
+    }
+    .ef-links { list-style: none; margin-bottom: 1.5em; }
+    .ef-item  { margin-bottom: 0.35em; }
+    .ef-link {
+      display: block;
+      background: none; border: none; padding: 0;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(220, 180, 95, 0.72);
+      cursor: pointer;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      transition: color 0.4s ease;
+      white-space: nowrap;
+    }
+    .ef-link:hover { color: rgba(245, 215, 135, 0.96); }
+    .ef-link.ef-current { color: rgba(220, 180, 95, 0.28); cursor: default; }
+    .ef-divider {
+      width: 28px; border: none;
+      border-top: 1px solid rgba(160, 125, 55, 0.2);
+      margin: 0 0 1.4em 0;
+    }
+    #efScrim { position: fixed; inset: 0; z-index: 199; pointer-events: none; }
+    #efScrim.open { pointer-events: all; }
+
+    @keyframes efLive {
+      0%   { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+      18%  { transform: translateY(-3px) rotate(1.5deg) scaleX(0.98); }
+      35%  { transform: translateY(-6px) rotate(-1deg)  scaleX(1.02); }
+      52%  { transform: translateY(-4px) rotate(1.8deg) scaleX(0.97); }
+      68%  { transform: translateY(-7px) rotate(-1deg)  scaleX(1.02); }
+      82%  { transform: translateY(-3px) rotate(1deg)   scaleX(0.99); }
+      100% { transform: translateY(0)    rotate(-1deg)  scaleX(1);    }
+    }
+
+    /* ——— ROOM LABEL ——— */
+    #roomLabel {
+      position: fixed; bottom: 3vmin; left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(8px, 0.68vw, 10px);
+      letter-spacing: 0.58em;
+      text-transform: uppercase;
+      color: rgba(178, 145, 88, 0.32);
+      z-index: 10; pointer-events: none;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.95);
+      white-space: nowrap;
+    }
+
+    /* ——————————————————————————————————————
+       HOTSPOT SYSTEM
+    —————————————————————————————————————— */
+    .hotspot {
+      position: fixed;
+      z-index: 10;
+      cursor: pointer;
+    }
+
+    .hs-glow {
+      position: absolute; inset: -40%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(218, 152, 48, 0.58) 0%,
+        rgba(188, 118, 32, 0.26) 50%,
+        transparent 72%);
+      /* idle breath — genuinely visible without hover/touch, matches the
+         jar hotspots' own standard below (6 Jul, portal-wide consistency pass).
+         Applies to hs-key / hs-desk; jars keep their own stronger flicker. */
+      animation: glowBreath 7s ease-in-out infinite;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+    @keyframes glowBreath {
+      0%, 100% { opacity: 0.42; }
+      50%       { opacity: 0.8; }
+    }
+    .hotspot:hover .hs-glow,
+    .hotspot.active .hs-glow { animation: none; opacity: 1; }
+
+    .hs-label {
+      position: absolute;
+      left: 50%; bottom: -2.6em;
+      transform: translateX(-50%);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(248, 238, 218, 0.92);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.2s;
+      pointer-events: none;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 18px rgba(0,0,0,0.95),
+        0 0 36px rgba(0,0,0,0.8);
+    }
+    .hotspot:hover .hs-label,
+    .hotspot.active .hs-label { opacity: 1; }
+
+    /* ——— VELIN'S KEY — upper right ——— */
+    #hs-key {
+      right: 8%;
+      top: 10%;
+      width: 13vw;
+      height: 35vh;
+      min-width: 70px;
+      min-height: 110px;
+    }
+
+    #hs-key .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(142, 110, 218, 0.35) 0%,
+        rgba(105, 78, 175, 0.14) 52%,
+        transparent 72%);
+    }
+    #hs-key:hover .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(162, 130, 238, 0.50) 0%,
+        rgba(122, 92, 192, 0.22) 52%,
+        transparent 72%);
+    }
+    #hs-key.last-quarter .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(215, 178, 78, 0.58) 0%,
+        rgba(182, 148, 52, 0.28) 52%,
+        transparent 72%);
+      animation: keyAwaken 3.2s ease-in-out infinite;
+    }
+    @keyframes keyAwaken {
+      0%, 100% { opacity: 0.72; transform: scale(1); }
+      50%       { opacity: 1.0;  transform: scale(1.10); }
+    }
+
+    /* ——— JAR HOTSPOTS ——— */
+    .jar-hs {
+      position: fixed;
+      z-index: 10;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .jar-hs .hs-glow {
+      position: absolute; inset: -55%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(218, 152, 48, 0.58) 0%,
+        rgba(188, 118, 32, 0.28) 44%,
+        rgba(158, 92, 18, 0.08) 68%,
+        transparent 82%);
+      animation: jarCandleGlow var(--jg-d, 5s) var(--jg-delay, 0s) ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes jarCandleGlow {
+      0%,  100% { opacity: 0.42; transform: scale(0.92); }
+      30%        { opacity: 0.75; transform: scale(1.0);  }
+      60%        { opacity: 0.55; transform: scale(0.96); }
+      80%        { opacity: 0.88; transform: scale(1.06); }
+    }
+    .jar-hs:hover .hs-glow {
+      animation: none;
+      opacity: 1;
+      transform: scale(1.12);
+      background: radial-gradient(ellipse at center,
+        rgba(232, 170, 62, 0.82) 0%,
+        rgba(205, 138, 42, 0.42) 44%,
+        rgba(172, 108, 24, 0.14) 68%,
+        transparent 82%);
+    }
+    .jar-hs.found .hs-glow {
+      background: radial-gradient(ellipse at center,
+        rgba(148, 118, 200, 0.32) 0%,
+        rgba(118, 90, 168, 0.12) 52%,
+        transparent 72%);
+      animation: jarFoundSettle 8s ease-in-out infinite;
+    }
+    @keyframes jarFoundSettle {
+      0%, 100% { opacity: 0.38; }
+      50%       { opacity: 0.58; }
+    }
+    .jar-hs.found { cursor: default; pointer-events: none; }
+
+    /* Jar positions — spread across full shelf width, clear of the stone pillar */
+    #jar-1 { left: 10%; top: 12%; width: 7vw; height: 8vh; min-width: 36px; min-height: 28px; }
+    #jar-2 { left: 52%; top: 22%; width: 8vw; height: 9vh; min-width: 40px; min-height: 32px; }
+    #jar-3 { left: 8%;  top: 52%; width: 8vw; height: 9vh; min-width: 40px; min-height: 32px; }
+    #jar-4 { left: 36%; top: 43%; width: 7vw; height: 8vh; min-width: 36px; min-height: 28px; }
+    #jar-5 { left: 56%; top: 52%; width: 8vw; height: 9vh; min-width: 40px; min-height: 32px; }
+
+    /* ——— JAR HINT — visible from room reveal ——— */
+    #jarHint {
+      position: fixed;
+      bottom: 14vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+    }
+    #jarHint.visible { opacity: 1; }
+    #jarHint .hint-text {
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(242, 230, 205, 0.88);
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 18px rgba(0,0,0,0.9);
+      display: block;
+      margin-bottom: 0.9em;
+    }
+    #jarHint .jar-dots {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .jar-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      border: 1px solid rgba(185, 155, 92, 0.38);
+      background: transparent;
+      transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
+    }
+    .jar-dot.lit {
+      background: rgba(162, 135, 210, 0.72);
+      border-color: rgba(162, 135, 210, 0.60);
+      box-shadow: 0 0 10px rgba(162, 135, 210, 0.48);
+    }
+    .hint-corridor {
+      display: block;
+      margin-top: 1.4em;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(220, 205, 175, 0.52);
+      text-decoration: none;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 14px rgba(0,0,0,0.9);
+      transition: color 0.4s ease;
+      pointer-events: all;
+    }
+    .hint-corridor:hover { color: rgba(242, 230, 205, 0.88); }
+
+    /* ——— ARRIVAL LINE — first breath ——— */
+    #arrivalLine {
+      position: fixed;
+      left: 50%; top: 42%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 2s ease;
+      white-space: nowrap;
+    }
+    #arrivalLine span {
+      font-size: clamp(22px, 2.4vw, 34px);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(250, 242, 228, 0.96);
+      letter-spacing: 0.06em;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 20px rgba(0,0,0,0.95),
+        0 0 50px rgba(0,0,0,0.85);
+    }
+
+    /* ——— GROUNDING LINE — always present ——— */
+    #groundingLine {
+      position: fixed;
+      bottom: 7vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      pointer-events: none;
+      font-size: clamp(12px, 1vw, 13px);
+      font-style: italic;
+      letter-spacing: 0.18em;
+      color: rgba(242, 228, 200, 0.72);
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 6px rgba(0,0,0,1),
+        0 0 20px rgba(0,0,0,0.95),
+        0 0 40px rgba(0,0,0,0.8);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* ——— CORRIDOR REVEAL — after all jars found ——— */
+    #corridorReveal {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 25;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+    }
+    #corridorReveal.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #corridorReveal .corridor-line {
+      display: block;
+      font-size: clamp(17px, 1.7vw, 21px);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(208, 178, 118, 0.88);
+      letter-spacing: 0.06em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.96), 0 0 50px rgba(0,0,0,0.7);
+      margin-bottom: 1.4em;
+    }
+    #corridorReveal .corridor-step {
+      display: inline-block;
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(195, 162, 98, 0.72);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(195, 162, 98, 0.24);
+      padding-bottom: 2px;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.95);
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+    #corridorReveal .corridor-step:hover {
+      color: rgba(218, 185, 118, 1);
+      border-color: rgba(218, 185, 118, 0.5);
+    }
+
+    /* ——— FLOATING VISIONS — room image rises with the words ——— */
+    .jar-vision {
+      position: fixed;
+      left: 0; top: 0;
+      pointer-events: none;
+      z-index: 68;
+      width: clamp(90px, 9vw, 130px);
+      height: clamp(90px, 9vw, 130px);
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      animation: visionDrift var(--fd, 9s) ease-out forwards;
+    }
+    @keyframes visionDrift {
+      0%   { transform: translate(calc(var(--fx) - 50%), var(--fy));               opacity: 0; }
+      13%  { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 18px));  opacity: 0.52; }
+      80%  { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 52px));  opacity: 0.42; }
+      100% { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 88px));  opacity: 0; }
+    }
+
+    /* ——— FLOATING FRAGMENTS ——— */
+    .jar-fragment {
+      position: fixed;
+      left: 0; top: 0;
+      pointer-events: none;
+      z-index: 70;
+      font-size: clamp(17px, 1.7vw, 20px);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(250, 240, 220, 0.95);
+      letter-spacing: 0.04em;
+      text-shadow:
+        0 0 2px rgba(0,0,0,1),
+        0 1px 8px rgba(0,0,0,1),
+        0 0 24px rgba(0,0,0,0.95),
+        0 0 48px rgba(0,0,0,0.8);
+      white-space: nowrap;
+      animation: fragmentDrift var(--fd, 9s) ease-out forwards;
+    }
+    @keyframes fragmentDrift {
+      0%   { transform: translate(calc(var(--fx) - 50%), var(--fy));          opacity: 0; filter: blur(10px); }
+      13%  { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 18px)); opacity: 1; filter: blur(0); }
+      80%  { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 52px)); opacity: 1; filter: blur(0); }
+      100% { transform: translate(calc(var(--fx) - 50%), calc(var(--fy) - 88px)); opacity: 0; filter: blur(5px); }
+    }
+
+    /* ——— THE DESK — lower right ——— */
+    #hs-desk {
+      right: 5%;
+      bottom: 10%;
+      width: 20vw;
+      height: 20vh;
+      min-width: 80px;
+      min-height: 64px;
+    }
+    #hs-desk .hs-label {
+      bottom: auto;
+      top: -2.6em;
+    }
+
+    /* ——————————————————————————————————————
+       PANEL BASE
+    —————————————————————————————————————— */
+    .panel {
+      position: fixed;
+      top: 0; bottom: 0;
+      width: min(92vw, 420px);
+      background: linear-gradient(158deg, rgba(8,5,14,0.97) 0%, rgba(14,10,24,0.96) 100%);
+      border: 1px solid rgba(148, 112, 80, 0.16);
+      z-index: 300;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+      padding: clamp(20px, 4vw, 36px);
+      padding-top: clamp(30px, 5vw, 52px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.65s cubic-bezier(0.32, 0, 0.15, 1), opacity 0.55s ease;
+    }
+
+    /* Key panel — centered modal */
+    #keyPanel {
+      left: 50%; top: 50%;
+      width: min(92vw, 450px);
+      height: auto;
+      max-height: 88vh;
+      bottom: auto;
+      border-radius: 2px;
+      border-color: rgba(138, 108, 210, 0.20);
+      transform: translate(-50%, -50%) scale(0.92);
+    }
+    #keyPanel.open {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1; pointer-events: all;
+    }
+
+    /* Desk panel — from right */
+    #deskPanel {
+      right: 0;
+      border-right: none;
+      border-radius: 2px 0 0 2px;
+      transform: translateX(100%);
+    }
+    #deskPanel.open {
+      transform: translateX(0);
+      opacity: 1; pointer-events: all;
+    }
+
+    /* Close button */
+    .panel-close {
+      position: absolute; top: 16px; right: 18px;
+      font-size: clamp(14px, 1.3vw, 18px);
+      color: rgba(185, 150, 88, 0.45);
+      cursor: pointer; background: none; border: none;
+      font-family: var(--serif);
+      transition: color 0.3s ease;
+      letter-spacing: 0.1em;
+    }
+    .panel-close:hover { color: rgba(210, 175, 108, 0.88); }
+
+    /* Panel typography */
+    .panel-title {
+      font-size: clamp(14px, 1.5vw, 20px);
+      font-weight: 300;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: rgba(212, 182, 112, 0.88);
+      margin-bottom: 1.4em;
+      padding-bottom: 0.8em;
+      border-bottom: 1px solid rgba(148, 112, 80, 0.13);
+    }
+
+    .panel-body {
+      flex: 1;
+      font-size: clamp(17px, 1.7vw, 19px);
+      font-weight: 300;
+      line-height: 1.84;
+      color: rgba(198, 172, 118, 0.76);
+    }
+
+    .panel-body p + p { margin-top: 1.1em; }
+    .panel-body em {
+      font-style: italic;
+      color: rgba(215, 188, 128, 0.88);
+    }
+
+    .panel-section {
+      margin-top: 1.8em;
+      padding-top: 1.2em;
+      border-top: 1px solid rgba(148, 112, 80, 0.09);
+    }
+    .panel-section-title {
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(162, 132, 78, 0.48);
+      margin-bottom: 0.9em;
+    }
+
+    /* ——————————————————————————————————————
+       KEY PANEL
+    —————————————————————————————————————— */
+    .key-sigil {
+      text-align: center;
+      font-size: clamp(36px, 4vw, 56px);
+      margin-bottom: 1em;
+      animation: sigilFloat 7s ease-in-out infinite;
+    }
+    @keyframes sigilFloat {
+      0%, 100% { transform: translateY(0) rotate(-4deg); filter: drop-shadow(0 0 14px rgba(138,108,210,0.45)); }
+      50%       { transform: translateY(-10px) rotate(4deg); filter: drop-shadow(0 0 28px rgba(158,128,230,0.65)); }
+    }
+    .key-sigil.awakened {
+      animation: sigilAwaken 4s ease-in-out infinite;
+    }
+    @keyframes sigilAwaken {
+      0%, 100% { transform: translateY(0) rotate(-3deg); filter: drop-shadow(0 0 20px rgba(212,178,72,0.62)); }
+      50%       { transform: translateY(-12px) rotate(3deg); filter: drop-shadow(0 0 40px rgba(230,195,88,0.85)); }
+    }
+    .key-sigil.settled {
+      animation: sigilSettle 10s ease-in-out infinite;
+      opacity: 0.55;
+    }
+    @keyframes sigilSettle {
+      0%, 100% { transform: translateY(0) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(138,108,210,0.22)); }
+      50%       { transform: translateY(-5px) rotate(2deg); filter: drop-shadow(0 0 16px rgba(138,108,210,0.35)); }
+    }
+
+    .key-phase-text {
+      font-style: italic;
+      text-align: center;
+      font-size: clamp(17px, 1.7vw, 19px);
+      line-height: 1.80;
+      color: rgba(175, 148, 210, 0.80);
+      margin-bottom: 1.2em;
+    }
+    .key-phase-text.ready  { color: rgba(215, 185, 112, 0.92); }
+    .key-phase-text.quiet  { color: rgba(148, 122, 88, 0.58); }
+
+    .key-claim-btn {
+      display: block; width: 100%;
+      padding: 0.82em 0;
+      margin-top: 1.4em;
+      background: none;
+      border: 1px solid rgba(212, 178, 72, 0.36);
+      color: rgba(218, 188, 105, 0.88);
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+    }
+    .key-claim-btn:hover {
+      background: rgba(212, 178, 72, 0.10);
+      border-color: rgba(212, 178, 72, 0.60);
+      color: rgba(232, 202, 122, 1);
+    }
+
+    /* ——————————————————————————————————————
+       DESK PANEL
+    —————————————————————————————————————— */
+    .message-input {
+      width: 100%;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(148, 112, 80, 0.18);
+      border-radius: 1px;
+      padding: 0.88em 1em;
+      color: rgba(208, 182, 128, 0.88);
+      font-family: var(--serif);
+      font-size: clamp(16px, 1.5vw, 18px);
+      font-style: italic;
+      resize: none;
+      min-height: 88px;
+      margin-bottom: 0.7em;
+      transition: border-color 0.3s ease;
+      outline: none;
+      display: block;
+    }
+    .message-input::placeholder { color: rgba(155, 128, 72, 0.28); }
+    .message-input:focus { border-color: rgba(148, 112, 80, 0.40); }
+
+    .message-submit {
+      display: block; width: 100%;
+      padding: 0.72em 0;
+      background: none;
+      border: 1px solid rgba(148, 112, 80, 0.26);
+      color: rgba(195, 168, 108, 0.82);
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.35s ease;
+    }
+    .message-submit:hover {
+      background: rgba(148, 112, 80, 0.09);
+      border-color: rgba(148, 112, 80, 0.52);
+      color: rgba(218, 190, 125, 1);
+    }
+    .message-submit:active {
+      background: rgba(148, 112, 80, 0.14);
+    }
+
+    .messages-list { margin-top: 0.4em; }
+    .message-entry {
+      padding: 0.72em 0;
+      border-bottom: 1px solid rgba(148, 112, 80, 0.07);
+      font-size: clamp(17px, 1.7vw, 19px);
+      font-style: italic;
+      color: rgba(182, 155, 98, 0.62);
+      line-height: 1.72;
+    }
+    .message-entry .message-moon {
+      display: block;
+      font-style: normal;
+      font-size: 0.74em;
+      letter-spacing: 0.12em;
+      color: rgba(138, 108, 60, 0.36);
+      margin-top: 0.28em;
+    }
+    .messages-empty {
+      font-style: italic;
+      color: rgba(138, 108, 60, 0.32);
+      text-align: center;
+      padding: 1em 0;
+      font-size: clamp(12px, 1.05vw, 14px);
+    }
+
+    /* Contact / keeper */
+    .keeper-section {
+      margin-top: 2.4em;
+      padding-top: 1.8em;
+      border-top: 1px solid rgba(148, 112, 80, 0.10);
+    }
+    .keeper-section .panel-section-title {
+      margin-bottom: 0.8em;
+    }
+    .keeper-text {
+      font-size: clamp(17px, 1.7vw, 19px);
+      font-style: italic;
+      color: rgba(182, 155, 98, 0.58);
+      line-height: 1.72;
+      margin-bottom: 1.1em;
+    }
+    .keeper-link {
+      display: block;
+      width: 100%;
+      padding: 0.68em 0;
+      background: none;
+      border: 1px solid rgba(148, 112, 80, 0.20);
+      color: rgba(180, 150, 95, 0.68);
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.35s ease;
+    }
+    .keeper-link:hover {
+      background: rgba(148, 112, 80, 0.07);
+      border-color: rgba(148, 112, 80, 0.44);
+      color: rgba(215, 185, 120, 0.92);
+    }
+
+    /* ——————————————————————————————————————
+       OVERLAY
+    —————————————————————————————————————— */
+    #panelOverlay {
+      position: fixed; inset: 0; z-index: 40;
+      background: rgba(5, 3, 8, 0.42);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    #panelOverlay.visible { opacity: 1; pointer-events: all; }
+
+    /* ——— VELIN TUITION OVERLAY ——— */
+    #velinTuition {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(2, 1, 7, 0.88);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 2s ease;
+      pointer-events: none;
+    }
+    #velinTuition.visible { opacity: 1; pointer-events: all; }
+
+    .velin-scroll {
+      max-width: min(560px, 84vw);
+      text-align: center;
+      padding: 0 1rem;
+    }
+    .velin-scroll .velin-byline {
+      font-family: var(--serif);
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(175, 145, 205, 0.52);
+      margin-bottom: 2.8rem;
+      opacity: 0;
+      transition: opacity 2s ease;
+    }
+    .velin-scroll .velin-byline.in { opacity: 1; }
+    /* listen / read gateway — the tap that begins also unlocks the audio */
+    .velin-choice { display: flex; align-items: center; justify-content: center; gap: 1.4em;
+      margin-bottom: 2.4rem; opacity: 0; transition: opacity 1.6s ease; }
+    .velin-choice.in { opacity: 1; }
+    .velin-opt { font-family: var(--serif); font-size: clamp(12px, 1.05vw, 15px);
+      letter-spacing: 0.42em; text-transform: uppercase; color: rgba(202, 172, 232, 0.78);
+      background: none; border: none; cursor: pointer; padding: 0.5em 0.3em;
+      transition: color 0.5s ease, text-shadow 0.5s ease; text-shadow: 0 0 14px rgba(0,0,0,0.85); }
+    .velin-opt:hover { color: rgba(230, 208, 248, 1); text-shadow: 0 0 18px rgba(160, 120, 210, 0.75); }
+    .velin-or { font-family: var(--serif); font-style: italic; font-size: clamp(12px, 1vw, 13px);
+      color: rgba(175, 145, 205, 0.42); }
+    .velin-scroll p {
+      font-family: var(--serif);
+      font-size: clamp(17px, 1.7vw, 21px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.82;
+      color: rgba(215, 195, 148, 0);
+      margin-bottom: 1.6rem;
+      transition: color 2.8s ease;
+    }
+    .velin-scroll p.in { color: rgba(215, 195, 148, 0.90); }
+
+    /* Velin portrait */
+    #velinPortrait {
+      width: clamp(120px, 22vw, 260px);
+      height: clamp(120px, 22vw, 260px);
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      margin: 0 auto 1.8rem;
+      display: block;
+      opacity: 0;
+      transition: opacity 3s ease;
+      filter: sepia(0.25) brightness(0.88);
+    }
+    #velinPortrait.in { opacity: 1; }
+
+    /* Audio element — hidden */
+    #velinVideo { display: none; }
+
+    #velinSkip {
+      position: fixed; bottom: 3.5vmin; right: 3.5vmin;
+      font-family: var(--serif);
+      font-size: clamp(12px, 1.05vw, 14px);
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(175, 145, 205, 0);
+      background: none; border: none; cursor: pointer; padding: 0;
+      transition: color 1.6s ease;
+      z-index: 501; pointer-events: none;
+    }
+    #velinSkip.in { color: rgba(175, 145, 205, 0.40); pointer-events: all; }
+    #velinSkip:hover { color: rgba(200, 170, 230, 0.75); }
+
+    /* ——— MOBILE (portrait-first: dedicated portrait crop + its own hotspot map) ——— */
+    @media (max-aspect-ratio: 3/4) {
+      .bg { background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/portrait_whispered_archives.png') center center / cover no-repeat; }
+      /* Velin's Key — floating in the mist, right of centre */
+      #hs-key  { right: 6%;  top: 40%; width: 26vw; height: 22vh; }
+      /* the five jars — along the left-hand shelves (generous tap targets) */
+      #jar-1 { left: 7%;  top: 33%; width: 16vw; height: 8vh; }
+      #jar-2 { left: 28%; top: 40%; width: 15vw; height: 8vh; }
+      #jar-3 { left: 5%;  top: 58%; width: 16vw; height: 8vh; }
+      #jar-4 { left: 22%; top: 63%; width: 15vw; height: 8vh; }
+      #jar-5 { left: 40%; top: 53%; width: 15vw; height: 8vh; }
+      /* the desk — lower right, beneath the key */
+      #hs-desk { right: 4%; top: 60%; bottom: auto; width: 30vw; height: 14vh; }
+      /* panels leave a tappable strip of overlay so you can tap out to the room */
+      .panel { width: 94vw; }
+      #keyPanel { width: 94vw; }
+      .panel-close { font-size: 26px; padding: 10px; line-height: 1; }
+      /* bottom hint text — larger and higher contrast on mobile */
+      #jarHint .hint-text { font-size: clamp(12px, 3.3vw, 15px); letter-spacing: 0.3em; color: rgba(234, 222, 198, 0.94); }
+      /* let the drifting fragments wrap and stay centred instead of clipping */
+      .jar-fragment { white-space: normal; max-width: 86vw; text-align: center; line-height: 1.5; }
+      /* larger, readable panel text on mobile (key lore + the manuscript) */
+      .panel-body, .key-phase-text, .message-entry, .messages-empty { font-size: clamp(17px, 4.4vw, 19px); line-height: 1.72; }
+      .panel-title { font-size: clamp(18px, 5vw, 22px); }
+      .panel-section-title { font-size: 12px; letter-spacing: 0.3em; }
+      #messageInput { font-size: 16px; }
+    }
+  </style>
+  <script src="sound-control.js"></script>
+</head>
+<body>
+
+  <div id="fadeCover"></div>
+
+  <!-- Velin's first-visitor tuition — overlay on the room, plays once -->
+  <div id="velinTuition" role="dialog" aria-label="Velin speaks">
+    <div class="velin-scroll">
+      <img id="velinPortrait" src="https://res.cloudinary.com/ds8pkprtb/image/upload/v1782182345/velin_c6jsgy.png" alt="Velin Thorne">
+      <audio id="velinVideo" src="https://res.cloudinary.com/ds8pkprtb/video/upload/velin-tuition_vp9tz2.mp3"></audio>
+
+      <p class="velin-byline">Velin Thorne</p>
+      <div id="velinChoice" class="velin-choice">
+        <button id="velinListen" class="velin-opt" type="button">listen</button>
+        <span class="velin-or">or</span>
+        <button id="velinRead" class="velin-opt" type="button">read</button>
+      </div>
+      <p id="velinLine1">You discover things here.<br>Nothing is labelled or explained.<br>Curiosity is the compass.</p>
+      <p id="velinLine2">This world moves with the moon<br>and the turning of the year.<br>What you find today may not be here tomorrow.<br>What isn&rsquo;t here today may be waiting.</p>
+    </div>
+  </div>
+  <button id="velinSkip">enter the archives</button>
+
+  <div class="bg" id="bg"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- Everflame — always alive, opens navigation menu -->
+  <div id="everflame" role="button" tabindex="0" aria-label="The Everflame"></div>
+
+  <!-- Everflame menu -->
+  <nav id="efMenu" aria-label="The Everflame">
+    <div id="efTrail">
+      <span class="ef-section-label">where you've walked</span>
+      <ul class="ef-links" id="efTrailList"></ul>
+      <hr class="ef-divider">
+    </div>
+    <ul class="ef-links">
+      <li class="ef-item"><button class="ef-link ef-current" id="efArchives" disabled>the whispered archives</button></li>
+      <li class="ef-item"><button class="ef-link" id="efTutorial">the tutorial</button></li>
+      <li class="ef-item"><button class="ef-link" id="efHearthfire">the hearthfire</button></li>
+      <li class="ef-item"><button class="ef-link" id="efCorridor">walk the corridor</button></li>
+      <li class="ef-item"><button class="ef-link" id="efLeave">leave the forest</button></li>
+    </ul>
+  </nav>
+  <div id="efScrim"></div>
+
+  <!-- Room label -->
+  <div id="roomLabel">The Whispered Archives</div>
+
+  <!-- Overlay — closes panels on click -->
+  <div id="panelOverlay" onclick="closeAll()"></div>
+
+  <!-- HOTSPOT: Velin's Key -->
+  <div class="hotspot" id="hs-key" onclick="openKeyPanel()">
+    <div class="hs-glow"></div>
+    <span class="hs-label">Velin's key</span>
+  </div>
+
+  <!-- JAR HOTSPOTS — five glowing jars, each with its own rhythm -->
+  <div class="jar-hs" id="jar-1" onclick="jarFound(0)" style="--jg-d:4.8s; --jg-delay:0s"><div class="hs-glow"></div></div>
+  <div class="jar-hs" id="jar-2" onclick="jarFound(1)" style="--jg-d:6.2s; --jg-delay:1.1s"><div class="hs-glow"></div></div>
+  <div class="jar-hs" id="jar-3" onclick="jarFound(2)" style="--jg-d:5.5s; --jg-delay:2.4s"><div class="hs-glow"></div></div>
+  <div class="jar-hs" id="jar-4" onclick="jarFound(3)" style="--jg-d:7.0s; --jg-delay:0.7s"><div class="hs-glow"></div></div>
+  <div class="jar-hs" id="jar-5" onclick="jarFound(4)" style="--jg-d:5.2s; --jg-delay:3.1s"><div class="hs-glow"></div></div>
+
+  <!-- JAR HINT — visible from room reveal, always present until jars found -->
+  <div id="jarHint">
+    <span class="hint-text">Find the five lights in the shelves</span>
+    <div class="jar-dots">
+      <div class="jar-dot" id="dot-0"></div>
+      <div class="jar-dot" id="dot-1"></div>
+      <div class="jar-dot" id="dot-2"></div>
+      <div class="jar-dot" id="dot-3"></div>
+      <div class="jar-dot" id="dot-4"></div>
+    </div>
+    <a href="vestibule.html" class="hint-corridor">or enter the corridor</a>
+  </div>
+
+  <!-- CORRIDOR REVEAL — after all five jars found -->
+  <div id="corridorReveal">
+    <span class="corridor-line">You found them all. The corridor calls.</span>
+    <a href="vestibule.html" class="corridor-step">step into the corridor</a>
+  </div>
+
+  <!-- HOTSPOT: The Desk -->
+  <div class="hotspot" id="hs-desk" onclick="openDeskPanel()">
+    <div class="hs-glow"></div>
+    <span class="hs-label">leave a word</span>
+  </div>
+
+  <!-- ARRIVAL LINE — first breath -->
+  <div id="arrivalLine"><span>We have found you.</span></div>
+
+  <!-- GROUNDING LINE — always present -->
+  <div id="groundingLine">This room does not close. It holds whoever arrives.</div>
+
+  <!-- ══════════════════════════════════════
+       KEY PANEL
+  ══════════════════════════════════════ -->
+  <div class="panel" id="keyPanel">
+    <button class="panel-close" onclick="closeAll()">✕</button>
+    <div class="panel-title">Velin's Key</div>
+    <div class="panel-body">
+      <div class="key-sigil" id="keySigil">🗝</div>
+      <p class="key-phase-text" id="keyPhaseText"></p>
+      <div class="panel-section">
+        <div class="panel-section-title">The Lore of the Key</div>
+        <p>Velin left it here before anyone knew to look for it. The key does not open a door. <em>It opens a readiness.</em></p>
+        <p>Those who carry it forward will find the portal recognises them in ways it does not recognise others. The fountain knows the key. The Loom remembers who holds it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       DESK PANEL
+  ══════════════════════════════════════ -->
+  <div class="panel" id="deskPanel">
+    <button class="panel-close" onclick="closeAll()">✕</button>
+    <div class="panel-title">The Open Manuscript</div>
+    <div class="panel-body">
+      <p>These pages receive what visitors bring. A word, a question, a feeling that has no shape yet. Leave something and it becomes part of the archive.</p>
+      <p><em>What you write here may be read by those who come after.</em></p>
+
+      <div class="panel-section">
+        <textarea class="message-input" id="messageInput"
+          placeholder="Leave a word for the archive…"
+          maxlength="280" rows="4"></textarea>
+        <button class="message-submit" id="messageSubmitBtn" type="button">Leave it here</button>
+        <p id="messageConfirm" style="display:none; margin-top:1em; font-style:italic; font-size:clamp(12px,1.08vw,14px); color:rgba(162,135,210,0.75); text-align:center; letter-spacing:0.04em;">
+          The archive has received your word.
+        </p>
+        <p id="messageEmpty" style="display:none; margin-top:1em; font-style:italic; font-size:clamp(12px,1.05vw,14px); color:rgba(185,150,88,0.55); text-align:center; letter-spacing:0.04em;">
+          Add a word first.
+        </p>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Words left behind</div>
+        <div class="messages-list" id="messagesList"></div>
+      </div>
+
+      <div class="keeper-section">
+        <div class="panel-section-title">Reach the Keeper</div>
+        <p class="keeper-text">If you need a hand finding your way, or if something in these rooms feels wrong, send word. The keeper of Aetherwood will find you.</p>
+        <a class="keeper-link" href="mailto:portal@aetherwood.au?subject=A%20word%20from%20Aetherwood">Send word</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ——— State ——— */
+    var LUNAR_PHASE = 'waxing-crescent';
+    var MSGS_STORE  = 'aetherwood_archive_messages';
+
+    var JAR_FRAGMENTS = [
+      'There are tales to be told. Will you enter?',
+      'The apothecary holds what you need to release your magic.',
+      'The hearthfire awaits. A place to be seen.',
+      'Find the discoveries that call to you.',
+      'The corridor breathes with the moon. Return and find it changed.',
+    ];
+
+    var CDN = 'https://res.cloudinary.com/ds8pkprtb/image/upload/';
+    var JAR_IMAGES = [
+      CDN + 'Library_of_tales1.png',          // tales — the reading room
+      CDN + 'aetherwood/portal/apothecary.png',                      // apothecary
+      CDN + 'w_200,h_200,c_fill,g_south/aetherwood/portal/hearthfire.jpg', // hearthfire — cropped to the fire
+      CDN + 'aetherwood/portal/lantern.jpg',                         // discoveries
+      CDN + 'end_threshold_corridor.png',               // corridor — tree at the end
+    ];
+
+    var JAR_FOUND = [false, false, false, false, false];
+
+    /* ——— Velin tuition ——— */
+    var TUITION_KEY = 'aetherwood_velin_tuition';
+
+    function dismissTuition() {
+      var overlay = document.getElementById('velinTuition');
+      var skip    = document.getElementById('velinSkip');
+      overlay.style.opacity = '0';
+      skip.classList.remove('in');
+      setTimeout(function () { overlay.style.display = 'none'; skip.style.display = 'none'; }, 2000);
+      try { localStorage.setItem(TUITION_KEY, '1'); } catch (e) {}
+    }
+
+    // Replay Velin's tour on demand (the Everflame anchor here in the Archives,
+    // and the noticeboard link for anyone who deep-linked past the corridor).
+    function replayTuition() {
+      if (typeof closeEfMenu === 'function') closeEfMenu();
+      tuitionStarted = false;
+      var overlay = document.getElementById('velinTuition');
+      var choice  = document.getElementById('velinChoice');
+      var line1   = document.getElementById('velinLine1');
+      var line2   = document.getElementById('velinLine2');
+      var skip    = document.getElementById('velinSkip');
+      var vid     = document.getElementById('velinVideo');
+      if (vid) { try { vid.pause(); vid.currentTime = 0; } catch (e) {} }
+      if (line1) line1.classList.remove('in');
+      if (line2) line2.classList.remove('in');
+      if (choice) { choice.style.display = ''; choice.classList.remove('in'); }
+      if (skip) { skip.style.display = ''; skip.classList.remove('in'); }
+      overlay.style.display = ''; overlay.style.opacity = ''; overlay.classList.remove('visible');
+      setTimeout(showVelinTuition, 60);
+    }
+
+    function showVelinTuition() {
+      var overlay   = document.getElementById('velinTuition');
+      var byline    = overlay.querySelector('.velin-byline');
+      var portrait  = document.getElementById('velinPortrait');
+      var choice    = document.getElementById('velinChoice');
+
+      overlay.classList.add('visible');
+
+      // Portrait, then her name, then the listen/read choice — no auto-play,
+      // so the visitor's tap is the gesture that unlocks the audio on mobile.
+      setTimeout(function () { portrait && portrait.classList.add('in'); }, 400);
+      setTimeout(function () { byline   && byline.classList.add('in');   }, 900);
+      setTimeout(function () { choice   && choice.classList.add('in');   }, 1600);
+
+      // An escape from the very start: "enter the archives" lets anyone decline
+      // the tour and go straight in, no waiting for it to finish.
+      var skip = document.getElementById('velinSkip');
+      if (skip) {
+        skip.addEventListener('click', dismissTuition);
+        setTimeout(function () { skip.classList.add('in'); }, 1700);
+      }
+
+      var listen = document.getElementById('velinListen');
+      var read   = document.getElementById('velinRead');
+      if (listen) listen.addEventListener('click', function () { startTuition('listen'); });
+      if (read)   read.addEventListener('click',   function () { startTuition('read');   });
+    }
+
+    var tuitionStarted = false;
+    function startTuition(mode) {
+      if (tuitionStarted) return; tuitionStarted = true;
+      var choice = document.getElementById('velinChoice');
+      var skip   = document.getElementById('velinSkip');
+      var line1  = document.getElementById('velinLine1');
+      var line2  = document.getElementById('velinLine2');
+      var vid    = document.getElementById('velinVideo');
+
+      if (choice) { choice.classList.remove('in'); setTimeout(function () { choice.style.display = 'none'; }, 800); }
+
+      if (mode === 'listen' && vid && vid.getAttribute('src')) {
+        // The click is a user gesture, so play() is allowed on mobile.
+        try { var p = vid.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+        setTimeout(function () { line1 && line1.classList.add('in'); }, 900);
+        setTimeout(function () { line2 && line2.classList.add('in'); }, 9000);
+        vid.addEventListener('ended', dismissTuition);
+        setTimeout(function () { skip.classList.add('in'); }, 6000);
+      } else {
+        setTimeout(function () { line1 && line1.classList.add('in'); }, 800);
+        setTimeout(function () { line2 && line2.classList.add('in'); }, 4800);
+        setTimeout(function () { skip.classList.add('in'); }, 5200);
+      }
+      skip.addEventListener('click', dismissTuition);
+    }
+
+    /* ——— Boot ——— */
+    function init() {
+      // Fade room in
+      setTimeout(function () {
+        document.getElementById('fadeCover').style.opacity = '0';
+      }, 120);
+
+      // Velin's tuition is an OFFER, never forced. It appears ONLY when the
+      // visitor deliberately steps through her archway in the corridor, which
+      // arrives with ?tuition=1. No storage gate, so no one on a new device, a
+      // VPN, or a cleared browser is ever ambushed with it. It still has a skip.
+      if (/[?&](tuition|intro)=1/.test(location.search)) {
+        setTimeout(showVelinTuition, 1800);
+      }
+
+      // Lunar phase
+      if (typeof LUNAR !== 'undefined') {
+        try {
+          var ls = LUNAR.getLunarState();
+          if (ls && ls.phase) LUNAR_PHASE = ls.phase;
+        } catch (e) {}
+      }
+
+      // Key hotspot state
+      if (LUNAR_PHASE === 'last-quarter') {
+        document.getElementById('hs-key').classList.add('last-quarter');
+      }
+
+      // Arrival line — first breath as room reveals
+      setTimeout(function () {
+        document.getElementById('arrivalLine').style.opacity = '1';
+        setTimeout(function () {
+          document.getElementById('arrivalLine').style.opacity = '0';
+        }, 3500);
+      }, 1600);
+
+      // Jar hint appears shortly after, stays as arrival line fades
+      setTimeout(function () {
+        document.getElementById('jarHint').classList.add('visible');
+      }, 2600);
+
+      // Preload vision images so they're ready when a jar is clicked
+      JAR_IMAGES.forEach(function (url) { (new Image()).src = url; });
+
+      // Messages: show the visitor's own instantly, then swap in the shared,
+      // approved community words if the proxy is reachable.
+      renderMessages(getMessages());
+      loadArchiveWords();
+
+      // Tapping anywhere in the read-only key panel returns you to the room.
+      var kp = document.getElementById('keyPanel');
+      if (kp) kp.addEventListener('click', function (e) {
+        if (!e.target.closest('button, a, input, textarea')) closeAll();
+      });
+
+      // Messages rendered on open. The submit button is wired in openDeskPanel()
+      // (btn.onclick = doSubmit), which also posts each word to Supabase via postArchive().
+    }
+
+    /* ——— Submit manuscript ——— */
+    var SESSION_MSGS = [];  // in-memory backup for when localStorage is blocked
+
+    function doSubmit() {
+      try {
+        var input = document.getElementById('messageInput');
+        var btn   = document.getElementById('messageSubmitBtn');
+        var conf  = document.getElementById('messageConfirm');
+        var empty = document.getElementById('messageEmpty');
+        var text  = input ? input.value.trim() : '';
+
+        // Show feedback if empty
+        if (!text) {
+          if (empty) { empty.style.display = 'block'; setTimeout(function(){ empty.style.display = 'none'; }, 2000); }
+          return;
+        }
+
+        var entry = { text: text, phase: LUNAR_PHASE.replace(/-/g, ' '), ts: Date.now() };
+
+        // Persist to localStorage (with in-memory fallback)
+        var msgs = getMessages();
+        msgs.push(entry);
+        if (msgs.length > 40) msgs = msgs.slice(-40);
+        saveMessages(msgs);
+
+        // Send it on to the shared archive so the community can grow
+        postArchive(text, entry.phase);
+
+        // Always maintain session array so render works even if storage is blocked
+        SESSION_MSGS.push(entry);
+
+        if (input) input.value = '';
+        renderMessages(msgs.length ? msgs : SESSION_MSGS);
+
+        if (btn)  btn.style.display  = 'none';
+        if (conf) conf.style.display = 'block';
+        setTimeout(function () {
+          if (btn)  btn.style.display  = 'block';
+          if (conf) conf.style.display = 'none';
+        }, 3200);
+      } catch(e) {
+        console.error('doSubmit error:', e);
+      }
+    }
+
+    /* ——— Panels ——— */
+    function closeAll() {
+      ['keyPanel', 'deskPanel'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('open');
+      });
+      ['hs-key', 'hs-desk'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      var ov = document.getElementById('panelOverlay');
+      var bg = document.getElementById('bg');
+      if (ov) ov.classList.remove('visible');
+      if (bg) bg.classList.remove('dimmed');
+    }
+
+    function openPanel(panelId, hotspotId) {
+      closeAll();
+      document.getElementById(panelId).classList.add('open');
+      document.getElementById('panelOverlay').classList.add('visible');
+      document.getElementById('bg').classList.add('dimmed');
+      if (hotspotId) document.getElementById(hotspotId).classList.add('active');
+    }
+
+    function openKeyPanel() {
+      // Last Quarter — go straight to the fountain, no pause
+      if (LUNAR_PHASE === 'last-quarter') {
+        var cover = document.getElementById('fadeCover');
+        cover.style.transition = 'opacity 1.4s ease';
+        cover.style.opacity = '1';
+        setTimeout(function () { window.location.href = 'fountain.html'; }, 1400);
+        return;
+      }
+
+      // All other phases — open the panel with dormant lore
+      var sigil     = document.getElementById('keySigil');
+      var phaseText = document.getElementById('keyPhaseText');
+      sigil.className = 'key-sigil';
+
+      if (LUNAR_PHASE === 'waning-gibbous') {
+        phaseText.className = 'key-phase-text';
+        phaseText.textContent = 'The moon is releasing. The key stirs, but the moment has not quite arrived. Return when the last quarter rises.';
+      } else if (LUNAR_PHASE === 'waning-crescent') {
+        phaseText.className = 'key-phase-text quiet';
+        phaseText.textContent = 'The last quarter has passed. The key rests again. It will stir when the moon returns to its final quarter.';
+      } else {
+        phaseText.className = 'key-phase-text';
+        phaseText.textContent = 'The key hangs between worlds, waiting. It will recognise you when the last quarter moon rises. Return then.';
+      }
+
+      openPanel('keyPanel', 'hs-key');
+    }
+
+    function openDeskPanel() {
+      /* Wire + reset the submit button here (JS rule: no inline onclick;
+         reset DOM state on every open so nothing stale survives reopen). */
+      var btn  = document.getElementById('messageSubmitBtn');
+      var conf = document.getElementById('messageConfirm');
+      if (btn)  { btn.style.display = 'block'; btn.onclick = doSubmit; }
+      if (conf) conf.style.display = 'none';
+      openPanel('deskPanel', 'hs-desk');
+    }
+
+
+    /* ——— Jar discovery ——— */
+    function jarFound(idx) {
+      if (JAR_FOUND[idx]) return;
+      JAR_FOUND[idx] = true;
+
+      var jarEl = document.getElementById('jar-' + (idx + 1));
+      if (jarEl) jarEl.classList.add('found');
+
+      var dot = document.getElementById('dot-' + idx);
+      if (dot) dot.classList.add('lit');
+
+      spawnFragment(idx, jarEl);
+
+      if (JAR_FOUND.every(function (f) { return f; })) {
+        setTimeout(revealCorridor, 2800);
+      }
+    }
+
+    function spawnFragment(idx, jarEl) {
+      var rect = jarEl ? jarEl.getBoundingClientRect() : null;
+      var x = rect ? rect.left + rect.width  / 2 : window.innerWidth  * 0.22;
+      var y = rect ? rect.top  + rect.height / 2 : window.innerHeight * 0.48;
+      // Keep the rising vision + words on screen wherever the jar sits (portrait
+      // jars near the top or edges were pushing the text off-screen).
+      var W = window.innerWidth, H = window.innerHeight;
+      x = Math.max(W * 0.30, Math.min(W * 0.70, x));
+      y = Math.max(H * 0.34, Math.min(H * 0.58, y));
+      var dur = (8.5 + Math.random() * 1.5) + 's';
+
+      // Vision — div with background-image rises behind the words
+      if (JAR_IMAGES[idx]) {
+        var vision = document.createElement('div');
+        vision.className = 'jar-vision';
+        vision.style.backgroundImage = 'url(' + JAR_IMAGES[idx] + ')';
+        vision.style.setProperty('--fx', x + 'px');
+        vision.style.setProperty('--fy', y + 'px');
+        vision.style.setProperty('--fd', dur);
+        document.body.appendChild(vision);
+        vision.addEventListener('animationend', function () { vision.remove(); });
+      }
+
+      // Text fragment — rises above the vision
+      var frag = document.createElement('div');
+      frag.className = 'jar-fragment';
+      frag.textContent = JAR_FRAGMENTS[idx];
+      frag.style.setProperty('--fx', (W / 2) + 'px');   // centre the words so no letter clips
+      frag.style.setProperty('--fy', (y + 30) + 'px');
+      frag.style.setProperty('--fd', dur);
+      document.body.appendChild(frag);
+      frag.addEventListener('animationend', function () { frag.remove(); });
+    }
+
+    function revealCorridor() {
+      var hint = document.getElementById('jarHint');
+      if (hint) hint.style.opacity = '0';
+      var reveal = document.getElementById('corridorReveal');
+      if (reveal) reveal.classList.add('visible');
+    }
+
+    /* ——— Messages ——— */
+    function getMessages() {
+      try { return JSON.parse(localStorage.getItem(MSGS_STORE) || '[]'); }
+      catch (e) { return []; }
+    }
+    function saveMessages(msgs) {
+      try { localStorage.setItem(MSGS_STORE, JSON.stringify(msgs)); }
+      catch (e) {}
+    }
+    /* Send a word to the shared archive (Supabase via the Netlify proxy).
+       Fire-and-forget: the poster already sees their word from localStorage;
+       this is what lets others see it once Ange approves (display=true). */
+    function postArchive(text, phase) {
+      try {
+        fetch('/.netlify/functions/submit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'archive_word', payload: { message: text, phase: (phase || '') } })
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    /* Load the shared, approved words. Falls back silently to the local list
+       (e.g. on the local test server, where the function isn't running). */
+    function loadArchiveWords() {
+      try {
+        fetch('/.netlify/functions/read?type=archive_words')
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (d && d.items && d.items.length) {
+              var remote = d.items.map(function (it) {
+                return { text: it.message, phase: (it.phase || '').replace(/-/g, ' ') };
+              }).reverse();  // read.js returns newest-first; renderMessages expects oldest-first
+              renderMessages(remote);
+            }
+          })
+          .catch(function () {});
+      } catch (e) {}
+    }
+    function renderMessages(msgs) {
+      var list = document.getElementById('messagesList');
+      if (!list) return;
+      if (!msgs.length) {
+        list.innerHTML = '<p class="messages-empty">The manuscript is empty. Be the first to leave a word.</p>';
+        return;
+      }
+      list.innerHTML = msgs.slice(-14).reverse().map(function (m) {
+        return '<div class="message-entry">' +
+          esc(m.text) +
+          '<span class="message-moon">' + esc(m.phase) + ' moon</span>' +
+          '</div>';
+      }).join('');
+    }
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ——— Navigation ——— */
+    function navigateTo(href) {
+      var cover = document.getElementById('fadeCover');
+      cover.style.display = '';
+      cover.style.transition = 'opacity 1.4s ease';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        cover.style.opacity = '1';
+        setTimeout(function(){ window.location.href = href; }, 1500);
+      }); });
+    }
+    function goHome() { navigateTo('vestibule.html'); }
+
+    /* ——— Trail logging ——— */
+    var EF_ANCHORS = ['hearthfire.html', 'whispered-archives.html'];
+    (function(){
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'whispered-archives.html'; });
+      trail.unshift({ name: 'the whispered archives', href: 'whispered-archives.html' });
+      if (trail.length > 8) trail = trail.slice(0, 8);
+      sessionStorage.setItem('aetherwood_trail', JSON.stringify(trail));
+    })();
+
+    /* ——— Everflame menu ——— */
+    var efOpen = false;
+    var efMenu     = document.getElementById('efMenu');
+    var efScrimEl  = document.getElementById('efScrim');
+    var efTrailEl  = document.getElementById('efTrail');
+    var efTrailList= document.getElementById('efTrailList');
+
+    function buildTrail() {
+      var trail = JSON.parse(sessionStorage.getItem('aetherwood_trail') || '[]');
+      trail = trail.filter(function(e){ return e.href !== 'whispered-archives.html' && EF_ANCHORS.indexOf(e.href) === -1; });
+      if (!trail.length) { efTrailEl.style.display = 'none'; return; }
+      efTrailEl.style.display = '';
+      efTrailList.innerHTML = '';
+      trail.slice(0, 3).forEach(function(e){
+        var li  = document.createElement('li'); li.className = 'ef-item';
+        var btn = document.createElement('button'); btn.className = 'ef-link';
+        btn.textContent = e.name;
+        btn.addEventListener('click', function(){ closeEfMenu(); navigateTo(e.href); });
+        li.appendChild(btn); efTrailList.appendChild(li);
+      });
+    }
+    function openEfMenu()  { buildTrail(); efMenu.classList.add('open'); efScrimEl.classList.add('open'); efOpen = true; }
+    function closeEfMenu() { efMenu.classList.remove('open'); efScrimEl.classList.remove('open'); efOpen = false; }
+
+    var ef = document.getElementById('everflame');
+    ef.addEventListener('click', function(){ efOpen ? closeEfMenu() : openEfMenu(); });
+    ef.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); efOpen ? closeEfMenu() : openEfMenu(); }
+    });
+    efScrimEl.addEventListener('click', closeEfMenu);
+    document.getElementById('efHearthfire').addEventListener('click', function(){ closeEfMenu(); navigateTo('hearthfire.html'); });
+    var efTut = document.getElementById('efTutorial'); if (efTut) efTut.addEventListener('click', replayTuition);
+    document.getElementById('efCorridor').addEventListener('click', function(){ closeEfMenu(); navigateTo('vestibule.html?walk=1'); });
+    document.getElementById('efLeave').addEventListener('click', function(){ closeEfMenu(); navigateTo('index.html'); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeEfMenu(); });
+
+    /* ——— Globals for HTML onclick ——— */
+    window.openKeyPanel  = openKeyPanel;
+    window.openDeskPanel = openDeskPanel;
+    window.closeAll      = closeAll;
+    window.goHome        = goHome;
+    window.jarFound      = jarFound;
+    window.doSubmit      = doSubmit;
+
+    /* ——— Start ——— */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+  </script>
+
+  <!-- Return to the corridor — visual doorway, bottom-left (portal nav standard) -->
+  <div id="returnCorridor" role="button" tabindex="0" aria-label="Return to the corridor"></div>
+  <style>
+  #returnCorridor{position:fixed;left:5%;bottom:5%;width:12vmin;height:12vmin;min-width:64px;min-height:64px;border-radius:50%;overflow:hidden;background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/whispered_archives_1.png') center / cover no-repeat;opacity:0.6;box-shadow:0 0 0 1px rgba(200,160,80,0.25),0 0 18px rgba(200,150,70,0.25);cursor:pointer;z-index:45;transition:opacity .6s ease,box-shadow .6s ease;}
+  #returnCorridor:hover,#returnCorridor.active{opacity:1;box-shadow:0 0 0 2px rgba(220,180,100,0.55),0 0 26px rgba(220,170,90,0.45);}
+  </style>
+  <script>
+  (function(){var r=document.getElementById('returnCorridor');if(!r)return;function go(){window.location.href='vestibule.html';}
+  r.addEventListener('click',go);
+  r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  r.addEventListener('touchstart',function(){r.classList.add('active');},{passive:true});
+  r.addEventListener('touchend',function(){setTimeout(function(){r.classList.remove('active');},700);});})();
+  </script>
+</body>
+</html>
