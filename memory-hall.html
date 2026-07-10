@@ -1031,7 +1031,7 @@
        read('candle_count', {cycle_id}). */
     (function () {
       var urlPhase   = new URLSearchParams(window.location.search).get('phase');
-      var candlePhase = urlPhase || (state && state.phase) || 'other';
+      var candlePhase = urlPhase || (state && state.phase && (state.phase.key || state.phase)) || 'other';
       var IS_WGC = (candlePhase === 'waning-gibbous');
 
       /* The hall marks its own phase: constellations brighten, a soft line

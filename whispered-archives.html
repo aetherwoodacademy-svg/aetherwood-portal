@@ -1162,7 +1162,7 @@
       if (typeof LUNAR !== 'undefined') {
         try {
           var ls = LUNAR.getLunarState();
-          if (ls && ls.phase) LUNAR_PHASE = ls.phase;
+          if (ls && ls.phase) LUNAR_PHASE = ls.phase.key || ls.phase;
         } catch (e) {}
       }
 

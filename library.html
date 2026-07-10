@@ -1226,7 +1226,7 @@
     var urlPhase = new URLSearchParams(window.location.search).get('phase');
     if (urlPhase) { gatePhase = urlPhase; }
     else if (typeof LUNAR !== 'undefined') {
-      try { var gls = LUNAR.getLunarState(); if (gls && gls.phase) gatePhase = gls.phase; } catch (e) {}
+      try { var gls = LUNAR.getLunarState(); if (gls && gls.phase) gatePhase = gls.phase.key || gls.phase; } catch (e) {}
     }
     var IS_FQ = (gatePhase === 'first-quarter');
     var IS_WG = (gatePhase === 'waxing-gibbous');
