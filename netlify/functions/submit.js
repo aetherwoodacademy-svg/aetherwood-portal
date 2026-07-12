@@ -10,8 +10,11 @@
 // Dependency-free: uses Node's built-in fetch. No npm install, no build step.
 // ============================================================================
 
-const SUPABASE_URL      = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const crypto = require('crypto');
+
+const SUPABASE_URL          = (process.env.SUPABASE_URL || '').replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+const SUPABASE_ANON_KEY     = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY; // subscribers only — never used for anon-facing tables
 const AIRTABLE_TOKEN    = process.env.AIRTABLE_TOKEN;     // confessions (added later)
 const AIRTABLE_BASE_ID  = process.env.AIRTABLE_BASE_ID;   // confessions (added later)
 
@@ -96,6 +99,11 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch { return json(400, { error: 'Invalid JSON' }); }
 
+  // The Everflame signup ritual — handled separately from TOUCHPOINTS below
+  // because it needs the service role key (not anon) and an upsert-on-email
+  // instead of a plain insert. See supabase_schema.sql §8 for why.
+  if (body.type === 'subscribe') return handleSubscribe(body.payload || {});
+
   const config = TOUCHPOINTS[body.type];
   if (!config) return json(400, { error: 'Unknown touchpoint type' });
 
@@ -138,6 +146,50 @@ exports.handler = async (event) => {
     return json(502, { error: 'Write failed', detail: String(err.message || err) });
   }
 };
+
+async function handleSubscribe(payload) {
+  const email = clean(payload.email, 200);
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json(400, { error: 'A valid email is required' });
+  }
+  const wantsLunar    = payload.wants_lunar === true || payload.wants_lunar === 'true';
+  const wantsReleases = payload.wants_releases === true || payload.wants_releases === 'true';
+  if (!wantsLunar && !wantsReleases) {
+    return json(400, { error: 'Choose at least one path' });
+  }
+  const record = {
+    email: email.toLowerCase(),
+    wants_lunar: wantsLunar,
+    wants_releases: wantsReleases,
+    unsubscribe_token: crypto.randomUUID(),
+  };
+  try {
+    await supabaseUpsertPrivileged('subscribers', record, 'email');
+    return json(200, { ok: true });
+  } catch (err) {
+    return json(502, { error: 'Write failed', detail: String(err.message || err) });
+  }
+}
+
+// Service-role upsert — bypasses RLS entirely. Only ever used for the
+// subscribers table (see supabase_schema.sql §8). Regenerates the
+// unsubscribe token on every re-signup; an old email's unsubscribe link
+// stops working once someone updates their preferences, which is an
+// acceptable trade for keeping this simple.
+async function supabaseUpsertPrivileged(table, record, conflictColumn) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) throw new Error('Supabase service role key not set');
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflictColumn}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_SERVICE_ROLE,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE}`,
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify(record),
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+}
 
 async function supabaseInsert(table, record) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase env vars not set');
