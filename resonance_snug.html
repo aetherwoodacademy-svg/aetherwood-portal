@@ -249,7 +249,7 @@
   function ember(spread){
     // rise from the fire — the desktop and portrait crops seat the hearth differently
     var h = (innerHeight > innerWidth)
-      ? { x0:0.44, xr:0.16, y0:0.40, yr:0.10 }   // portrait: the grate, not the floor plate
+      ? { x0:0.44, xr:0.16, y0:0.32, yr:0.10 }   // portrait: lifted 12 Jul (embers sat below the grate in Ange's walkthrough; lowest spawn now at the grate's mouth)
       : { x0:0.36, xr:0.30, y0:0.58, yr:0.12 };   // desktop, unchanged
     return { x:(h.x0+Math.random()*h.xr)*W, y: spread ? Math.random()*(h.y0+h.yr)*H : (h.y0+Math.random()*h.yr)*H,
       r:(0.6+Math.random()*1.7)*dpr, s:(0.10+Math.random()*0.30)*dpr, drift:(Math.random()-0.5)*0.22*dpr,

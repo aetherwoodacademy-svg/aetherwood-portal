@@ -448,6 +448,18 @@
     }
     .subscribe-thanks.show { display: block; }
 
+    .ef-paths { display: flex; gap: 10px; flex-wrap: wrap; }
+    .ef-path {
+      background: transparent; border: 1px solid rgba(200, 160, 65, 0.28); border-radius: 14px;
+      color: rgba(215, 175, 90, 0.65); font-family: var(--serif); font-style: italic;
+      font-size: clamp(11px, 1.05vw, 13px); letter-spacing: 0.02em; padding: 6px 14px; cursor: pointer;
+      transition: border-color 0.5s ease, color 0.5s ease, background 0.5s ease;
+    }
+    .ef-path:hover { border-color: rgba(215, 175, 85, 0.6); color: rgba(230, 195, 110, 0.9); }
+    .ef-path.is-chosen { border-color: rgba(215, 175, 85, 0.8); color: rgba(230, 195, 110, 1); background: rgba(200, 160, 65, 0.12); }
+    .ef-hint { display: none; font-size: clamp(11px, 1vw, 12px); font-style: italic; color: rgba(185, 150, 80, 0.5); margin: -4px 0 0; }
+    .ef-hint.show { display: block; }
+
     /* ——— EVERFLAME MENU ——— */
     #efMenu {
       position: fixed;
@@ -534,19 +546,24 @@
        competes with the Everflame (top-left) or the noticeboard (right). */
     .return-link {
       position: fixed;
-      bottom: max(2.5vh, 14px);
-      left: max(3vmin, 18px);
+      bottom: 5%;
+      left: 5%;
       z-index: 150;
-      background: none; border: none; padding: 6px 2px; cursor: pointer;
-      font-family: var(--serif);
-      font-size: clamp(8px, 0.8vw, 10px);
-      letter-spacing: 0.4em;
-      text-transform: uppercase;
-      color: rgba(175, 145, 88, 0.32);
-      white-space: nowrap;
-      transition: color 0.5s ease;
+      width: 12vmin; height: 12vmin; min-width: 64px; min-height: 64px;
+      border-radius: 50%; overflow: hidden; cursor: pointer;
+      border: 1px solid rgba(236,235,228,0.25);
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/corridor_nebula.png') center / cover;
+      padding: 0;
+      opacity: 0.55;
+      transition: opacity 1.2s ease, transform .5s ease;
+      animation: returnDoorBreath 8s ease-in-out infinite;
     }
-    .return-link:hover { color: rgba(220, 185, 110, 0.75); }
+    .return-link:hover { opacity: 0.95; transform: scale(1.04); }
+    .return-link.hidden { display: none; }
+    @keyframes returnDoorBreath {
+      0%, 100% { opacity: 0.45; }
+      50%      { opacity: 0.7; }
+    }
 
     /* ——————————————————————————————————————
        NEW MOON — THE LOOM'S STAGE
@@ -597,19 +614,28 @@
     .moon-close {
       position: fixed; top: 22px; right: 26px; z-index: 70;
       background: none; border: none; cursor: pointer;
-      font-family: var(--serif); font-size: 20px;
-      color: rgba(190,155,85,0.22); padding: 10px;
+      font-family: var(--serif); font-size: 26px;
+      color: rgba(200,165,95,0.55); padding: 12px 16px;
       transition: color 0.4s ease;
     }
-    .moon-close:hover { color: rgba(220,185,110,0.65); }
+    .moon-close:hover { color: rgba(220,185,110,0.85); }
 
-    .moon-phase-label {
-      position: fixed; top: max(3.5vh, 20px); left: 50%;
-      transform: translateX(-50%); z-index: 61;
-      font-size: clamp(8px, 0.72vw, 9px);
-      letter-spacing: 0.55em; text-transform: uppercase;
-      color: rgba(175,140,72,0.22); white-space: nowrap; pointer-events: none;
+    /* The Circle's own escape. Always visible, bottom-left, returns to the
+       fire (the place just left), per the nav audit: there is always a way
+       to escape. Glow-only text, no box. */
+    .moon-escape {
+      position: fixed; bottom: 5%; left: 5%; z-index: 70;
+      background: none; border: none; cursor: pointer; padding: 8px 2px;
+      font-family: var(--serif); font-style: italic;
+      font-size: clamp(13px, 1.2vw, 15px);
+      letter-spacing: 0.08em;
+      color: rgba(210,175,105,0.6);
+      text-shadow: 0 0 18px rgba(255,190,90,0.25);
+      transition: color 0.5s ease;
     }
+    .moon-escape:hover { color: rgba(230,200,125,0.9); }
+
+    /* .moon-phase-label removed 12 Jul 2026, see note at its old markup */
 
     /* States fill the stage */
     .moon-state { position: absolute; inset: 0; }
@@ -922,10 +948,13 @@
     /* ritual buttons + CTAs */
     .whisper-submit       { font-size: clamp(12px, 1.05vw, 14px); }
     .subscribe-form button{ font-size: clamp(12px, 1.05vw, 14px); }
+    .ef-path               { font-size: clamp(12px, 1.05vw, 14px); }
+    .ef-hint                { font-size: clamp(12px, 1vw, 13px); }
     .moon-choice          { font-size: clamp(12px, 1.05vw, 14px); }
     .moon-done            { font-size: clamp(12px, 1.05vw, 14px); }
     .moon-release         { font-size: clamp(12px, 1vw, 13px); }
-    .return-link          { font-size: clamp(12px, 1vw, 13px); }
+    .moon-escape          { font-size: clamp(13px, 1.2vw, 15px); }
+    /* .return-link is now the image doorway, no text to floor */
     .ef-link              { font-size: clamp(12px, 1.05vw, 13px); letter-spacing: 0.3em; }
     /* names, eyebrows, small-caps labels (12–13px floor) */
     .hs-label             { font-size: clamp(12px, 1vw, 13px); }
@@ -952,6 +981,7 @@
     .orient-steps b { color: rgba(228,205,150,0.9); font-weight: 400; }
   </style>
   <script src="sound-control.js"></script>
+  <script src="everflame-signup.js"></script>
 </head>
 <body>
 
@@ -1025,7 +1055,11 @@
   <div class="moon-stage" id="moonStage" role="dialog" aria-modal="true" aria-label="The Threadsinger's Circle">
     <div class="stage-fire-bg" id="stageFireBg"></div>
     <button class="moon-close" id="moonClose" aria-label="Close">×</button>
-    <span class="moon-phase-label">New Moon · The Threadsinger's Circle</span>
+    <button class="moon-escape" id="moonEscape" aria-label="Step back to the fire">step back to the fire</button>
+    <!-- The fixed "New Moon · The Threadsinger's Circle" caption was removed
+         12 Jul 2026 (Ange's walkthrough): nowrap + wide letter-spacing ran it
+         off both edges of a phone screen, a ghost of unreadable text. The
+         ritual speaks for itself. -->
     <button class="moon-done hidden" id="moonDone">I have what I need</button>
 
     <!-- State 1: catch intentions from the Loom -->
@@ -1089,16 +1123,20 @@
       <div class="whisper-thanks" id="whisperThanks">Your whisper joins the board.</div>
     </div>
 
-    <!-- SUBSCRIBE -->
+    <!-- SUBSCRIBE — the Everflame ritual, shared with Lost Soul / Silver Beast via everflame-signup.js -->
     <div class="subscribe-wrap">
       <span class="subscribe-label">receive word when the board is updated</span>
-      <form class="subscribe-form" id="subscribeForm" name="hearthfire-updates" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-        <input type="hidden" name="form-name" value="hearthfire-updates">
-        <p style="display:none"><input name="bot-field"></p>
-        <input type="email" name="email" placeholder="your email" required autocomplete="email">
+      <form class="subscribe-form" id="everflameForm">
+        <input type="email" id="efEmail" name="email" placeholder="your email" required autocomplete="email" aria-label="your email">
+        <p style="display:none"><input id="efBot" name="bot-field" tabindex="-1" autocomplete="off"></p>
+        <div class="ef-paths" role="group" aria-label="how the Everflame should reach you">
+          <button type="button" class="ef-path" data-path="lunar" aria-pressed="false">walk with the moon</button>
+          <button type="button" class="ef-path" data-path="release" aria-pressed="false">wait for the tales</button>
+        </div>
+        <p class="ef-hint">choose at least one path first</p>
         <button type="submit">leave word</button>
       </form>
-      <div class="subscribe-thanks" id="subscribeThanks">
+      <div class="subscribe-thanks" id="everflameThanks">
         Word received. The board will find you.
       </div>
     </div>
@@ -1108,7 +1146,10 @@
   <div class="wordmark">Aetherwood</div>
 
   <!-- Direct exit — nav standard 0.1, independent of the Everflame -->
-  <button class="return-link" id="returnLink" aria-label="Return to the corridor">return to the corridor</button>
+  <!-- Return doorway. Circular image portal, bottom-left, per the audited
+       return-doorway standard (see constellation.html #grovePortal). Takes
+       you back to the corridor you entered from. -->
+  <button class="return-link" id="returnLink" aria-label="Return to the corridor" title="return to the corridor"></button>
 
   <!-- Calibration aid — ?calib=1, mirrors year-wheel.html -->
   <div id="calib">· move mouse / touch ·</div>
@@ -1129,8 +1170,6 @@
     var panel        = document.getElementById('boardPanel');
     var scrim        = document.getElementById('boardScrim');
     var whisper      = document.getElementById('sealedWhisper');
-    var subForm      = document.getElementById('subscribeForm');
-    var subThanks    = document.getElementById('subscribeThanks');
     var efMenu       = document.getElementById('efMenu');
     var efScrim      = document.getElementById('efScrim');
     var efTrail      = document.getElementById('efTrail');
@@ -1482,6 +1521,11 @@
       moonStage.classList.add('open');
       moonScrim.classList.add('open');
       bg.classList.add('dimmed');
+
+      /* While the Circle is open, the room's corridor doorway is hidden so
+         the ritual has exactly one escape and it returns to the fire, not
+         out of the room (nav audit, 12 Jul). */
+      document.getElementById('returnLink').classList.add('hidden');
     }
 
     function closeMoonPanel() {
@@ -1491,6 +1535,7 @@
       bg.classList.remove('dimmed');
       removeAllLoomWords();
       clearMoonMotes();
+      document.getElementById('returnLink').classList.remove('hidden');
     }
 
     function submitIntention(isPublic) {
@@ -1522,6 +1567,7 @@
     }
 
     document.getElementById('moonClose').addEventListener('click', closeMoonPanel);
+    document.getElementById('moonEscape').addEventListener('click', closeMoonPanel);
     moonScrim.addEventListener('click', closeMoonPanel);
 
     moonDone.addEventListener('click', function() {
@@ -1764,18 +1810,39 @@
       }, { passive: true });
     }
 
-    /* ——— SUBSCRIBE FORM ——— */
-    subForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(new FormData(subForm)).toString()
-      }).then(function(){
-        subForm.style.display = 'none';
-        subThanks.classList.add('show');
-      }).catch(function(){ subForm.submit(); });
-    });
+    /* ——— SUBSCRIBE FORM: handled by everflame-signup.js (shared with Lost Soul / Silver Beast) ——— */
+
+    /* ——— HEARTH AMBIENCE, the fire's crackle (added 12 Jul 2026) ———
+       The room had no sound at all (found in Ange's walkthrough). Same file
+       and Web Audio routing as the Resonance snug: element → GainNode →
+       destination (JS rule 6, iOS ignores element.volume). Starts only on
+       the visitor's first touch or click, never as a surprise, and the
+       global mute in sound-control.js still kills it. */
+    var hearthCrackle = null;
+    var hearthCtx     = null;
+    function startHearthAmbience() {
+      if (hearthCrackle) return;
+      try {
+        hearthCrackle = new Audio();
+        hearthCrackle.crossOrigin = 'anonymous';
+        hearthCrackle.src  = 'https://res.cloudinary.com/ds8pkprtb/video/upload/fire_crackle.mp3';
+        hearthCrackle.loop = true;
+        try {
+          hearthCtx = new (window.AudioContext || window.webkitAudioContext)();
+          var src = hearthCtx.createMediaElementSource(hearthCrackle);
+          var g   = hearthCtx.createGain();
+          g.gain.value = 0.45;
+          src.connect(g); g.connect(hearthCtx.destination);
+          if (hearthCtx.state === 'suspended') { hearthCtx.resume(); }
+        } catch (e) {
+          /* No Web Audio: fall back to element volume (desktop only) */
+          try { hearthCrackle.volume = 0.45; } catch (e2) {}
+        }
+        hearthCrackle.play().catch(function(){ /* blocked: stay silent */ });
+      } catch (e) { /* never let sound break the room */ }
+    }
+    document.addEventListener('pointerdown', startHearthAmbience, { once: true });
+    document.addEventListener('touchstart',  startHearthAmbience, { once: true, passive: true });
   </script>
 
   <script>

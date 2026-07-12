@@ -38,8 +38,11 @@ const LUNAR = (() => {
       room:         'hearthfire.html',
       roomName:     'the Hearthfire',
       host:         'The Threadsingers',
-      fractionStart: 0,
-      fractionEnd:   0.125
+      /* Ange's cosmology (12 Jul 2026): the New Moon begins when the first
+         crescent shows her face, ~1.85 days AFTER the astronomical instant.
+         The moonless days around the instant belong to the Dark Moon. */
+      fractionStart: 0.0625,
+      fractionEnd:   0.1875
     },
     {
       key:          'waxing-crescent',
@@ -48,7 +51,10 @@ const LUNAR = (() => {
       room:         'apothecary.html',
       roomName:     'the Apothecary',
       host:         'The Apothecary',
-      fractionStart: 0.125,
+      /* Shortened to ~1.85 days by the 12 Jul 2026 recalibration (the New
+         Moon now starts at first crescent and keeps its full length).
+         ANGE: retune this boundary any time, it is yours. */
+      fractionStart: 0.1875,
       fractionEnd:   0.25
     },
     {
@@ -108,8 +114,12 @@ const LUNAR = (() => {
       room:         'resonance_snug.html', // the warm snug (old resonance.html retired)
       roomName:     'the Resonance Chamber',
       host:         'Draven',
+      /* Ange's cosmology (12 Jul 2026): the Dark Moon is the moonless days
+         AROUND the astronomical instant, not just before it. This window
+         wraps past 1.0: getPhase() unwraps it. The snug holds the night of
+         the instant itself; Tales After Dark releases mid-window. */
       fractionStart: 0.875,
-      fractionEnd:   1.0
+      fractionEnd:   1.0625
     }
   ];
 
@@ -131,8 +141,13 @@ const LUNAR = (() => {
    * Returns the phase object for a given date.
    */
   function getPhase(date = new Date()) {
-    const fraction = getLunarFraction(date);
-    return PHASES.find(p => fraction >= p.fractionStart && fraction < p.fractionEnd) || PHASES[0];
+    // The Dark Moon window wraps past 1.0 (it holds the days around the
+    // astronomical instant, per Ange's cosmology, 12 Jul 2026). Fractions
+    // just after 0 therefore belong to the tail of the Dark Moon: unwrap
+    // them by adding a full cycle before matching.
+    const raw = getLunarFraction(date);
+    const fraction = raw < PHASES[0].fractionStart ? raw + 1 : raw;
+    return PHASES.find(p => fraction >= p.fractionStart && fraction < p.fractionEnd) || PHASES[PHASES.length - 1];
   }
 
   /**
@@ -181,7 +196,9 @@ const LUNAR = (() => {
     const phaseParam  = urlParams.get('phase');
     const testPhase   = phaseParam ? PHASES.find(function(p){ return p.key === phaseParam; }) : null;
 
-    const fraction      = getLunarFraction(date);
+    const rawFraction   = getLunarFraction(date);
+    // Unwrap for the Dark Moon's wrapped window, same as getPhase()
+    const fraction      = rawFraction < PHASES[0].fractionStart ? rawFraction + 1 : rawFraction;
     const phase         = testPhase || getPhase(date);
     const cycleId       = getCycleId(date);
     const daysIntoPhase = (fraction - phase.fractionStart) * SYNODIC_PERIOD;
@@ -189,7 +206,7 @@ const LUNAR = (() => {
 
     return {
       phase,
-      fraction,
+      fraction: rawFraction, // public contract stays 0 to 1
       cycleId,
       daysIntoPhase: Math.max(0, Math.floor(daysIntoPhase)),
       daysUntilNext: Math.max(1, Math.ceil(daysUntilNext)),

@@ -782,6 +782,17 @@
       font-size: clamp(0.9rem,1.6vw,1.02rem); color: rgba(220,180,95,0.72); line-height: 1.85; margin-top: 0.4rem;
     }
     .everflame-thanks.show { display: block; }
+    .ef-paths { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+    .ef-path {
+      background: none; border: 1px solid rgba(195,155,72,0.3); border-radius: 16px;
+      color: rgba(195,155,72,0.6); font-family: var(--serif); font-style: italic;
+      font-size: clamp(12px, 1.3vw, 14px); letter-spacing: 0.02em; padding: 0.4em 1em; cursor: pointer;
+      transition: all 0.35s ease;
+    }
+    .ef-path:hover { border-color: rgba(220,180,95,0.55); color: rgba(220,180,95,0.8); }
+    .ef-path.is-chosen { border-color: rgba(220,180,95,0.85); color: rgba(230,195,110,1); background: rgba(195,155,72,0.12); }
+    .ef-hint { display: none; font-family: var(--serif); font-style: italic; font-size: clamp(12px, 1.1vw, 13px); color: rgba(195,155,72,0.5); margin: -0.3rem 0 0; }
+    .ef-hint.show { display: block; }
 
     /* ——— Chapter threshold: a held beat of dark, the title surfacing like an imprint ——— */
     #chapterThreshold {
@@ -820,6 +831,8 @@
     }
   </style>
   <script src="sound-control.js"></script>
+  <script src="portal-data.js"></script>
+  <script src="everflame-signup.js"></script>
 </head>
 <body>
 
@@ -1631,10 +1644,14 @@
       <div class="everflame-call">
         <div class="everflame-call-flame" aria-hidden="true"></div>
         <p class="everflame-call-line">Or let the Everflame call you<br>when the next chapter is released from the resonance.</p>
-        <form class="everflame-form" id="everflameForm" name="lost-soul-everflame" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-          <input type="hidden" name="form-name" value="lost-soul-everflame">
-          <p class="ef-hp"><input name="bot-field" tabindex="-1" autocomplete="off"></p>
-          <input type="email" name="email" placeholder="leave your name with the flame" required autocomplete="email" aria-label="your email">
+        <form class="everflame-form" id="everflameForm">
+          <input type="email" id="efEmail" name="email" placeholder="leave your name with the flame" required autocomplete="email" aria-label="your email">
+          <p class="ef-hp"><input id="efBot" name="bot-field" tabindex="-1" autocomplete="off"></p>
+          <div class="ef-paths" role="group" aria-label="how the Everflame should reach you">
+            <button type="button" class="ef-path" data-path="lunar" aria-pressed="false">walk with the moon</button>
+            <button type="button" class="ef-path" data-path="release" aria-pressed="false">wait for the tales</button>
+          </div>
+          <p class="ef-hint">choose at least one path first</p>
           <button type="submit">light the way</button>
         </form>
         <div class="everflame-thanks" id="everflameThanks">The Everflame holds your name.<br>It will call when the resonance returns.</div>
@@ -3576,24 +3593,6 @@
 })();
 </script>
 
-<script>
-/* ——— Everflame call-to-action (Closing) — Netlify Forms, mirrors hearthfire subscribe ——— */
-(function(){
-  var efForm = document.getElementById('everflameForm');
-  var efThanks = document.getElementById('everflameThanks');
-  if(!efForm) return;
-  efForm.addEventListener('submit', function(e){
-    e.preventDefault();
-    fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(new FormData(efForm)).toString()
-    }).then(function(){
-      efForm.style.display = 'none';
-      if(efThanks) efThanks.classList.add('show');
-    }).catch(function(){ efForm.submit(); });
-  });
-})();
-</script>
+
 </body>
 </html>

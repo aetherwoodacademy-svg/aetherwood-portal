@@ -110,6 +110,85 @@
       height: 1em;
     }
 
+    /* ——— PHASE LETTER (added 12 Jul 2026) ———
+       The letter for the current moon, shown below the poem. Same quiet
+       register: floating text, soft glow, no cards or boxes. Sections render
+       only when their words exist in LETTERS below, so the page grows as
+       Ange writes, phase by phase. */
+    .letter {
+      text-align: center;
+      max-width: min(88vw, 480px);
+      margin-bottom: 6vh;
+    }
+    .letter-stirs {
+      font-size: clamp(17px, 1.5vw, 19px);
+      font-weight: 300;
+      line-height: 1.9;
+      color: rgba(230, 210, 160, 0.88);
+      letter-spacing: 0.02em;
+      margin-bottom: 1.4em;
+    }
+    .letter-doorway {
+      display: inline-block;
+      font-size: clamp(13px, 1.1vw, 14px);
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(215, 180, 100, 0.62);
+      text-decoration: none;
+      padding: 10px 4px;
+      margin: 1.5em 0 2em;
+      text-shadow: 0 0 22px rgba(255, 195, 95, 0.28);
+      transition: color 0.8s ease;
+    }
+    .letter-doorway:hover { color: rgba(235, 205, 130, 0.95); }
+    .letter-keeper {
+      font-size: clamp(17px, 1.4vw, 18px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.85;
+      color: rgba(210, 188, 142, 0.7);
+      margin: 1.6em 0 1.2em;
+    }
+    .letter-turn {
+      font-size: clamp(13px, 1.15vw, 14px);
+      letter-spacing: 0.12em;
+      font-style: italic;
+      color: rgba(195, 168, 108, 0.5);
+    }
+
+    /* ——— SEASONAL VERSE (frame added 12 Jul 2026) ———
+       When a sabbat approaches, its verse and letter layer beneath the
+       phase letter. Hemisphere-aware, same store and detection as the
+       Year Wheel. Renders nothing until words exist in SEASONAL_VERSES. */
+    .season-wrap {
+      text-align: center;
+      max-width: min(88vw, 460px);
+      margin-bottom: 6vh;
+    }
+    .season-label {
+      font-size: clamp(12px, 1vw, 13px);
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: rgba(185, 150, 90, 0.42);
+      margin-bottom: 1.6em;
+    }
+    .season-line {
+      display: block;
+      font-size: clamp(16px, 1.9vw, 20px);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.9;
+      color: rgba(232, 210, 158, 0.88);
+    }
+    .season-break { display: block; height: 1em; }
+    .season-letter {
+      font-size: clamp(17px, 1.4vw, 18px);
+      font-weight: 300;
+      line-height: 1.85;
+      color: rgba(220, 198, 150, 0.78);
+      margin-top: 1.4em;
+    }
+
     /* ——— PORTAL CTA ——— */
     /* Uncomment and set href when the portal is live */
     .portal-cta {
@@ -311,6 +390,7 @@
     .sc-support-chip { font-size: clamp(12px, 1vw, 13px); }
   </style>
   <script src="sound-control.js"></script>
+  <script src="lunar.js"></script>
 </head>
 <body>
   <div class="page">
@@ -322,6 +402,14 @@
     <div class="moon-phase" id="moonPhase"></div>
 
     <div class="poem" id="poem"></div>
+
+    <!-- PHASE LETTER — what stirs, the doorway, the Keeper's desk, the turn.
+         Populated from LETTERS below; sections without words yet stay silent. -->
+    <div class="letter" id="letter"></div>
+
+    <!-- SEASONAL VERSE — renders only when a sabbat approaches AND its words
+         exist in SEASONAL_VERSES. Hemisphere-aware. -->
+    <div class="season-wrap" id="seasonWrap"></div>
 
     <!-- SOLSTICE FEATURE — visible June 18–24 -->
     <div class="solstice-section" id="solsticeSection" style="display:none">
@@ -358,36 +446,15 @@
 
   <script>
     /* ——————————————————————————————————————
-       MOON PHASE CALCULATOR
-       Reference new moon: 16 June 2026 UTC
-       Synodic period: 29.53059 days
+       MOON PHASE
     —————————————————————————————————————— */
-    var REF = Date.UTC(2026, 5, 16, 0, 0, 0);
-    var SYNODIC_MS = 29.53059 * 24 * 60 * 60 * 1000;
-
-    function getMoonPhase() {
-      var elapsed = ((Date.now() - REF) % SYNODIC_MS + SYNODIC_MS) % SYNODIC_MS;
-      var day = elapsed / (24 * 60 * 60 * 1000);
-      if (day < 1.85)  return 0; // New Moon
-      if (day < 7.38)  return 1; // Waxing Crescent
-      if (day < 9.22)  return 2; // First Quarter
-      if (day < 14.77) return 3; // Waxing Gibbous
-      if (day < 16.61) return 4; // Full Moon
-      if (day < 22.15) return 5; // Waning Gibbous
-      if (day < 24.00) return 6; // Last Quarter
-      return 7;                   // Dark Moon
-    }
-
-    var PHASE_NAMES = [
-      'New Moon',
-      'Waxing Crescent',
-      'First Quarter',
-      'Waxing Gibbous',
-      'Full Moon',
-      'Waning Gibbous',
-      'Last Quarter',
-      'Dark Moon'
-    ];
+    /* Now from lunar.js (12 Jul 2026). The lantern used to carry its own
+       calculator with a different reference date, so it could disagree with
+       the portal by a day at phase boundaries. One sky, one engine.
+       ?phase=<key> previews any letter, e.g. lantern.html?phase=full-moon */
+    var LUNAR_STATE = LUNAR.getLunarState();
+    var PHASE_KEYS = ['new-moon','waxing-crescent','first-quarter','waxing-gibbous',
+                      'full-moon','waning-gibbous','last-quarter','dark-moon'];
 
     /* ——————————————————————————————————————
        POEMS
@@ -395,44 +462,236 @@
        Use '|' for a stanza break.
        Add poems as you write them — null = falls back to New Moon poem.
     —————————————————————————————————————— */
+    /* Ange's original threshold poem, kept for reuse (replaced as the New
+       Moon verse 12 Jul 2026 when the phase poems began arriving):
+         In the stillness / With shadow fallen behind / A light emerges /
+         A glimmer / A promise / Of all that is to come // Deep within the
+         woods / A lantern shines / Its steady light / Showing you the way /
+         If you dare to trust // Will you step through / Into the warmth /
+         And out of the shadow / To discover what awaits / Beyond the fork
+         in the road? */
     var POEMS = [
-      /* 0 — New Moon */
+      /* 0 — New Moon (Ange, 12 Jul 2026) */
       [
-        'In the stillness',
-        'With shadow fallen behind',
-        'A light emerges',
-        'A glimmer',
-        'A promise',
-        'Of all that is to come',
+        'Find me in the first glimmer of light.',
         '|',
-        'Deep within the woods',
-        'A lantern shines',
-        'Its steady light',
-        'Showing you the way',
-        'If you dare to trust',
+        'The promise of what’s to come',
+        'takes root in the dark.',
+        'The first glimmer of light.',
+        'A way forward.',
+        'A way onward.',
         '|',
-        'Will you step through',
-        'Into the warmth',
-        'And out of the shadow',
-        'To discover what awaits',
-        'Beyond the fork in the road?'
+        'Gather yourself.',
+        'Gather your heart.',
+        'Let the journey commence,',
+        'one step at a time,',
+        'night after night.'
       ],
-      /* 1 — Waxing Crescent */ null,
-      /* 2 — First Quarter   */ null,
-      /* 3 — Waxing Gibbous  */ null,
-      /* 4 — Full Moon       */ null,
-      /* 5 — Waning Gibbous  */ null,
-      /* 6 — Last Quarter    */ null,
-      /* 7 — Dark Moon       */ null
+      /* 1 — Waxing Crescent (Ange, 12 Jul 2026) */
+      [
+        'Find me in the curve of light',
+        'Still learning its own shape',
+        'Your intentions are for you alone',
+        'To choose as you need',
+        '|',
+        'Build them and nurture them',
+        'Give them the same care',
+        'as your dreams',
+        'The waxing light will grow each night',
+        'Watch as the light within you shines'
+      ],
+      /* 2 — First Quarter (Ange, 12 Jul 2026) */
+      [
+        'The space where intention',
+        'Becomes action',
+        'The space you crafted',
+        'To believe in yourself',
+        '|',
+        'Every choice you make',
+        'Weaves a thread',
+        'Every step you take',
+        'Leads you closer',
+        '|',
+        'Enjoy the journey',
+        'As your truth unfolds'
+      ],
+      /* 3 — Waxing Gibbous (Ange, 12 Jul 2026) */
+      [
+        'Nearly whole',
+        'But still time',
+        'The intention is set',
+        'The dream is in sight',
+        'Make this night',
+        'Yours to craft',
+        'Yours to hold',
+        'Yours to take flight',
+        'Meet me at the full moon',
+        'Where all will be revealed',
+        'Beneath the glowing bridge',
+        'As our dreams unfold'
+      ],
+      /* 4 — Full Moon (Ange, 12 Jul 2026) */
+      [
+        'The light, in fullness',
+        'Holds nothing from sight',
+        'Your work is done',
+        'The intention set',
+        'Once told',
+        'to the new moon',
+        'Is ready for you',
+        'So watch as your own',
+        'Story unfolds',
+        'Return to yourself',
+        'Find your magic',
+        'Surrender to the untold',
+        'And enjoy the rewards'
+      ],
+      /* 5 — Waning Gibbous (Ange, 12 Jul 2026) */
+      [
+        'The cycle is almost closed',
+        'But the work is not done',
+        'Time to reflect',
+        'Find what is not at ease',
+        'As the loom watches all',
+        'With the darkness approaching',
+        '|',
+        'Resonate with yourself',
+        'Your intentions',
+        'were yours to behold',
+        'And change or keep',
+        'For the next cycle to unfold'
+      ],
+      /* 6 — Last Quarter (Ange, 12 Jul 2026) */
+      [
+        'What no longer serves',
+        'Can now be released',
+        'That which has no purpose',
+        'No longer your anchor',
+        'Shed your regrets',
+        'Lose your fears',
+        'Create your own space',
+        'And watch yourself grow.'
+      ],
+      /* 7 — Dark Moon */
+      [
+        'Find me in the space between breaths.',
+        '|',
+        'Where the world falls silent,',
+        'where the moon offers no light,',
+        'and nothing asks to be hidden.',
+        '|',
+        'Sit with your darkness.',
+        'Name it.',
+        'Own it.'
+      ]
     ];
+
+    /* ——————————————————————————————————————
+       LETTERS
+       The phase letter shown beneath the poem, one entry per phase in the
+       same order as POEMS. Every field is optional: null stays silent, so
+       the page grows as the letters are written (skeletons and beats in
+       phase-letter-skeletons.md).
+         stirs:  array of paragraph strings, in-world, present tense
+         keeper: array of paragraph strings, from the Keeper's desk (you)
+         turn:   one line, when the moon changes next and which door wakes
+       The doorway link is not written here: it comes from lunar.js's own
+       phase-to-room map, so it can never point at the wrong door.
+       ANGE: these are yours to fill. Nothing below is prose, only nulls.
+    —————————————————————————————————————— */
+    var LETTERS = [
+      /* 0 — New Moon        */ { stirs: null, keeper: null, turn: null },
+      /* 1 — Waxing Crescent */ { stirs: null, keeper: null, turn: null },
+      /* 2 — First Quarter   */ { stirs: null, keeper: null, turn: null },
+      /* 3 — Waxing Gibbous  */ { stirs: null, keeper: null, turn: null },
+      /* 4 — Full Moon       */ { stirs: null, keeper: null, turn: null },
+      /* 5 — Waning Gibbous  */ { stirs: null, keeper: null, turn: null },
+      /* 6 — Last Quarter    */ { stirs: null, keeper: null, turn: null },
+      /* 7 — Dark Moon */
+      {
+        stirs: [
+          'The darkest night is not the absence of light. It is the space we create to allow the light to return.'
+        ],
+        keeper: null,
+        turn: null
+      }
+    ];
+
+    /* ——————————————————————————————————————
+       SEASONS
+       The eight sabbats, same dates and hemisphere handling as the Year
+       Wheel (aetherwood_hemisphere is shared, so a visitor's choice there
+       carries here). A season is "approaching" from 7 days before its date
+       until 2 days after (tune SEASON_LEAD/SEASON_TAIL). Its verse and
+       letter render only when words exist below.
+       ANGE: seasonal words go in SEASONAL_VERSES, same shapes as POEMS
+       (lines with '|' breaks) and LETTERS (paragraph arrays).
+       Preview: lantern.html?season=samhain (add ?hemi=north to test the
+       other sky).
+    —————————————————————————————————————— */
+    var SEASONS = [
+      {key:'yule',       name:'Yule',       n:[12,21], s:[6,21]},
+      {key:'imbolc',     name:'Imbolc',     n:[2,1],   s:[8,1]},
+      {key:'ostara',     name:'Ostara',     n:[3,20],  s:[9,22]},
+      {key:'beltane',    name:'Beltane',    n:[5,1],   s:[11,1]},
+      {key:'litha',      name:'Litha',      n:[6,21],  s:[12,21]},
+      {key:'lughnasadh', name:'Lughnasadh', n:[8,1],   s:[2,1]},
+      {key:'mabon',      name:'Mabon',      n:[9,22],  s:[3,20]},
+      {key:'samhain',    name:'Samhain',    n:[10,31], s:[5,1]}
+    ];
+    var SEASON_LEAD = 7;  // days before the sabbat it begins to show
+    var SEASON_TAIL = 2;  // days after the sabbat it lingers
+
+    var SEASONAL_VERSES = {
+      yule:       { verse: null, letter: null },
+      imbolc:     { verse: null, letter: null },
+      ostara:     { verse: null, letter: null },
+      beltane:    { verse: null, letter: null },
+      litha:      { verse: null, letter: null },
+      lughnasadh: { verse: null, letter: null },
+      mabon:      { verse: null, letter: null },
+      samhain:    { verse: null, letter: null }
+    };
+
+    /* Hemisphere: same key and detection as year-wheel.html */
+    function detectHemi(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+      if(/^(Australia|Antarctica|Pacific\/(Auckland|Fiji|Noumea|Guadalcanal|Tongatapu|Port_Moresby)|America\/(Argentina|Sao_Paulo|Santiago|La_Paz|Lima|Asuncion|Montevideo)|Africa\/(Johannesburg|Windhoek|Maputo|Harare|Lusaka))/.test(tz))return 'south';}catch(e){}return 'north';}
+    function getHemi(){
+      var q = new URLSearchParams(location.search).get('hemi');
+      if (q === 'north' || q === 'south') return q;
+      var s = null; try { s = localStorage.getItem('aetherwood_hemisphere'); } catch(e) {}
+      return s || detectHemi();
+    }
+
+    function getActiveSeason(now) {
+      var testKey = new URLSearchParams(location.search).get('season');
+      if (testKey) {
+        var t = SEASONS.find(function(f){ return f.key === testKey; });
+        if (t) return t;
+      }
+      var hemi = getHemi();
+      var DAY = 24 * 60 * 60 * 1000;
+      for (var i = 0; i < SEASONS.length; i++) {
+        var md = hemi === 'south' ? SEASONS[i].s : SEASONS[i].n;
+        /* Check this year's and next year's date, so lead windows that
+           reach across New Year still catch */
+        for (var dy = 0; dy <= 1; dy++) {
+          var d = new Date(now.getFullYear() + dy, md[0] - 1, md[1]);
+          var delta = (now.getTime() - d.getTime()) / DAY;
+          if (delta >= -SEASON_LEAD && delta <= SEASON_TAIL) return SEASONS[i];
+        }
+      }
+      return null;
+    }
 
     /* ——————————————————————————————————————
        RENDER
     —————————————————————————————————————— */
-    var phase = getMoonPhase();
+    var phase = PHASE_KEYS.indexOf(LUNAR_STATE.phase.key);
+    if (phase < 0) phase = 0;
     var poem  = POEMS[phase] || POEMS[0];
 
-    document.getElementById('moonPhase').textContent = PHASE_NAMES[phase];
+    document.getElementById('moonPhase').textContent = LUNAR_STATE.phase.name;
 
     var poemEl = document.getElementById('poem');
     poem.forEach(function(line) {
@@ -447,6 +706,69 @@
         poemEl.appendChild(span);
       }
     });
+
+    /* The letter: only sections with words render. The doorway always
+       renders, straight from the lunar map, so the lantern is never a
+       dead end even before the letters are written. */
+    (function renderLetter() {
+      var L = LETTERS[phase] || {};
+      var box = document.getElementById('letter');
+
+      function addParas(arr, cls) {
+        (arr || []).forEach(function(p) {
+          var el = document.createElement('p');
+          el.className = cls;
+          el.textContent = p;
+          box.appendChild(el);
+        });
+      }
+
+      addParas(L.stirs, 'letter-stirs');
+
+      var door = document.createElement('a');
+      door.className = 'letter-doorway';
+      door.href = LUNAR_STATE.phase.room;
+      door.textContent = 'step through to ' + LUNAR_STATE.phase.roomName;
+      box.appendChild(door);
+
+      addParas(L.keeper, 'letter-keeper');
+
+      if (L.turn) {
+        var turn = document.createElement('p');
+        turn.className = 'letter-turn';
+        turn.textContent = L.turn;
+        box.appendChild(turn);
+      }
+    })();
+
+    /* The seasonal layer: renders only when a sabbat is near AND its words
+       exist. Silent otherwise. */
+    (function renderSeason() {
+      var season = getActiveSeason(new Date());
+      if (!season) return;
+      var words = SEASONAL_VERSES[season.key];
+      if (!words || (!words.verse && !words.letter)) return;
+      var wrap = document.getElementById('seasonWrap');
+
+      var label = document.createElement('p');
+      label.className = 'season-label';
+      label.textContent = season.name;
+      wrap.appendChild(label);
+
+      (words.verse || []).forEach(function(line) {
+        var el = document.createElement('span');
+        el.className = line === '|' ? 'season-break' : 'season-line';
+        if (line !== '|') el.textContent = line;
+        wrap.appendChild(el);
+      });
+
+      (words.letter || []).forEach(function(p) {
+        var el = document.createElement('p');
+        el.className = 'season-letter';
+        el.textContent = p;
+        wrap.appendChild(el);
+      });
+    })();
     /* ——————————————————————————————————————
        SOLSTICE FEATURE
        Active: June 18–24 each year
