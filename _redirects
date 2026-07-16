@@ -1,0 +1,17 @@
+# Clean vanity URLs for social/marketing use.
+# 200 = rewrite (serves the file, URL bar keeps the clean slug), not a
+# redirect. Nothing existing is renamed or touched, purely additive.
+
+/resonance         /resonance_snug.html       200
+/vestibule         /vestibule.html            200
+/hearthfire        /hearthfire.html           200
+/library           /library.html              200
+/apothecary        /apothecary.html           200
+/compliance        /compliance.html           200
+/archives          /whispered-archives.html   200
+/memory-hall       /memory-hall.html          200
+/fountain          /fountain.html             200
+/year-wheel        /year-wheel.html           200
+/oracle            /oracle.html               200
+/lost-soul         /lost-soul.html            200
+/lantern           /lantern.html              200

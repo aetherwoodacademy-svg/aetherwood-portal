@@ -192,7 +192,8 @@
     #hs-laughter .hs-orb, #hs-laughter .hs-orb::before, #hs-laughter .hs-orb::after { animation-delay: 2.7s; }
     #hs-keepers .hs-orb, #hs-keepers .hs-orb::before, #hs-keepers .hs-orb::after { animation-delay: 3.6s; }
     #hs-legacy .hs-orb, #hs-legacy .hs-orb::before, #hs-legacy .hs-orb::after { animation-delay: 4.8s; }
-    #hs-tribute .hs-orb, #hs-tribute .hs-orb::before, #hs-tribute .hs-orb::after { animation-delay: 6s; }
+    /* Veil Thins (hs-tribute) RETIRED 12 Jul 2026 per Phase 0 decision 0.7:
+       the thin-veil moments live solely in the Year Wheel's Samhain arms now. */
     #hs-candle .hs-orb, #hs-candle .hs-orb::before, #hs-candle .hs-orb::after { animation-delay: 5.4s; }
     /* ——— WANING GIBBOUS — the hall's own phase (Ange's idea, 29 Jun 2026).
        The constellations burn brighter and a soft line marks the night.
@@ -222,13 +223,12 @@
     .hotspot:hover .hs-label, .hotspot:focus .hs-label, .hotspot.active .hs-label { opacity: 1; }
     .hotspot:hover .hs-orb { animation-duration: 2.8s; }
 
-    /* The five constellations + the Veil (at the moon) — desktop */
+    /* The five constellations — desktop */
     #hs-wonder   { left: 20%; top: 42%; }
     #hs-hearth   { left: 36%; top: 64%; }
     #hs-laughter { left: 54%; top: 50%; }
     #hs-keepers  { left: 70%; top: 60%; }
     #hs-legacy   { left: 85%; top: 40%; }
-    #hs-tribute  { left: 71%; top: 17%; }   /* on the moon */
     #hs-candle   { left: 46%; top: 78%; }   /* placeholder, not yet calibrated */
 
     /* mobile: drawn inward so every label fits the portrait */
@@ -238,7 +238,6 @@
       #hs-laughter { left: 50%; top: 50%; }
       #hs-keepers  { left: 92.6%; top: 51.9%; }
       #hs-legacy   { left: 78%; top: 40%; }
-      #hs-tribute  { left: 66%; top: 18%; }
       #hs-candle   { left: 46%; top: 82%; }   /* placeholder, not yet calibrated */
       .hs-label { font-size: .86rem; }
     }
@@ -646,7 +645,7 @@
     #everflame {
       position: fixed; top: 3.5vmin; left: 3.5vmin;
       width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
-      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1783866143/everflame.png') center bottom / contain no-repeat;
       mix-blend-mode: screen; filter: brightness(1.1);
       transition: filter 0.7s ease; z-index: 45; cursor: pointer;
       animation: efLive 8s ease-in-out infinite;
@@ -810,22 +809,12 @@
   <div class="hotspot" id="hs-keepers" role="button" tabindex="0" aria-label="Keepers"><div class="hs-orb"></div><span class="hs-label">keepers</span></div>
   <div class="hotspot" id="hs-legacy" role="button" tabindex="0" aria-label="Legacy"><div class="hs-orb"></div><span class="hs-label">legacy</span></div>
 
-  <!-- ——— THE VEIL THINS — at the moon ——— -->
-  <div class="hotspot" id="hs-tribute" role="button" tabindex="0" aria-label="Where the veil thins"><div class="hs-orb cold"></div><span class="hs-label">the veil thins</span></div>
+  <!-- THE VEIL THINS: RETIRED 12 Jul 2026 per Phase 0 decision 0.7 (locked 3 Jul).
+       The thin-veil moments now live solely in the Year Wheel's Samhain arms,
+       hemisphere-aware. Hotspot, panel and time-lock JS removed in the same pass. -->
 
-  <!-- ——— SCRIM + VEIL PANEL ——— -->
+  <!-- ——— SCRIM ——— -->
   <div id="scrim"></div>
-  <div class="panel" id="panel-tribute">
-    <span class="closeX" data-close>&times;</span>
-    <span class="eyebrow">when the worlds stand close</span>
-    <h2>The Veil Thins</h2>
-    <p class="lore">Twice a year, as the wheel turns through Samhain in each hemisphere, the veil grows thin. The grove gathers the names then, spoken aloud, remembered together, held in one place while the worlds stand close.</p>
-    <p id="tributeStatus">It is cold and still. The veil thins twice a year, at Samhain, north and south.</p>
-    <div class="lockline"><span class="dot cold"></span> <span id="tributeWhen">time-locked</span></div>
-    <div class="actions">
-      <button class="btn ghost" data-close>step back</button>
-    </div>
-  </div>
 
   <!-- ——— DOORWAY (entry) ——— -->
   <div id="doorway">
@@ -985,43 +974,9 @@
       bindHotspot('hs-' + k, function () { enterConstellation(k); });
     });
 
-    /* ——— THE VEIL THINS (time-locked) ———
-       Opens twice a year — Samhain in each hemisphere.
-       Northern: 31 October.  Southern: 1 May.  The grove opens on both. */
-    var VEIL_DATES = [
-      { m: 10, d: 31 },  // Samhain, northern hemisphere
-      { m: 5,  d: 1  }   // Samhain, southern hemisphere
-    ];
-    (function setupVeil() {
-      var now = new Date();
-      var orb = document.querySelector('#hs-tribute .hs-orb');
-      var whenEl = document.getElementById('tributeWhen');
-      var statusEl = document.getElementById('tributeStatus');
-
-      /* test override, since this is hardcoded to the real calendar date
-         and can't otherwise be previewed without changing the system clock */
-      var urlPhase = new URLSearchParams(window.location.search).get('phase');
-
-      var openNow = (urlPhase === 'veil-open') ||
-        (urlPhase !== 'veil-closed' && VEIL_DATES.some(function (v) { return now.getMonth() === v.m - 1 && now.getDate() === v.d; }));
-      if (openNow) {
-        whenEl.textContent = 'open now, the veil is thin';
-        statusEl.textContent = 'The veil is thin. Tonight the names are gathered and remembered together.';
-        if (orb) orb.classList.remove('cold');
-        return;
-      }
-
-      var soonest = null;
-      VEIL_DATES.forEach(function (v) {
-        var d = new Date(now.getFullYear(), v.m - 1, v.d);
-        if (d < now) d = new Date(now.getFullYear() + 1, v.m - 1, v.d);
-        if (!soonest || d < soonest) soonest = d;
-      });
-      var days = Math.ceil((soonest - now) / 86400000);
-      var when = soonest.toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
-      whenEl.textContent = 'wakes when the veil thins · ' + when + ' (' + days + ' days)';
-    })();
-    bindHotspot('hs-tribute', function () { openPanel('panel-tribute'); });
+    /* THE VEIL THINS: RETIRED 12 Jul 2026 per Phase 0 decision 0.7.
+       Time-lock, hotspot binding and panel removed; the thin-veil moments
+       live solely in the Year Wheel's Samhain arms now. */
 
     /* ——— THE CANDLE RITUAL — Waning Gibbous only ———
        Locked to phase like every other lunar touchpoint in the portal

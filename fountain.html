@@ -71,12 +71,40 @@
     }
 
     /* ——————————————————————————————————————
+       RETURN TO THE WHISPERED ARCHIVES. Visual doorway, bottom-left,
+       same pattern as the rest of the portal (nav standard 0.1).
+       Always present, so the ritual's auto-return is never the only
+       way out and the Everflame is never required. Added 12 Jul 2026
+       from the walkthrough audit.
+    —————————————————————————————————————— */
+    #returnArchives {
+      position: fixed;
+      left: 5%; bottom: 5%;
+      width: 12vmin; height: 12vmin;
+      min-width: 64px; min-height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      clip-path: circle(50%);
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1781960368/whispered_archives_xaotge.jpg') center 52% / cover no-repeat;
+      opacity: 0.6;
+      box-shadow: 0 0 0 1px rgba(200, 160, 80, 0.25), 0 0 18px rgba(200, 150, 70, 0.25);
+      cursor: pointer;
+      z-index: 210;
+      transition: opacity 0.6s ease, box-shadow 0.6s ease;
+    }
+    #returnArchives:hover,
+    #returnArchives.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(220, 180, 100, 0.55), 0 0 26px rgba(220, 170, 90, 0.45);
+    }
+
+    /* ——————————————————————————————————————
        EVERFLAME NAV
     —————————————————————————————————————— */
     #everflame {
       position: fixed; top: 3.5vmin; left: 3.5vmin;
       width: 14vmin; height: 14vmin; min-width: 90px; min-height: 90px;
-      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom / contain no-repeat;
+      background: url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1783866143/everflame.png') center bottom / contain no-repeat;
       mix-blend-mode: screen;
       filter: brightness(0.9);
       z-index: 200; cursor: pointer; pointer-events: all;
@@ -397,6 +425,9 @@
   <div id="vignette"></div>
   <div id="fadeCover"></div>
 
+  <!-- Return doorway to the Whispered Archives, always present (nav standard 0.1) -->
+  <div id="returnArchives" role="button" tabindex="0" aria-label="Return to the Whispered Archives" title="Return to the Whispered Archives"></div>
+
   <div id="everflame" role="button" tabindex="0" aria-label="The Everflame" title="The Everflame"></div>
 
   <nav id="efMenu" aria-label="The Everflame">
@@ -487,6 +518,18 @@
       setTimeout(function () {
         document.getElementById('ritualWrap').classList.add('visible');
       }, 7200);
+
+      // Return doorway to the Whispered Archives (nav standard 0.1),
+      // wired here like every other control, no inline onclick.
+      var retA = document.getElementById('returnArchives');
+      if (retA) {
+        retA.addEventListener('click', function () { navigateTo('whispered-archives.html'); });
+        retA.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateTo('whispered-archives.html'); }
+        });
+        retA.addEventListener('touchstart', function () { retA.classList.add('active'); }, { passive: true });
+        retA.addEventListener('touchend', function () { setTimeout(function () { retA.classList.remove('active'); }, 800); });
+      }
     }
 
     /* ——— Release ritual ——— */

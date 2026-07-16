@@ -91,11 +91,14 @@
 
   /* everflame nav */
   #everflame{position:fixed;top:3.5vmin;left:3.5vmin;width:12vmin;height:12vmin;min-width:82px;min-height:82px;
-    background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/aetherwood/portal/everflame.jpg') center bottom/contain no-repeat;
-    mix-blend-mode:screen;filter:brightness(.9);z-index:200;cursor:pointer;animation:efLive 8s ease-in-out infinite;}
+    background:url('https://res.cloudinary.com/ds8pkprtb/image/upload/v1783866143/everflame.png') center bottom/contain no-repeat;
+    /* z 825: above the season world overlay (#world, 820) so the Everflame is
+       always reachable inside a world walk (walkthrough Blocker, nav standard 0.1);
+       below shooting-star (830) so wishes still streak over everything. */
+    mix-blend-mode:screen;filter:brightness(.9);z-index:825;cursor:pointer;animation:efLive 8s ease-in-out infinite;}
   #everflame:hover{filter:brightness(1.6) saturate(1.1);}
   @keyframes efLive{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}100%{transform:translateY(0) rotate(-1deg)}}
-  #efMenu{position:fixed;top:calc(3.5vmin + 12vmin + 16px);left:3vmin;z-index:201;pointer-events:none;opacity:0;transform:translateY(8px);transition:.7s;}
+  #efMenu{position:fixed;top:calc(3.5vmin + 12vmin + 16px);left:3vmin;z-index:826;pointer-events:none;opacity:0;transform:translateY(8px);transition:.7s;}
   #efMenu.open{opacity:1;pointer-events:all;transform:translateY(0);}
   #efMenu::before{content:'';position:absolute;top:-70px;left:-40px;right:-50px;bottom:-30px;
     background:radial-gradient(ellipse at 22% 0%,rgba(4,6,18,.85),rgba(4,6,18,.5) 45%,transparent 78%);z-index:-1;}
