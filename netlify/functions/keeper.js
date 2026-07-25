@@ -11,7 +11,7 @@
 //                          Can reuse NOTIFY_ADMIN_TOKEN if you prefer one secret.)
 
 const URL = process.env.SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_KEY;
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 const GATE = process.env.KEEPER_TOKEN || process.env.NOTIFY_ADMIN_TOKEN;
 
 const H = { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json" };
