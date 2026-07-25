@@ -501,7 +501,7 @@
       position: fixed;
       top: 0; bottom: 0;
       width: min(92vw, 420px);
-      background: linear-gradient(158deg, rgba(8,5,14,0.97) 0%, rgba(14,10,24,0.96) 100%);
+      background: linear-gradient(158deg, rgba(8,5,14,1) 0%, rgba(14,10,24,1) 100%);
       border: 1px solid rgba(148, 112, 80, 0.16);
       z-index: 300;
       display: flex; flex-direction: column;
@@ -570,13 +570,13 @@
       font-size: clamp(17px, 1.7vw, 19px);
       font-weight: 300;
       line-height: 1.84;
-      color: rgba(198, 172, 118, 0.76);
+      color: rgba(198, 172, 118, 0.90);
     }
 
     .panel-body p + p { margin-top: 1.1em; }
     .panel-body em {
       font-style: italic;
-      color: rgba(215, 188, 128, 0.88);
+      color: rgba(215, 188, 128, 0.95);
     }
 
     .panel-section {
@@ -588,7 +588,7 @@
       font-size: clamp(12px, 1vw, 13px);
       letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: rgba(162, 132, 78, 0.48);
+      color: rgba(162, 132, 78, 0.72);
       margin-bottom: 0.9em;
     }
 
@@ -672,7 +672,7 @@
       outline: none;
       display: block;
     }
-    .message-input::placeholder { color: rgba(155, 128, 72, 0.28); }
+    .message-input::placeholder { color: rgba(155, 128, 72, 0.50); }
     .message-input:focus { border-color: rgba(148, 112, 80, 0.40); }
 
     .message-submit {
@@ -680,7 +680,7 @@
       padding: 0.72em 0;
       background: none;
       border: 1px solid rgba(148, 112, 80, 0.26);
-      color: rgba(195, 168, 108, 0.82);
+      color: rgba(195, 168, 108, 0.92);
       font-family: var(--serif);
       font-size: clamp(12px, 1.05vw, 14px);
       letter-spacing: 0.3em;
@@ -734,7 +734,7 @@
     .keeper-text {
       font-size: clamp(17px, 1.7vw, 19px);
       font-style: italic;
-      color: rgba(182, 155, 98, 0.58);
+      color: rgba(182, 155, 98, 0.86);
       line-height: 1.72;
       margin-bottom: 1.1em;
     }
@@ -1025,7 +1025,19 @@
       <div class="keeper-section">
         <div class="panel-section-title">Reach the Keeper</div>
         <p class="keeper-text">If you need a hand finding your way, or if something in these rooms feels wrong, send word. The keeper of Aetherwood will find you.</p>
-        <a class="keeper-link" href="mailto:portal@aetherwood.au?subject=A%20word%20from%20Aetherwood">Send word</a>
+        <textarea class="message-input" id="keeperInput"
+          placeholder="Tell the Keeper what you need…"
+          maxlength="600" rows="3"></textarea>
+        <input class="message-input" id="keeperContact" type="email" inputmode="email"
+          placeholder="Leave an email if you'd like a reply (optional)"
+          autocomplete="off" style="margin-top:0.7em; font-style:italic; font-size:clamp(14px,1.3vw,16px);">
+        <button class="message-submit" id="keeperSubmitBtn" type="button" style="margin-top:0.9em;">Send word</button>
+        <p id="keeperConfirm" style="display:none; margin-top:1em; font-style:italic; font-size:clamp(12px,1.08vw,14px); color:rgba(162,135,210,0.75); text-align:center; letter-spacing:0.04em;">
+          Your word is on its way to the Keeper.
+        </p>
+        <p id="keeperEmpty" style="display:none; margin-top:1em; font-style:italic; font-size:clamp(12px,1.05vw,14px); color:rgba(185,150,88,0.55); text-align:center; letter-spacing:0.04em;">
+          Add a word first.
+        </p>
       </div>
     </div>
   </div>
@@ -1219,7 +1231,7 @@
           return;
         }
 
-        var entry = { text: text, phase: LUNAR_PHASE.replace(/-/g, ' '), ts: Date.now() };
+        var entry = { text: text, phase: (LUNAR_PHASE || '').replace(/-/g, ' '), ts: Date.now() };
 
         // Persist to localStorage (with in-memory fallback)
         var msgs = getMessages();
@@ -1245,6 +1257,48 @@
       } catch(e) {
         console.error('doSubmit error:', e);
       }
+    }
+
+    /* ——— Reach the Keeper (support request → Supabase, replaces the old mailto) ——— */
+    function doKeeperSubmit() {
+      try {
+        var input   = document.getElementById('keeperInput');
+        var contact = document.getElementById('keeperContact');
+        var btn     = document.getElementById('keeperSubmitBtn');
+        var conf    = document.getElementById('keeperConfirm');
+        var empty   = document.getElementById('keeperEmpty');
+        var text    = input   ? input.value.trim()   : '';
+        var email   = contact ? contact.value.trim() : '';
+
+        if (!text) {
+          if (empty) { empty.style.display = 'block'; setTimeout(function(){ empty.style.display = 'none'; }, 2000); }
+          return;
+        }
+
+        postSupport(text, email);
+
+        if (input)   input.value = '';
+        if (contact) contact.value = '';
+        if (btn)  btn.style.display  = 'none';
+        if (conf) conf.style.display = 'block';
+        setTimeout(function () {
+          if (btn)  btn.style.display  = 'block';
+          if (conf) conf.style.display = 'none';
+        }, 3600);
+      } catch (e) {
+        console.error('doKeeperSubmit error:', e);
+      }
+    }
+    /* Fire-and-forget to the shared submit proxy. Lands in support_requests,
+       surfaces in the Keeper's Console. Silent if the function isn't running
+       (e.g. local test server). */
+    function postSupport(message, contact) {
+      try {
+        fetch('/.netlify/functions/submit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'support', payload: { message: message, contact: (contact || '') } })
+        }).catch(function () {});
+      } catch (e) {}
     }
 
     /* ——— Panels ——— */
@@ -1307,6 +1361,13 @@
       var conf = document.getElementById('messageConfirm');
       if (btn)  { btn.style.display = 'block'; btn.onclick = doSubmit; }
       if (conf) conf.style.display = 'none';
+      /* Reach the Keeper ritual — same reset+wire pattern */
+      var kbtn  = document.getElementById('keeperSubmitBtn');
+      var kconf = document.getElementById('keeperConfirm');
+      var kempt = document.getElementById('keeperEmpty');
+      if (kbtn)  { kbtn.style.display = 'block'; kbtn.onclick = doKeeperSubmit; }
+      if (kconf) kconf.style.display = 'none';
+      if (kempt) kempt.style.display = 'none';
       openPanel('deskPanel', 'hs-desk');
     }
 
@@ -1415,10 +1476,9 @@
         return;
       }
       list.innerHTML = msgs.slice(-14).reverse().map(function (m) {
-        return '<div class="message-entry">' +
-          esc(m.text) +
-          '<span class="message-moon">' + esc(m.phase) + ' moon</span>' +
-          '</div>';
+        var ph = (m.phase && m.phase !== 'undefined') ? String(m.phase).trim() : '';
+        var moon = ph ? '<span class="message-moon">' + esc(ph) + ' moon</span>' : '';
+        return '<div class="message-entry">' + esc(m.text) + moon + '</div>';
       }).join('');
     }
     function esc(s) {
