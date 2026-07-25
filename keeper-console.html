@@ -99,6 +99,17 @@
   .rdy.hand .rdot{background:#b58fd0;}
   .rdy.note .rdot{background:#8a7fa6;}
 
+  /* engagement drill-down */
+  .tile.clickable{cursor:pointer;transition:border-color .2s, background .2s;}
+  .tile.clickable:hover{border-color:var(--gold);}
+  .tile.clickable.open{border-color:var(--gold);background:linear-gradient(180deg,#211b2e,#1a1626);}
+  .engdetail{margin-top:14px;}
+  .engdetail-head{font-family:var(--caps);font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:9px;}
+  .engrow{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-bottom:7px;}
+  .engrow .engtxt{color:var(--ink);}
+  .engrow .engmeta{color:var(--dim);font-size:0.78rem;margin-top:3px;}
+  .tagnew{color:#8fd0a8;}
+
   /* password gate */
   #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50;}
   #gate .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;width:min(360px,90vw);text-align:center;}
@@ -163,6 +174,7 @@
         <div class="tiles" id="engTiles">
           <div class="tile"><div class="num skeleton">–</div><div class="lbl">loading</div></div>
         </div>
+        <div id="engDetail" class="engdetail"></div>
       </section>
 
       <section class="card wide">
@@ -224,6 +236,10 @@
     return res.json();
   }
 
+  // Moderation rows are used by three panels; fetch once per refresh.
+  var _modCache = null;
+  function getModeration(){ if(!_modCache) _modCache = api("moderation"); return _modCache; }
+
   // ---------- gate ----------
   document.getElementById("enter").onclick = tryEnter;
   document.getElementById("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") tryEnter(); });
@@ -248,6 +264,7 @@
   // ---------- loaders ----------
   async function loadAll(){
     document.getElementById("stamp").textContent = "as of " + new Date().toLocaleString();
+    _modCache = null;
     renderMoon();
     loadReadiness();
     loadEngagement();
@@ -259,27 +276,68 @@
 
   async function loadEngagement(){
     const tiles = document.getElementById("engTiles");
+    const detail = document.getElementById("engDetail");
+    detail.innerHTML = ""; detail.dataset.open = "";
     try{
-      const data = await api("counts"); // { table: number, ... , total_visits: n }
+      const data = await api("counts");
+      var byTable = {};
+      try{
+        const mod = await getModeration();
+        (mod||[]).forEach(function(r){ (byTable[r.table]=byTable[r.table]||[]).push(r); });
+      }catch(e){}
       tiles.innerHTML = "";
       const entries = Object.entries(data).filter(([k])=>ENG_LABELS[k]!==undefined || k==="visits");
       let any=false;
       for(const [k,v] of entries){
         any=true;
-        const t=document.createElement("div"); t.className="tile";
-        t.innerHTML=`<div class="num">${v}</div><div class="lbl">${ENG_LABELS[k]||"Visits"}</div>`;
+        const t=document.createElement("div");
+        t.className = "tile" + (byTable[k] ? " clickable" : "");
+        const num=document.createElement("div"); num.className="num"; num.textContent=v;
+        const lbl=document.createElement("div"); lbl.className="lbl"; lbl.textContent=ENG_LABELS[k]||"Visits";
+        t.appendChild(num); t.appendChild(lbl);
+        if(byTable[k]){
+          t.onclick = (function(key,label,rows,tile){
+            return function(){ showEngDetail(key,label,rows,tile); };
+          })(k, ENG_LABELS[k]||k, byTable[k], t);
+        }
         tiles.appendChild(t);
       }
       if(!any) tiles.innerHTML = `<div class="placeholder">No engagement yet.</div>`;
+      document.getElementById("engHint").textContent = "tap a number to see what's inside";
     }catch(e){
       tiles.innerHTML = notWired("Engagement counts light up once the console function is deployed.", e);
     }
   }
 
+  function showEngDetail(key, label, rows, tile){
+    const d = document.getElementById("engDetail");
+    Array.prototype.forEach.call(document.querySelectorAll("#engTiles .tile.open"), function(el){ el.classList.remove("open"); });
+    if(d.dataset.open === key){ d.innerHTML=""; d.dataset.open=""; return; }
+    if(tile) tile.classList.add("open");
+    d.dataset.open = key;
+    d.innerHTML = "";
+    const head=document.createElement("div"); head.className="engdetail-head";
+    head.textContent = label + "  ·  " + rows.length + (rows.length===1?" entry":" entries");
+    d.appendChild(head);
+    if(!rows.length){ const p=document.createElement("div"); p.className="placeholder"; p.textContent="Nothing to show here yet."; d.appendChild(p); return; }
+    const now = Date.now();
+    const sorted = rows.slice().sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+    sorted.forEach(function(r){
+      const recent = (now - new Date(r.created_at).getTime()) < 2*86400000;
+      const hidden = r.display === false;
+      const row=document.createElement("div"); row.className="engrow";
+      const txt=document.createElement("div"); txt.className="engtxt"; txt.textContent = r.text || "(empty)";
+      const meta=document.createElement("div"); meta.className="engmeta";
+      meta.textContent = fmt(r.created_at) + (r.extra ? ("  ·  " + r.extra) : "") + (hidden ? "  ·  hidden" : "");
+      if(recent){ meta.appendChild(document.createTextNode("  ·  ")); const b=document.createElement("span"); b.className="tagnew"; b.textContent="recent"; meta.appendChild(b); }
+      row.appendChild(txt); row.appendChild(meta); d.appendChild(row);
+    });
+  }
+
   async function loadModeration(){
     const body = document.getElementById("modBody");
     try{
-      const rows = await api("moderation"); // [{table,label,text,extra,extraLabel,display,created_at,id?}]
+      const rows = await getModeration(); // [{table,label,text,extra,extraLabel,display,created_at,id?}]
       if(!rows.length){ body.innerHTML = `<div class="placeholder">All quiet. Nothing to review.</div>`; return; }
       body.innerHTML="";
       document.getElementById("modHint").textContent = rows.length+" entries";
@@ -412,7 +470,7 @@
 
     var supOpen=null, modFlag=null;
     try{ var s=await api("support");    supOpen=(s||[]).filter(function(r){return r.status!=="answered";}).length; }catch(e){}
-    try{ var m=await api("moderation"); modFlag=(m||[]).filter(function(r){return looksOff(r.text);}).length; }catch(e){}
+    try{ var m=await getModeration(); modFlag=(m||[]).filter(function(r){return looksOff(r.text);}).length; }catch(e){}
 
     var phaseItems = RUBRIC[nx.key] || [];
     var items = phaseItems.slice();
