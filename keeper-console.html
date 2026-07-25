@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Keeper's Console · Aetherwood</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b0910">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Keeper">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/ds8pkprtb/image/upload/everflame.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0910; --panel:#15121d; --panel2:#1c1826; --line:#2c2538;
+    --ink:#efe7d6; --dim:#9a8fa6; --gold:#c9a24a; --green:#5aa87a; --red:#b5566a; --amber:#e3b34a;
+    --caps:"Cinzel",serif; --serif:"Cormorant Garamond",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--serif);padding:22px;font-size:16px;}
+  header.top{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+  h1{font-family:var(--caps);font-weight:500;font-size:1.5rem;color:var(--gold);letter-spacing:0.08em;}
+  .tagline{color:var(--dim);font-size:0.95rem;}
+  .metabar{color:var(--dim);font-size:0.85rem;margin:8px 0 20px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+  .metabar button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:var(--serif);font-size:0.9rem;}
+  .metabar button:hover{border-color:var(--gold);}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;}
+  .card h2{font-family:var(--caps);font-weight:400;font-size:0.8rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+  .card h2 .count{font-family:var(--serif);letter-spacing:0;color:var(--dim);font-size:0.85rem;text-transform:none;}
+  .wide{grid-column:1 / -1;}
+
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
+  .tile .num{font-size:1.9rem;color:var(--ink);line-height:1;}
+  .tile .lbl{color:var(--dim);font-size:0.78rem;margin-top:6px;}
+
+  /* rows */
+  .row{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;}
+  .row .body{flex:1;min-width:0;}
+  .row .txt{color:var(--ink);}
+  .row .meta{color:var(--dim);font-size:0.78rem;margin-top:3px;}
+  .badge{font-size:0.7rem;padding:2px 8px;border-radius:20px;align-self:center;white-space:nowrap;}
+  .badge.live{background:rgba(90,168,122,0.18);color:#8fd0a8;border:1px solid rgba(90,168,122,0.4);}
+  .badge.hidden{background:rgba(181,86,106,0.18);color:#e39aa8;border:1px solid rgba(181,86,106,0.4);}
+  .act{border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.85rem;font-weight:600;align-self:center;min-width:84px;font-family:var(--serif);}
+  .act.hide{background:rgba(181,86,106,0.16);color:#e39aa8;border:1px solid rgba(181,86,106,0.5);}
+  .act.approve{background:rgba(90,168,122,0.16);color:#8fd0a8;border:1px solid rgba(90,168,122,0.5);}
+  .act:disabled{opacity:0.5;cursor:wait;}
+  .flag{color:var(--amber);font-size:0.78rem;margin-top:2px;}
+
+  .placeholder{color:var(--dim);font-style:italic;font-size:0.95rem;line-height:1.5;background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:14px;}
+  .skeleton{color:var(--dim);font-style:italic;}
+
+  /* moon hero */
+  .moonhero{display:flex;gap:18px;align-items:center;background:linear-gradient(180deg,#1a1526,#12101c);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
+  .moonhero .disc{width:64px;height:64px;border-radius:50%;position:relative;overflow:hidden;background:#0a0812;box-shadow:0 0 24px rgba(180,150,255,.16);flex:none;}
+  .moonhero .disc .lit{position:absolute;inset:0;background:radial-gradient(circle at 38% 34%,#f6efff,#cdbff0 60%,#a99fce);}
+  .moonhero .disc .sh{position:absolute;inset:0;background:#0a0812;border-radius:50%;}
+  .moonhero .mtext{flex:1;min-width:0;}
+  .moonhero .mphase{font-family:var(--caps);letter-spacing:0.1em;color:var(--gold);font-size:0.92rem;}
+  .moonhero .mroom{color:var(--ink);font-size:1.08rem;font-style:italic;margin-top:2px;}
+  .moonhero .mstats{display:flex;gap:20px;margin-top:9px;flex-wrap:wrap;color:var(--dim);font-size:0.8rem;}
+  .moonhero .mstats b{color:var(--ink);display:block;font-size:1rem;}
+  /* usage meters */
+  .meter{margin-bottom:11px;}
+  .meter .ml{display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink);margin-bottom:4px;}
+  .meter .ml .mv{color:var(--dim);}
+  .meter .mbar{height:7px;border-radius:5px;background:var(--panel2);overflow:hidden;}
+  .meter .mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#caa6ef);}
+
+  /* drifting fairy-motes */
+  #app{position:relative;z-index:1;}
+  .motes{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+  .mote{position:absolute;bottom:-14px;border-radius:50%;
+    background:rgba(232,196,116,0.85);
+    box-shadow:0 0 7px 2px rgba(224,180,96,0.5), 0 0 14px 4px rgba(150,120,220,0.18);
+    animation:mrise linear infinite, mtwinkle ease-in-out infinite;opacity:0;}
+  @keyframes mrise{
+    0%{transform:translateY(0) translateX(0);}
+    100%{transform:translateY(-108vh) translateX(var(--drift,24px));}
+  }
+  @keyframes mtwinkle{
+    0%,100%{opacity:0;}
+    12%{opacity:0.9;}
+    50%{opacity:0.55;}
+    88%{opacity:0.85;}
+  }
+
+  /* readiness rows */
+  .rdy{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:0.96rem;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--ink);}
+  .rdy .rdot{width:9px;height:9px;border-radius:50%;margin-top:7px;flex:none;background:var(--dim);}
+  .rdy.ok .rdot{background:var(--green);}
+  .rdy.warn .rdot{background:#e3b34a;}
+  .rdy.hand .rdot{background:#b58fd0;}
+  .rdy.note .rdot{background:#8a7fa6;}
+
+  /* password gate */
+  #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50;}
+  #gate .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;width:min(360px,90vw);text-align:center;}
+  #gate h2{font-family:var(--caps);color:var(--gold);letter-spacing:0.1em;margin-bottom:6px;}
+  #gate p{color:var(--dim);font-size:0.9rem;margin-bottom:16px;}
+  #gate input{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:1rem;margin-bottom:12px;font-family:var(--serif);}
+  #gate button{width:100%;padding:11px;border-radius:8px;border:1px solid var(--gold);background:rgba(201,162,74,0.14);color:var(--gold);font-size:0.95rem;cursor:pointer;font-family:var(--caps);letter-spacing:0.08em;}
+  #gate .err{color:var(--red);font-size:0.85rem;margin-top:10px;min-height:1.1em;}
+  .hidden-el{display:none !important;}
+</style>
+</head>
+<body>
+
+  <div class="motes" id="motes"></div>
+
+  <div id="gate">
+    <div class="box">
+      <h2>The Keeper's Door</h2>
+      <p>Speak the word to enter the console.</p>
+      <input id="pw" type="password" placeholder="Keeper's word" autocomplete="off">
+      <label style="display:flex;gap:8px;align-items:center;justify-content:center;color:var(--dim);font-size:0.85rem;margin:2px 0 12px;cursor:pointer;"><input type="checkbox" id="remember" checked> Remember me on this device</label>
+      <button id="enter">Enter</button>
+      <div class="err" id="gateErr"></div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden-el">
+    <header class="top">
+      <h1>Keeper's Console</h1>
+      <span class="tagline">The pulse of Aetherwood, in one place.</span>
+    </header>
+    <div class="metabar">
+      <span id="status">Ready.</span>
+      <button id="refresh">Refresh all</button>
+      <button id="forget">Forget this device</button>
+      <span id="stamp"></span>
+    </div>
+
+    <div class="moonhero">
+      <div class="disc" id="moonDisc"><div class="lit"></div><div class="sh" id="moonSh"></div></div>
+      <div class="mtext">
+        <div class="mphase" id="moonPhase">—</div>
+        <div class="mroom" id="moonRoom">—</div>
+        <div class="mstats">
+          <span><b id="moonIllum">—</b>illumination</span>
+          <span><b id="moonAge">—</b>days into the cycle</span>
+          <span><b id="moonNext">—</b><span id="moonNextName">next phase</span></span>
+        </div>
+        <a href="https://aetherwood.au" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-family:var(--caps);font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,162,74,0.4);padding-bottom:2px;">Enter Aetherwood &rarr;</a>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <section class="card wide">
+        <h2>Readiness for the next phase <span class="count" id="rdyHint"></span></h2>
+        <div id="rdyBody"><div class="skeleton">Reading the sky…</div></div>
+      </section>
+
+      <section class="card wide">
+        <h2>Engagement <span class="count" id="engHint"></span></h2>
+        <div class="tiles" id="engTiles">
+          <div class="tile"><div class="num skeleton">–</div><div class="lbl">loading</div></div>
+        </div>
+      </section>
+
+      <section class="card wide">
+        <h2>Moderation queue <span class="count" id="modHint"></span></h2>
+        <div id="modBody"><div class="skeleton">Loading entries…</div></div>
+      </section>
+
+      <section class="card">
+        <h2>Support requests <span class="count" id="supHint"></span></h2>
+        <div id="supBody"></div>
+      </section>
+
+      <section class="card">
+        <h2>Take it home <span class="count" id="ordHint"></span></h2>
+        <div id="ordBody"></div>
+      </section>
+
+      <section class="card">
+        <h2>Art library <span class="count" id="cldHint"></span></h2>
+        <div id="cldBody"></div>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+  // ============================================================
+  // Keeper's Console. NO secret key lives here on purpose.
+  // All data comes from the Netlify function /.netlify/functions/keeper,
+  // which holds the key server-side and checks the Keeper's word.
+  // Until that function is deployed, panels show their "not wired yet" state.
+  // ============================================================
+  const API = "/.netlify/functions/keeper";
+  let TOKEN = "";
+
+  const ENG_LABELS = {
+    new_moon_tapestry:"Tapestry threads",
+    waxing_gibbous_words:"Gibbous words",
+    waning_gibbous_candles:"Candles lit",
+    memory_hall_leaves:"Memory leaves",
+    memory_hall_stars:"Memory stars",
+    hearthfire_whispers:"Hearthfire whispers",
+    whispered_archive_words:"Archive words"
+  };
+
+  function fmt(d){ try{return new Date(d).toLocaleString();}catch(e){return d;} }
+  function looksOff(t){ if(!t) return false; const s=String(t).toLowerCase();
+    return /(https?:\/\/|www\.|\.com|\.net|click here|buy now|casino|crypto|free money)/.test(s)
+        || /(fuck|shit|cunt|bitch)/.test(s); }
+
+  async function api(action, opts={}){
+    const res = await fetch(`${API}?action=${action}`, {
+      method: opts.method || "GET",
+      headers: { "x-keeper-token": TOKEN, "Content-Type":"application/json" },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    if(res.status===401||res.status===403) throw new Error("unauthorised");
+    if(!res.ok) throw new Error(res.status+" "+res.statusText);
+    return res.json();
+  }
+
+  // ---------- gate ----------
+  document.getElementById("enter").onclick = tryEnter;
+  document.getElementById("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") tryEnter(); });
+  function showApp(){
+    document.getElementById("gate").classList.add("hidden-el");
+    document.getElementById("app").classList.remove("hidden-el");
+  }
+  async function tryEnter(){
+    TOKEN = document.getElementById("pw").value.trim();
+    const err = document.getElementById("gateErr");
+    err.textContent = "";
+    if(!TOKEN){ err.textContent="Enter the word."; return; }
+    try{ if(document.getElementById("remember").checked) localStorage.setItem("keeper_word", TOKEN); }catch(e){}
+    showApp();
+    loadAll();
+  }
+  // If this device already remembers the word, open straight in.
+  (function(){
+    try{ var saved = localStorage.getItem("keeper_word"); if(saved){ TOKEN = saved; showApp(); loadAll(); } }catch(e){}
+  })();
+
+  // ---------- loaders ----------
+  async function loadAll(){
+    document.getElementById("stamp").textContent = "as of " + new Date().toLocaleString();
+    renderMoon();
+    loadReadiness();
+    loadEngagement();
+    loadModeration();
+    loadSupport();
+    loadOrders();
+    loadCloudinary();
+  }
+
+  async function loadEngagement(){
+    const tiles = document.getElementById("engTiles");
+    try{
+      const data = await api("counts"); // { table: number, ... , total_visits: n }
+      tiles.innerHTML = "";
+      const entries = Object.entries(data).filter(([k])=>ENG_LABELS[k]!==undefined || k==="visits");
+      let any=false;
+      for(const [k,v] of entries){
+        any=true;
+        const t=document.createElement("div"); t.className="tile";
+        t.innerHTML=`<div class="num">${v}</div><div class="lbl">${ENG_LABELS[k]||"Visits"}</div>`;
+        tiles.appendChild(t);
+      }
+      if(!any) tiles.innerHTML = `<div class="placeholder">No engagement yet.</div>`;
+    }catch(e){
+      tiles.innerHTML = notWired("Engagement counts light up once the console function is deployed.", e);
+    }
+  }
+
+  async function loadModeration(){
+    const body = document.getElementById("modBody");
+    try{
+      const rows = await api("moderation"); // [{table,label,text,extra,extraLabel,display,created_at,id?}]
+      if(!rows.length){ body.innerHTML = `<div class="placeholder">All quiet. Nothing to review.</div>`; return; }
+      body.innerHTML="";
+      document.getElementById("modHint").textContent = rows.length+" entries";
+      for(const r of rows) body.appendChild(modRow(r));
+    }catch(e){
+      body.innerHTML = notWired("The moderation list reads your comment rooms once deployed.", e);
+    }
+  }
+  function modRow(r){
+    const isLive = r.display !== false;
+    const flagged = looksOff(r.text);
+    const row=document.createElement("div"); row.className="row";
+    const body=document.createElement("div"); body.className="body";
+    body.innerHTML = `<div class="txt"></div><div class="meta"></div>`;
+    body.querySelector(".txt").textContent = r.text ?? "(empty)";
+    let m = (r.label||r.table)+"  ·  "+fmt(r.created_at);
+    if(r.extra) m += "  ·  "+(r.extraLabel||"note")+": "+r.extra;
+    body.querySelector(".meta").textContent = m;
+    if(flagged){ const f=document.createElement("div"); f.className="flag"; f.textContent="Flagged: looks like spam or off-tone"; body.appendChild(f); }
+    row.appendChild(body);
+    const badge=document.createElement("span"); badge.className="badge "+(isLive?"live":"hidden"); badge.textContent=isLive?"Live":"Hidden";
+    row.appendChild(badge);
+    const btn=document.createElement("button"); btn.className="act "+(isLive?"hide":"approve"); btn.textContent=isLive?"Hide":"Approve";
+    btn.onclick=async()=>{ btn.disabled=true;
+      try{ await api("set-display",{method:"POST",body:{table:r.table,id:r.id,created_at:r.created_at,display:!isLive}});
+        r.display=!isLive; const nl=r.display!==false;
+        badge.className="badge "+(nl?"live":"hidden"); badge.textContent=nl?"Live":"Hidden";
+        btn.className="act "+(nl?"hide":"approve"); btn.textContent=nl?"Hide":"Approve";
+      }catch(err){ alert("Could not save: "+err.message); } finally{ btn.disabled=false; } };
+    row.appendChild(btn);
+    return row;
+  }
+
+  async function loadSupport(){
+    const body=document.getElementById("supBody");
+    try{
+      const rows = await api("support");
+      const open = rows.filter(r=>r.status!=="answered");
+      if(!rows.length){ body.innerHTML=`<div class="placeholder">No support requests yet.</div>`; return; }
+      body.innerHTML=""; document.getElementById("supHint").textContent = open.length+" open";
+      for(const r of rows){
+        const answered = r.status==="answered";
+        const d=document.createElement("div"); d.className="row";
+        const b=document.createElement("div"); b.className="body";
+        b.innerHTML=`<div class="txt"></div><div class="meta"></div>`;
+        b.querySelector(".txt").textContent = r.message || "(no message)";
+        let m = fmt(r.created_at);
+        if(r.contact) m += "  ·  reply to: "+r.contact;
+        else m += "  ·  no reply address left";
+        b.querySelector(".meta").textContent = m;
+        d.appendChild(b);
+        const badge=document.createElement("span");
+        badge.className="badge "+(answered?"live":"hidden");
+        badge.textContent = answered?"Answered":"Open";
+        d.appendChild(badge);
+        const btn=document.createElement("button");
+        btn.className="act "+(answered?"hide":"approve");
+        btn.textContent = answered?"Reopen":"Mark answered";
+        btn.onclick=async()=>{ btn.disabled=true;
+          try{ await api("support-status",{method:"POST",body:{id:r.id,status:answered?"open":"answered"}});
+            r.status=answered?"open":"answered"; loadSupport();
+          }catch(err){ alert("Could not update: "+err.message); btn.disabled=false; } };
+        d.appendChild(btn);
+        body.appendChild(d);
+      }
+    }catch(e){
+      body.innerHTML = notWired("Support requests appear here once the console function is deployed and the Archives ritual is live.", e, true);
+    }
+  }
+
+  async function loadOrders(){
+    const body=document.getElementById("ordBody");
+    try{
+      const rows = await api("orders");
+      if(!rows.length){ body.innerHTML=`<div class="placeholder">No take-it-home requests yet.</div>`; return; }
+      body.innerHTML=""; document.getElementById("ordHint").textContent=rows.length;
+      for(const r of rows){ const d=document.createElement("div"); d.className="row";
+        d.innerHTML=`<div class="body"><div class="txt"></div><div class="meta"></div></div>`;
+        d.querySelector(".txt").textContent=(r.item||r.product||"Item")+(r.name?"  for  "+r.name:"");
+        d.querySelector(".meta").textContent=(r.email?r.email+"  ·  ":"")+fmt(r.created_at||r.date);
+        body.appendChild(d); }
+    }catch(e){
+      body.innerHTML = notWired("Take-it-home requests appear here once we know where they land and route them in.", e, true);
+    }
+  }
+
+  function notWired(msg, err, pending){
+    const why = (err && err.message==="unauthorised")
+      ? "The Keeper's word was not recognised. Refresh and try again."
+      : pending ? "Not connected to a data source yet."
+      : "Waiting for the console function to be deployed.";
+    return `<div class="placeholder">${msg}<br><span style="opacity:0.7">${why}</span></div>`;
+  }
+
+  /* ---- Readiness for the next phase ---- */
+  async function loadReadiness(){
+    var body = document.getElementById("rdyBody");
+    var SYN = 29.530588853, REF = Date.UTC(2000,0,6,18,14,0)/86400000;
+    function age(d){ var a=(d.getTime()/86400000 - REF)%SYN; if(a<0)a+=SYN; return a; }
+    var SEG = [
+      {key:"dark",s:0.0,name:"Dark Moon"},{key:"new",s:1.846,name:"New Moon"},
+      {key:"waxcr",s:5.537,name:"Waxing Crescent"},{key:"fq",s:7.383,name:"First Quarter"},
+      {key:"waxgib",s:11.074,name:"Waxing Gibbous"},{key:"full",s:14.765,name:"Full Moon"},
+      {key:"wangib",s:18.457,name:"Waning Gibbous"},{key:"lq",s:22.148,name:"Last Quarter"}
+    ];
+    var WRAP = 25.839;
+    function idx(a){ if(a>=WRAP) return 0; var k=0; for(var i=0;i<SEG.length;i++){ if(a>=SEG[i].s) k=i; } return k; }
+    function daysUntil(from,ta){ var d=new Date(from.getTime()), prev=age(d);
+      for(var i=1;i<=32;i++){ d=new Date(from.getTime()+i*86400000); var a=age(d);
+        if((prev<=ta&&ta<=a)||(prev>a&&(ta>=prev||ta<=a))) return i; prev=a; } return null; }
+    var now=new Date(), a=age(now), ci=idx(a), nxi=(ci+1)%SEG.length, nx=SEG[nxi];
+    var ns=daysUntil(now, nxi===0?0:SEG[nxi].s);
+    var dtxt = ns==null?"soon":(ns<1?"today":ns+(ns===1?" day":" days"));
+
+    // What each phase asks. hand = your writing/judgment; note = auto-checkable
+    // once we confirm the Airtable specifics; live = checked right now.
+    var RUBRIC = {
+      dark:  [{t:"hand",l:"This cycle's Tales After Dark tale is ready in the Resonance Chamber"},
+              {t:"hand",l:"The companion YouTube video is published"}],
+      new:   [{t:"note",l:"Faculty notices refreshed in your voice (Airtable)"}],
+      waxcr: [],
+      fq:    [{t:"note",l:"This month's challenge is written in Airtable"}],
+      waxgib:[],
+      full:  [{t:"hand",l:"This cycle's Dreamwalking chapter is written and the Wolf Runner door unsealed"},
+              {t:"hand",l:"Maureen's footnotes on this cycle's confessions are written"},
+              {t:"note",l:"The confession archive shows the current cycle"}],
+      wangib:[],
+      lq:    []
+    };
+
+    var supOpen=null, modFlag=null;
+    try{ var s=await api("support");    supOpen=(s||[]).filter(function(r){return r.status!=="answered";}).length; }catch(e){}
+    try{ var m=await api("moderation"); modFlag=(m||[]).filter(function(r){return looksOff(r.text);}).length; }catch(e){}
+
+    var phaseItems = RUBRIC[nx.key] || [];
+    var items = phaseItems.slice();
+    items.push({t:"live", ok: supOpen===0,
+      l: supOpen==null?"Support requests answered (could not check)":(supOpen===0?"All support requests answered":supOpen+" support request"+(supOpen===1?"":"s")+" still open")});
+    items.push({t:"live", ok: modFlag===0,
+      l: modFlag==null?"Moderation queue clear (could not check)":(modFlag===0?"Nothing flagged in the moderation queue":modFlag+" flagged item"+(modFlag===1?"":"s")+" to review")});
+
+    var html = '<div style="margin-bottom:12px;color:var(--dim)">Next: <span style="color:var(--gold)">'+nx.name+'</span> in '+dtxt+'. Here is what it asks.</div>';
+    if(!phaseItems.length){
+      html += '<div class="placeholder" style="margin-bottom:10px">This phase mostly sits open. Nothing to prepare beyond the two below.</div>';
+    }
+    items.forEach(function(it){
+      var cls = it.t==="live" ? (it.ok?"ok":"warn") : (it.t==="hand"?"hand":"note");
+      var tail = it.t==="hand" ? ' <em style="color:var(--dim);font-style:italic">needs you</em>'
+               : it.t==="note" ? ' <em style="color:var(--dim);font-style:italic">verify</em>' : '';
+      html += '<div class="rdy '+cls+'"><span class="rdot"></span><span>'+it.l+tail+'</span></div>';
+    });
+    body.innerHTML = html;
+    var attn = items.filter(function(i){return i.t==="live" && !i.ok;}).length;
+    document.getElementById("rdyHint").textContent = attn ? attn+" need attention" : "on track";
+  }
+
+  /* ---- Moon phase (computed here, no backend) ---- */
+  function renderMoon(){
+    var SYN = 29.530588853, REF = Date.UTC(2000,0,6,18,14,0)/86400000;
+    function age(d){ var a = (d.getTime()/86400000 - REF) % SYN; if(a<0) a+=SYN; return a; }
+    function ill(a){ return (1 - Math.cos(2*Math.PI*a/SYN))/2; }
+    var SEG = [
+      {s:0.0,   name:"Dark Moon",       g:"\u{1F311}", room:"Resonance Chamber"},
+      {s:1.846, name:"New Moon",        g:"\u{1F312}", room:"Hearthfire"},
+      {s:5.537, name:"Waxing Crescent", g:"\u{1F312}", room:"Apothecary"},
+      {s:7.383, name:"First Quarter",   g:"\u{1F313}", room:"Library of Tales"},
+      {s:11.074,name:"Waxing Gibbous",  g:"\u{1F314}", room:"Library of Tales"},
+      {s:14.765,name:"Full Moon",       g:"\u{1F315}", room:"Compliance Office"},
+      {s:18.457,name:"Waning Gibbous",  g:"\u{1F316}", room:"Memory Hall"},
+      {s:22.148,name:"Last Quarter",    g:"\u{1F317}", room:"The Fountain"}
+    ];
+    var WRAP = 25.839;
+    function idx(a){ if(a>=WRAP) return 0; var k=0; for(var i=0;i<SEG.length;i++){ if(a>=SEG[i].s) k=i; } return k; }
+    function daysUntil(from,ta){ var d=new Date(from.getTime()), prev=age(d);
+      for(var i=1;i<=32;i++){ d=new Date(from.getTime()+i*86400000); var a=age(d);
+        if((prev<=ta && ta<=a) || (prev>a && (ta>=prev || ta<=a))) return i; prev=a; } return null; }
+    var now=new Date(), a=age(now), ci=idx(a), cur=SEG[ci], nxi=(ci+1)%SEG.length, nx=SEG[nxi];
+    document.getElementById("moonPhase").textContent = cur.g + "  " + cur.name;
+    document.getElementById("moonRoom").textContent  = "Live now: " + cur.room;
+    document.getElementById("moonIllum").textContent = Math.round(ill(a)*100) + "%";
+    document.getElementById("moonAge").textContent   = a.toFixed(1);
+    var ns = daysUntil(now, nxi===0 ? 0 : SEG[nxi].s);
+    document.getElementById("moonNext").textContent = ns==null ? "—" : (ns<1 ? "today" : ns + (ns===1?" day":" days"));
+    document.getElementById("moonNextName").textContent = "to " + nx.name;
+    var sh=document.getElementById("moonSh"), f=ill(a), waxing=a<SYN/2, cover=1-f;
+    sh.style.transform = "translateX(" + ((waxing?1:-1)*cover*100) + "%)";
+    sh.style.opacity = (f>0.985 ? 0 : 1);
+  }
+
+  /* ---- Art library headroom (Cloudinary usage, via the function) ---- */
+  async function loadCloudinary(){
+    var body = document.getElementById("cldBody");
+    try{
+      var d = await api("cloudinary");
+      if(d && d.unconfigured){
+        body.innerHTML = notWired("Add your Cloudinary keys to the console function to see plan headroom here.", null, true);
+        return;
+      }
+      var meters = [];
+      Object.keys(d || {}).forEach(function(k){
+        var v = d[k];
+        if(v && typeof v==="object" && ("usage" in v) && ("limit" in v)){
+          meters.push({name:k, used:v.usage, limit:v.limit, pct:v.used_percent});
+        }
+      });
+      if(!meters.length){ body.innerHTML = `<div class="placeholder">Connected, no plan meters returned.</div>`; return; }
+      body.innerHTML = "";
+      meters.forEach(function(m){
+        var pct = (typeof m.pct==="number") ? m.pct : (m.limit ? Math.round(m.used/m.limit*100) : 0);
+        var el = document.createElement("div"); el.className="meter";
+        el.innerHTML = '<div class="ml"><span>'+m.name+'</span><span class="mv">'+pct+'% used</span></div>'+
+                       '<div class="mbar"><i style="width:'+Math.min(100,pct)+'%"></i></div>';
+        body.appendChild(el);
+      });
+    }catch(e){
+      body.innerHTML = notWired("Your Cloudinary plan headroom shows here once the console function is deployed with Cloudinary keys.", e, true);
+    }
+  }
+
+  /* ---- fairy-motes ---- */
+  (function(){
+    var host = document.getElementById("motes");
+    if(!host) return;
+    for(var i=0;i<24;i++){
+      var m = document.createElement("div");
+      m.className = "mote";
+      var s = 2 + Math.random()*2.8;
+      m.style.width = s+"px"; m.style.height = s+"px";
+      m.style.left = (Math.random()*100)+"%";
+      m.style.animationDuration = (13 + Math.random()*12)+"s, "+(3 + Math.random()*3)+"s";
+      m.style.animationDelay = (-Math.random()*18)+"s, "+(-Math.random()*4)+"s";
+      m.style.setProperty("--drift", (Math.random()*70 - 35)+"px");
+      host.appendChild(m);
+    }
+  })();
+
+  renderMoon();
+  document.getElementById("refresh").onclick = loadAll;
+  document.getElementById("forget").onclick = function(){
+    try{ localStorage.removeItem("keeper_word"); }catch(e){}
+    TOKEN = "";
+    document.getElementById("app").classList.add("hidden-el");
+    document.getElementById("gate").classList.remove("hidden-el");
+    document.getElementById("pw").value = "";
+  };
+</script>
+</body>
+</html>

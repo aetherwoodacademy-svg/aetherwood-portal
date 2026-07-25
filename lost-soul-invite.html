@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>A door has opened · Aetherwood</title>
+
+  <meta property="og:type"        content="video.other">
+  <meta property="og:title"       content="A door has opened · Aetherwood">
+  <meta property="og:description" content="You're invited to walk The Lost Soul, before the wood is ready.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-deep:#060306;
+      --ink-cream:rgba(240,230,208,0.94);
+      --gold:rgba(206,172,96,0.92);
+      --serif:"Cormorant Garamond",Georgia,serif;
+      --caps:"Cinzel",serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;height:100%;background:var(--bg-deep);overflow:hidden;}
+    body{display:flex;align-items:center;justify-content:center;}
+
+    /* the whole screen is the doorway */
+    .doorway{
+      position:fixed;inset:0;display:block;
+      text-decoration:none;color:var(--ink-cream);
+      cursor:pointer;background:var(--bg-deep);
+    }
+    .doorway video{
+      position:absolute;inset:0;width:100%;height:100%;
+      object-fit:cover;background:var(--bg-deep);
+    }
+    /* deepen the edges so text reads and the scene feels held */
+    .vignette{
+      position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(120% 90% at 50% 42%, rgba(6,3,6,0) 46%, rgba(6,3,6,0.55) 100%),
+        linear-gradient(180deg, rgba(6,3,6,0.35) 0%, rgba(6,3,6,0) 30%, rgba(6,3,6,0) 62%, rgba(6,3,6,0.75) 100%);
+    }
+
+    .cue{
+      position:absolute;left:0;right:0;bottom:clamp(2.2rem,7vh,4.5rem);
+      text-align:center;pointer-events:none;
+      opacity:0;transform:translateY(10px);
+      transition:opacity 2s ease, transform 2s ease;
+    }
+    .cue.show{opacity:1;transform:translateY(0);}
+    .cue .lead{
+      display:block;font-family:var(--serif);font-style:italic;font-weight:300;
+      font-size:clamp(1.05rem,4.4vw,1.4rem);
+      color:rgba(240,230,208,0.82);
+      text-shadow:0 0 22px rgba(10,6,4,0.9);
+      margin-bottom:0.7rem;
+    }
+    .cue .enter{
+      display:block;font-family:var(--caps);font-weight:500;
+      font-size:clamp(0.86rem,3.6vw,1.05rem);
+      letter-spacing:0.3em;text-transform:uppercase;
+      color:var(--gold);
+      text-shadow:0 0 26px rgba(206,172,96,0.5), 0 0 6px rgba(10,6,4,0.9);
+      animation:breathe 3.4s ease-in-out infinite;
+    }
+    @keyframes breathe{0%,100%{opacity:0.68;}50%{opacity:1;}}
+
+    .whisper{
+      position:absolute;top:clamp(1.4rem,5vh,2.6rem);left:0;right:0;
+      text-align:center;pointer-events:none;
+      font-family:var(--serif);font-style:italic;
+      font-size:clamp(0.85rem,3.4vw,1rem);
+      color:rgba(240,230,208,0.55);
+      text-shadow:0 0 18px rgba(10,6,4,0.9);
+      opacity:0;transition:opacity 2.4s ease 0.6s;
+    }
+    .whisper.show{opacity:1;}
+  </style>
+</head>
+<body>
+  <!--
+    ============================================================
+    ONE thing to set: LOST_SOUL_LINK in the <script> below.
+    Optional: READER_NAME for a whispered greeting at the top.
+    The video file lost_soul_invitation.mp4 must sit
+    beside this page (same folder / same place when hosted).
+    ============================================================
+  -->
+  <a class="doorway" id="doorway" href="#">
+    <video id="film" autoplay muted loop playsinline preload="auto">
+      <source src="lost_soul_invitation.mp4" type="video/mp4">
+    </video>
+    <div class="vignette"></div>
+    <div class="whisper" id="whisper"></div>
+    <div class="cue" id="cue">
+      <span class="lead">The door is open</span>
+      <span class="enter">Enter The Lost Soul</span>
+    </div>
+  </a>
+
+  <script>
+    // ================= SET THIS =================
+    var LOST_SOUL_LINK = "https://aetherwood.au/lost-soul";  // where the tap should carry her
+    var READER_NAME    = "for Jo";                    // optional, e.g. "for Amber"
+    // ============================================
+
+    (function(){
+      var doorway = document.getElementById("doorway");
+      doorway.setAttribute("href", LOST_SOUL_LINK);
+
+      var whisper = document.getElementById("whisper");
+      if (READER_NAME && READER_NAME.trim()){
+        whisper.textContent = READER_NAME.trim();
+        whisper.classList.add("show");
+      }
+
+      // reveal the "enter" cue a moment in, so the scene lands first
+      var cue = document.getElementById("cue");
+      setTimeout(function(){ cue.classList.add("show"); }, 3200);
+
+      // gentle safety: if autoplay is ever blocked, first tap plays, second enters
+      var film = document.getElementById("film");
+      var played = true;
+      film.play().catch(function(){ played = false; });
+      doorway.addEventListener("click", function(e){
+        if (!played){ e.preventDefault(); film.play(); played = true; }
+      });
+    })();
+  </script>
+</body>
+</html>
