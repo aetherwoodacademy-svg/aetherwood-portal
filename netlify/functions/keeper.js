@@ -119,6 +119,31 @@ exports.handler = async (event) => {
       return json(200, []);
     }
 
+    // The Scriptorium: the Keeper's private writing-state desk.
+    // One JSON row holds the whole board. GET returns it; POST overwrites it.
+    // Same key the function already holds; nothing extra to configure.
+    if (action === "scriptorium") {
+      if (event.httpMethod === "POST") {
+        const b = JSON.parse(event.body || "{}");
+        const board = (b && b.board !== undefined) ? b.board : b;
+        const res = await fetch(`${URL}/rest/v1/scriptorium_board`, {
+          method: "POST",
+          headers: { ...H, Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ id: 1, board, updated_at: new Date().toISOString() }),
+        });
+        if (!res.ok) return json(500, { error: "save failed", status: res.status });
+        return json(200, { ok: true });
+      }
+      // GET (default): hand back the saved board, or null if nothing saved yet.
+      const res = await fetch(
+        `${URL}/rest/v1/scriptorium_board?id=eq.1&select=board`,
+        { headers: H }
+      );
+      if (!res.ok) return json(200, { board: null });
+      const rows = await res.json();
+      return json(200, { board: (rows[0] && rows[0].board) || null });
+    }
+
     if (action === "cloudinary") {
       const cn = process.env.CLOUDINARY_CLOUD_NAME;
       const ck = process.env.CLOUDINARY_API_KEY;
